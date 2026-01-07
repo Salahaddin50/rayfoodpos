@@ -1,0 +1,67 @@
+name: rayfoodpos
+region: nyc
+services:
+  - name: web
+    github:
+      repo: Salahaddin50/rayfoodpos
+      branch: master
+      deploy_on_push: true
+    build_command: |
+      composer install --optimize-autoloader --no-dev
+      npm ci
+      npm run build
+      php artisan storage:link
+    run_command: php artisan serve --host=0.0.0.0 --port=8080
+    environment_slug: php
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    http_port: 8080
+    health_check:
+      http_path: /
+    envs:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: error
+      - key: APP_URL
+        scope: RUN_TIME
+        type: SECRET
+      - key: APP_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: DB_CONNECTION
+        value: mysql
+      - key: DB_HOST
+        scope: RUN_TIME
+        type: SECRET
+      - key: DB_PORT
+        scope: RUN_TIME
+        type: SECRET
+      - key: DB_DATABASE
+        scope: RUN_TIME
+        type: SECRET
+      - key: DB_USERNAME
+        scope: RUN_TIME
+        type: SECRET
+      - key: DB_PASSWORD
+        scope: RUN_TIME
+        type: SECRET
+      - key: VITE_HOST
+        scope: RUN_TIME
+        type: SECRET
+      - key: VITE_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+databases:
+  - name: rayfoodpos-db
+    engine: MYSQL
+    version: "8"
+    production: true
+    cluster_name: rayfoodpos-db-cluster
+    db_name: rayfoodpos
+    db_user: rayfoodpos_user
+
