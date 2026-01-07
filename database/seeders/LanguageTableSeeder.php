@@ -25,24 +25,17 @@ class LanguageTableSeeder extends Seeder
             'status'            => Status::ACTIVE
         ];
 
-        $banglaLanguageArray = [
-            'name'              => 'Bangla',
-            'code'              => 'bn',
+        $russianLanguageArray = [
+            'name'              => 'Russian',
+            'code'              => 'ru',
             'display_mode'      => DisplayMode::LTR,
             'status'            => Status::ACTIVE
         ];
 
-        $germanLanguageArray = [
-            'name'              => 'German',
-            'code'              => 'de',
+        $azerbaijaniLanguageArray = [
+            'name'              => 'Azerbaijani',
+            'code'              => 'az',
             'display_mode'      => DisplayMode::LTR,
-            'status'            => Status::ACTIVE
-        ];
-
-        $arabicLanguageArray = [
-            'name'              => 'Arabic',
-            'code'              => 'ar',
-            'display_mode'      => DisplayMode::RTL,
             'status'            => Status::ACTIVE
         ];
 
@@ -51,19 +44,14 @@ class LanguageTableSeeder extends Seeder
             $englishLanguage->addMedia(public_path('/images/language/english.png'))->preservingOriginal()->toMediaCollection('language');
         }
 
-        $banglaLanguage = Language::create($banglaLanguageArray);
-        if(file_exists(public_path('/images/language/bangla.png'))) {
-            $banglaLanguage->addMedia(public_path('/images/language/bangla.png'))->preservingOriginal()->toMediaCollection('language');
+        $russianLanguage = Language::create($russianLanguageArray);
+        if(file_exists(public_path('/images/language/russian.png'))) {
+            $russianLanguage->addMedia(public_path('/images/language/russian.png'))->preservingOriginal()->toMediaCollection('language');
         }
 
-        $germanLanguage = Language::create($germanLanguageArray);
-        if(file_exists(public_path('/images/language/german.png'))) {
-            $germanLanguage->addMedia(public_path('/images/language/german.png'))->preservingOriginal()->toMediaCollection('language');
-        }
-
-        $arabicLanguage = Language::create($arabicLanguageArray);
-        if (file_exists(public_path('/images/language/arabic.png'))) {
-            $arabicLanguage->addMedia(public_path('/images/language/arabic.png'))->preservingOriginal()->toMediaCollection('language');
+        $azerbaijaniLanguage = Language::create($azerbaijaniLanguageArray);
+        if (file_exists(public_path('/images/language/azerbaijani.png'))) {
+            $azerbaijaniLanguage->addMedia(public_path('/images/language/azerbaijani.png'))->preservingOriginal()->toMediaCollection('language');
         }
 
     }
