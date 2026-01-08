@@ -18,7 +18,6 @@ import PageComponent from "../../components/admin/settings/Page/PageComponent";
 import PageListComponent from "../../components/admin/settings/Page/PageListComponent";
 import PageShowComponent from "../../components/admin/settings/Page/PageShowComponent";
 import OtpComponent from "../../components/admin/settings/Otp/OtpComponent";
-import LicenseComponent from "../../components/admin/settings/License/LicenseComponent";
 import AnalyticComponent from "../../components/admin/settings/analytics/AnalyticComponent";
 import AnalyticListComponent from "../../components/admin/settings/analytics/AnalyticListComponent";
 import AnalyticShowComponent from "../../components/admin/settings/analytics/AnalyticShowComponent";
@@ -415,17 +414,6 @@ export default [
                     permissionUrl: "settings",
                     breadcrumb: "payment_gateway",
                 },
-            },
-            {
-                path: "license",
-                component: LicenseComponent,
-                name: "admin.settings.license",
-                meta: {
-                    isFrontend: false,
-                    auth: true,
-                    permissionUrl: "settings",
-                    breadcrumb: "license",
-                }
             },
             {
                 path: "notification-alert",

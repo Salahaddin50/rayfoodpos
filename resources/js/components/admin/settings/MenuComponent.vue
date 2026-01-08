@@ -79,10 +79,6 @@
                 <i class="lab lab-payment-gateway text-sm"></i>
                 {{ $t("menu.payment_gateway") }}
             </router-link>
-            <router-link :to="{ name: 'admin.settings.license' }" class="db-tab-btn">
-                <i class="lab lab-license text-sm"></i>
-                {{ $t("menu.license") }}
-            </router-link>
         </nav>
     </div>
 </template>
