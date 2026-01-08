@@ -19,6 +19,7 @@ class SimpleOrderResource extends JsonResource
         return [
             'id'                           => $this->id,
             'order_serial_no'              => $this->order_serial_no,
+            'token'                        => $this->token,
             'order_datetime'               => AppLibrary::datetime($this->order_datetime),
             "total_currency_price"         => AppLibrary::currencyAmountFormat($this->total),
             "total_amount_price"           => AppLibrary::flatAmountFormat($this->total),
@@ -33,6 +34,9 @@ class SimpleOrderResource extends JsonResource
             'status'                       => $this->status,
             'status_name'                  => trans('orderStatus.' . $this->status),
             'customer_name'                => $this->user?->name,
+            'table_name'                   => $this->diningTable?->name,
+            'takeaway_type'                => $this->takeawayType,
+            'takeaway_type_name'           => $this->takeawayType?->name,
         ];
     }
 }

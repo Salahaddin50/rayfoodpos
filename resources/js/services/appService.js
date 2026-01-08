@@ -174,7 +174,7 @@ export default {
             return "py-0.5 px-2 rounded-full text-[10px] font-rubik leading-4 first-letter:capitalize whitespace-nowrap text-[#008BBA] bg-primary-light";
         }
         else if (status == orderStatusEnum.DELIVERED) {
-            return "py-0.5 px-2 rounded-full text-[10px] font-rubik leading-4 first-letter:capitalize whitespace-nowrap text-primary bg-primary-light";
+            return "py-0.5 px-2 rounded-full text-[10px] font-rubik leading-4 first-letter:capitalize whitespace-nowrap text-white bg-[#1AB759]";
         }
         else if (status == orderStatusEnum.REJECTED) {
             return "py-0.5 px-2 rounded-full text-[10px] font-rubik leading-4 first-letter:capitalize whitespace-nowrap text-red-600 bg-red-100";
