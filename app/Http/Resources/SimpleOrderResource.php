@@ -37,6 +37,7 @@ class SimpleOrderResource extends JsonResource
             'table_name'                   => $this->diningTable?->name,
             'takeaway_type'                => $this->takeawayType,
             'takeaway_type_name'           => $this->takeawayType?->name,
+            'pos_note'                     => $this->pos_note,
         ];
     }
 }

@@ -87,6 +87,7 @@
                             <th class="db-table-head-th">{{ $t('label.order_id') }}</th>
                             <th class="db-table-head-th">{{ $t('label.order_type') }}</th>
                             <th class="db-table-head-th">{{ $t('label.token') }} / {{ $t('label.type') }}</th>
+                            <th class="db-table-head-th">{{ $t('label.note') }}</th>
                             <th class="db-table-head-th">{{ $t('label.customer') }}</th>
                             <th class="db-table-head-th">{{ $t('label.amount') }}</th>
                             <th class="db-table-head-th">{{ $t('label.date') }}</th>
@@ -120,6 +121,10 @@
                                     <span v-if="order.token">{{ order.token }}</span>
                                     <span v-else>{{ $t('label.online') }}</span>
                                 </template>
+                            </td>
+                            <td class="db-table-body-td">
+                                <span v-if="order.pos_note" class="text-sm">{{ order.pos_note }}</span>
+                                <span v-else class="text-[#D9DBE9]">-</span>
                             </td>
                             <td class="db-table-body-td">
                                 {{ order.customer_name }}
@@ -158,7 +163,7 @@
                     </tbody>
                     <tbody class="db-table-body" v-else>
                         <tr class="db-table-body-tr">
-                            <td class="db-table-body-td text-center" colspan="8">
+                            <td class="db-table-body-td text-center" colspan="9">
                                 <div class="p-4">
                                     <div class="max-w-[300px] mx-auto mt-2">
                                         <img class="w-full h-full" :src="ENV.API_URL + '/images/default/not-found.png'"
