@@ -44,7 +44,9 @@ class OrderStatusScreenOrderService
                 })->orWhere(function ($subQuery) {
                     $subQuery->where('is_advance_order', Ask::YES)->where('order_datetime', '<', Carbon::today());
                 });
-            })->get();
+            })->orderBy('order_datetime', 'desc')
+                ->orderBy('id', 'desc')
+                ->get();
         } catch (Exception $exception) {
             Log::info($exception->getMessage());
             throw new Exception(QueryExceptionLibrary::message($exception), 422);
