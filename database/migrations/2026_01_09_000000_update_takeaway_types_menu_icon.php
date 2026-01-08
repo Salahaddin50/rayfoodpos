@@ -15,12 +15,12 @@ return new class extends Migration
     public function up()
     {
         // Update the takeaway_types menu icon
-        // Using lab lab-bag-line (same as in seeder and Vue component fallback)
+        // Using lab lab-bag-2 (valid icon class from lab.css)
         DB::table('menus')
             ->where('language', 'takeaway_types')
             ->where('url', 'takeaway-types')
             ->update([
-                'icon' => 'lab lab-bag-line',
+                'icon' => 'lab lab-bag-2',
                 'updated_at' => now()
             ]);
         
@@ -33,7 +33,7 @@ return new class extends Migration
                       ->orWhere('icon', ' ');
             })
             ->update([
-                'icon' => 'lab lab-bag-line',
+                'icon' => 'lab lab-bag-2',
                 'updated_at' => now()
             ]);
     }
