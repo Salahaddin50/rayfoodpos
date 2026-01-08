@@ -52,13 +52,14 @@ export default {
             const menus = this.$store.getters.authMenu || [];
 
             // Enforce a stable top order regardless of persisted/cached menu payload
-            const pinnedOrder = ["dashboard", "items", "dining_tables", "takeaway_types"];
+            const pinnedOrder = ["dashboard", "items", "dining_tables", "takeaway"];
             const pinnedIndex = (language) => {
                 const idx = pinnedOrder.indexOf(language);
                 return idx === -1 ? null : idx;
             };
             const fallbackIcons = {
                 dining_tables: "lab lab-reserve-line",
+                takeaway: "lab lab-bag-line",
                 takeaway_types: "lab lab-bag-line",
             };
 

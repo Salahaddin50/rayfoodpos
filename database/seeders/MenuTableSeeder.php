@@ -50,14 +50,26 @@ class MenuTableSeeder extends Seeder
 
             ],
             [
-                'name'       => 'Takeaway Types',
-                'language'   => 'takeaway_types',
-                'url'        => 'takeaway-types',
+                'name'       => 'Takeaway',
+                'language'   => 'takeaway',
+                'url'        => '#',
                 'icon'       => 'lab lab-bag-line',
                 'priority'   => 21,
                 'status'     => 1,
                 'created_at' => now(),
-                'updated_at' => now()
+                'updated_at' => now(),
+                'children'   => [
+                    [
+                        'name'       => 'Takeaway Types',
+                        'language'   => 'takeaway_types',
+                        'url'        => 'takeaway-types',
+                        'icon'       => 'lab lab-bag-line',
+                        'priority'   => 21,
+                        'status'     => 1,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]
+                ]
             ],
             [
                 'name'       => 'Pos & Orders',
