@@ -568,6 +568,8 @@
         "select_order_type": "Выбрать тип заказа",
         "select_table": "Выбрать стол",
         "search_table": "Поиск стола",
+        "select_takeaway_type": "Выбрать тип на вынос",
+        "search_takeaway_type": "Поиск типа на вынос",
         "select_address": "Выбрать адрес",
         "search_address": "Поиск адреса",
         "prepared": "Готово",

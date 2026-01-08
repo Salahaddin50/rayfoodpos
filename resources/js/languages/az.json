@@ -568,6 +568,8 @@
         "select_order_type": "Sifariş Növü Seç",
         "select_table": "Masa Seç",
         "search_table": "Masa Axtar",
+        "select_takeaway_type": "Aparma Növü Seç",
+        "search_takeaway_type": "Aparma Növü Axtar",
         "select_address": "Ünvan Seç",
         "search_address": "Ünvan Axtar",
         "prepared": "Hazırlandı",

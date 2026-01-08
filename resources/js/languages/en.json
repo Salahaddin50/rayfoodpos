@@ -568,6 +568,8 @@
         "select_order_type": "Select Order Type",
         "select_table": "Select Table",
         "search_table": "Search Table",
+        "select_takeaway_type": "Select Takeaway Type",
+        "search_takeaway_type": "Search Takeaway Type",
         "select_address": "Select Address",
         "search_address": "Search Address",
         "prepared": "Prepared",
