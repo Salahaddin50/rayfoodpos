@@ -13138,9 +13138,19 @@
     "prefer-lowest": false,
     "platform": {
         "php": "^8.2",
+        "ext-bcmath": "*",
+        "ext-curl": "*",
+        "ext-dom": "*",
         "ext-exif": "*",
+        "ext-fileinfo": "*",
         "ext-json": "*",
+        "ext-mbstring": "*",
+        "ext-openssl": "*",
         "ext-pdo": "*"
+        ,
+        "ext-pdo_mysql": "*",
+        "ext-xml": "*",
+        "ext-zip": "*"
     },
     "platform-dev": [],
     "plugin-api-version": "2.2.0"
