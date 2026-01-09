@@ -13139,7 +13139,6 @@
     "platform": {
         "php": "^8.2",
         "ext-exif": "*",
-        "ext-http": "*",
         "ext-json": "*",
         "ext-pdo": "*"
     },
