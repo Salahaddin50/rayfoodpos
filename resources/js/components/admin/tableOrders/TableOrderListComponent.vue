@@ -90,7 +90,7 @@
                         <tr class="db-table-head-tr">
                             <th class="db-table-head-th">{{ $t("label.order_id") }}</th>
                             <th class="db-table-head-th">{{ $t("label.order_type") }}</th>
-                            <th class="db-table-head-th">{{ $t("label.token") }} / {{ $t("label.type") }}</th>
+                            <th class="db-table-head-th">{{ $t("label.token") }} / {{ $t("label.table_name") }}</th>
                             <th class="db-table-head-th">{{ $t("label.note") }}</th>
                             <th class="db-table-head-th">{{ $t("label.customer") }}</th>
                             <th class="db-table-head-th">{{ $t("label.amount") }}</th>
