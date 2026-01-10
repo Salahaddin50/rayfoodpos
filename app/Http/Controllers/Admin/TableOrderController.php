@@ -29,7 +29,7 @@ class TableOrderController extends AdminController
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:table-orders', only: ['index', 'show', 'export', 'changeStatus', 'changePaymentStatus']),
+            new Middleware('permission:table-orders', only: ['index', 'show', 'destroy', 'export', 'changeStatus', 'changePaymentStatus']),
         ];
     }
 
@@ -46,6 +46,16 @@ class TableOrderController extends AdminController
     {
         try {
             return new OrderDetailsResource($this->orderService->show($order, false));
+        } catch (Exception $exception) {
+            return response(['status' => false, 'message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function destroy(Order $order): \Illuminate\Http\Response | \Illuminate\Contracts\Foundation\Application | \Illuminate\Contracts\Routing\ResponseFactory
+    {
+        try {
+            $this->orderService->destroy($order);
+            return response('', 202);
         } catch (Exception $exception) {
             return response(['status' => false, 'message' => $exception->getMessage()], 422);
         }
