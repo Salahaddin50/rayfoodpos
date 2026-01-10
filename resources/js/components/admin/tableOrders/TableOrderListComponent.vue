@@ -90,8 +90,7 @@
                         <tr class="db-table-head-tr">
                             <th class="db-table-head-th">{{ $t("label.order_id") }}</th>
                             <th class="db-table-head-th">{{ $t("label.order_type") }}</th>
-                            <th class="db-table-head-th">{{ $t("label.table_name") }}</th>
-                            <th class="db-table-head-th">{{ $t("label.note") }}</th>
+                            <th class="db-table-head-th">{{ $t("label.table") }} / {{ $t("label.token") }}</th>
                             <th class="db-table-head-th">{{ $t("label.customer") }}</th>
                             <th class="db-table-head-th">{{ $t("label.amount") }}</th>
                             <th class="db-table-head-th">{{ $t("label.date") }}</th>
@@ -113,17 +112,16 @@
                             </td>
                             <td class="db-table-body-td">
                                 <span v-if="order.table_name">{{ order.table_name }}</span>
-                                <span v-else class="text-[#D9DBE9]">-</span>
+                                <span v-else>-</span>
+                                <span v-if="order.token"> / {{ order.token }}</span>
                             </td>
                             <td class="db-table-body-td">
-                                <span v-if="order.pos_note" class="text-sm">{{ order.pos_note }}</span>
-                                <span v-else class="text-[#D9DBE9]">-</span>
-                            </td>
-                            <td class="db-table-body-td">
-                                {{ order.customer_name || textShortener(order.customer?.name, 20) }}
+                                {{ textShortener(order.customer.name, 20) }}
                             </td>
                             <td class="db-table-body-td">{{ order.total_amount_price }}</td>
-                            <td class="db-table-body-td">{{ order.order_datetime }}</td>
+                            <td class="db-table-body-td">
+                                {{ order.order_datetime }}
+                            </td>
                             <td class="db-table-body-td">
                                 <span :class="orderStatusClass(order.status)">
                                     {{ enums.orderStatusEnumArray[order.status] }}
@@ -160,7 +158,7 @@
                     </tbody>
                     <tbody class="db-table-body" v-else>
                         <tr class="db-table-body-tr">
-                            <td class="db-table-body-td text-center" colspan="9">
+                            <td class="db-table-body-td text-center" colspan="8">
                                 <div class="p-4">
                                     <div class="max-w-[300px] mx-auto mt-2">
                                         <img class="w-full h-full" :src="ENV.API_URL + '/images/default/not-found.png'"
