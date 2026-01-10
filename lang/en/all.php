@@ -45,7 +45,10 @@ return [
         'caution'          => 'Caution',
         'description'      => 'Description',
         'sales_report'     => 'Sales Report',
-        'items_report'     =>  'Items Report'
+        'items_report'     =>  'Items Report',
+        'unit_price'       => 'Unit Price',
+        'total_income'     => 'Total Income',
+        'options'          => 'Options'
     ],
     'message' => [
         'validation_error'            => 'Validation Error.',

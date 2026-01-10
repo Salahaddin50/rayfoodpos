@@ -90,6 +90,7 @@
 <body>
     @php 
          $total_quantity = 0;
+         $total_income = 0;
     @endphp 
     <div class="container">
         <div class="report">
@@ -102,25 +103,66 @@
                         <th>{{ trans('all.label.name', [], 'en') }}</th>
                         <th>{{ trans('all.label.item_category_id', [], 'en') }}</th>
                         <th>{{ trans('all.label.item_type', [], 'en') }}</th>
+                        <th>{{ trans('all.label.date', [], 'en') }}</th>
+                        <th>{{ trans('all.label.unit_price', [], 'en') }}</th>
+                        <th>{{ trans('all.label.options', [], 'en') }}</th>
                         <th>{{ trans('all.label.quantity', [], 'en') }}</th>
+                        <th>{{ trans('all.label.total_income', [], 'en') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach ($items as $item)
                         @php
-                            $total_quantity+= $item->orders->count();
+                            $total_quantity += $item->total_quantity;
+                            $total_income += $item->total_income;
                          @endphp
                         <tr>
-                            <td>{{$item->name}}</td>
-                            <td>{{  optional($item->category)->name }}</td>
-                            <td>{{ trans( 'itemType.' . $item->item_type , [] , 'en') }}</td>
-                            <td>{{    $item->orders->count() }}</td>
+                            <td>{{ $item->item_name }}</td>
+                            <td>{{ $item->category_name ?? '' }}</td>
+                            <td>{{ trans('itemType.' . $item->item_type, [], 'en') }}</td>
+                            <td>{{ $item->first_order_date ? date('Y-m-d', strtotime($item->first_order_date)) : '' }}</td>
+                            <td>{{ App\Libraries\AppLibrary::flatAmountFormat($item->unit_price) }}</td>
+                            <td>
+                                @php
+                                    $optionsParts = [];
+                                    $variations = !empty($item->item_variations) ? json_decode($item->item_variations, true) : [];
+                                    if (is_array($variations) && count($variations) > 0) {
+                                        $variationParts = [];
+                                        foreach ($variations as $v) {
+                                            if (is_array($v) && !empty($v['variation_name']) && !empty($v['name'])) {
+                                                $variationParts[] = $v['variation_name'] . ': ' . $v['name'];
+                                            } elseif (is_array($v) && !empty($v['name'])) {
+                                                $variationParts[] = $v['name'];
+                                            }
+                                        }
+                                        if (count($variationParts) > 0) {
+                                            $optionsParts[] = implode(', ', $variationParts);
+                                        }
+                                    }
 
+                                    $extras = !empty($item->item_extras) ? json_decode($item->item_extras, true) : [];
+                                    if (is_array($extras) && count($extras) > 0) {
+                                        $extraNames = [];
+                                        foreach ($extras as $e) {
+                                            if (is_array($e) && !empty($e['name'])) {
+                                                $extraNames[] = $e['name'];
+                                            }
+                                        }
+                                        if (count($extraNames) > 0) {
+                                            $optionsParts[] = 'Extras: ' . implode(', ', $extraNames);
+                                        }
+                                    }
+                                @endphp
+                                {{ implode(' | ', $optionsParts) }}
+                            </td>
+                            <td>{{ $item->total_quantity }}</td>
+                            <td>{{ App\Libraries\AppLibrary::flatAmountFormat($item->total_income) }}</td>
                         </tr>
                     @endforeach
                     <tr class="total">
-                        <td colspan="3">{{ trans('all.label.total', [], 'en') }}</td>
+                        <td colspan="6">{{ trans('all.label.total', [], 'en') }}</td>
                         <td>{{ $total_quantity }}</td>
+                        <td>{{ App\Libraries\AppLibrary::flatAmountFormat($total_income) }}</td>
                     </tr>
                 </tbody>
             </table>

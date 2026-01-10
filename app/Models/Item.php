@@ -109,6 +109,11 @@ class Item extends Model implements HasMedia
         return $this->hasMany(OrderItem::class, 'item_id', 'id');
     }
 
+    public function orderItems(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(OrderItem::class, 'item_id', 'id');
+    }
+
     public function offer(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(Offer::class, 'offer_items');

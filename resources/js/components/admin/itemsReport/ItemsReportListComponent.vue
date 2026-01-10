@@ -90,7 +90,11 @@
                             <th class="db-table-head-th">{{ $t('label.name') }}</th>
                             <th class="db-table-head-th">{{ $t('label.category') }}</th>
                             <th class="db-table-head-th">{{ $t('label.type') }}</th>
+                            <th class="db-table-head-th">{{ $t('label.date') }}</th>
+                            <th class="db-table-head-th">{{ $t('label.unit_price') }}</th>
+                            <th class="db-table-head-th">{{ $t('label.options') }}</th>
                             <th class="db-table-head-th">{{ $t('label.quantity') }}</th>
+                            <th class="db-table-head-th">{{ $t('label.total_income') }}</th>
                         </tr>
                     </thead>
                     <tbody class="db-table-body" v-if="itemsReports.length > 0">
@@ -100,7 +104,13 @@
                             <td class="db-table-body-td">
                                 {{ enums.itemTypeEnumArray[itemsReport.item_type] }}
                             </td>
+                            <td class="db-table-body-td">{{ itemsReport.created_at }}</td>
+                            <td class="db-table-body-td">{{ itemsReport.currency_price }}</td>
+                            <td class="db-table-body-td">
+                                {{ formatOptions(itemsReport) }}
+                            </td>
                             <td class="db-table-body-td">{{ itemsReport.order }}</td>
+                            <td class="db-table-body-td">{{ itemsReport.currency_total_income }}</td>
                         </tr>
                     </tbody>
                     <tbody class="db-table-body" v-else>
@@ -122,7 +132,11 @@
                             <td class="db-table-body-td">{{ $t('label.total') }}</td>
                             <td></td>
                             <td></td>
-                            <td class="db-table-body-td"> {{ subTotal(itemsReports) }}</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td class="db-table-body-td"> {{ subTotalQuantity(itemsReports) }}</td>
+                            <td class="db-table-body-td"> {{ subTotalIncome(itemsReports) }}</td>
                         </tr>
                     </tfoot>
                 </table>
@@ -317,6 +331,46 @@ export default {
             return items.reduce((acc, ele) => {
                 return acc + parseInt(ele.order);
             }, 0);
+        },
+        subTotalQuantity(items) {
+            return items.reduce((acc, ele) => {
+                return acc + parseInt(ele.order);
+            }, 0);
+        },
+        subTotalIncome(items) {
+            const total = items.reduce((acc, ele) => {
+                return acc + parseFloat(ele.total_income || 0);
+            }, 0);
+            return total.toFixed(2);
+        },
+        formatOptions(item) {
+            const parts = [];
+
+            const variations = item?.item_variations;
+            if (variations && Object.keys(variations).length !== 0) {
+                const variationList = (Array.isArray(variations) ? variations : Object.values(variations))
+                    .map((v) => {
+                        if (!v) return null;
+                        if (v.variation_name && v.name) return `${v.variation_name}: ${v.name}`;
+                        if (v.name) return `${v.name}`;
+                        return null;
+                    })
+                    .filter(Boolean);
+
+                if (variationList.length > 0) {
+                    parts.push(variationList.join(", "));
+                }
+            }
+
+            const extras = item?.item_extras;
+            if (Array.isArray(extras) && extras.length > 0) {
+                const extraNames = extras.map(e => e?.name).filter(Boolean);
+                if (extraNames.length > 0) {
+                    parts.push(`${this.$t('label.extras')}: ${extraNames.join(", ")}`);
+                }
+            }
+
+            return parts.join(" | ");
         },
         clear: function () {
             this.props.search.paginate = 1;
