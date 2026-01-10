@@ -1,0 +1,12 @@
+========================================
+QUICK DEPLOYMENT - COPY & PASTE THIS
+========================================
+
+Open PowerShell and run this ONE command:
+
+ssh root@167.71.51.100 "curl -fsSL https://raw.githubusercontent.com/Salahaddin50/rayfoodpos/master/deploy-to-server.sh | bash"
+
+When it asks for password, enter: muazBoy_1987a
+
+That's it! The script will do everything automatically.
+

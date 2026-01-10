@@ -41,7 +41,7 @@ class KitchenDisplaySystemOrderService
             $orderColumn = $request->get('order_column') ?? 'id';
             $orderType   = $request->get('order_by') ?? 'desc';
 
-            return Order::with('orderItems', 'diningTable', 'takeawayType')->whereIn('status', [OrderStatus::ACCEPT, OrderStatus::PREPARING, OrderStatus::PREPARED])->where(function ($query) {
+            return Order::with('orderItems')->whereIn('status', [OrderStatus::ACCEPT, OrderStatus::PREPARING, OrderStatus::PREPARED])->where(function ($query) {
                 $query->where(function ($subQuery) {
                     $subQuery->whereDate('order_datetime', Carbon::today())->where('is_advance_order', Ask::NO);
                 })->orWhere(function ($subQuery) {

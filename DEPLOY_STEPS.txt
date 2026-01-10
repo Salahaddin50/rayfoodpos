@@ -1,0 +1,97 @@
+========================================
+DIGITAL OCEAN DROPLET DEPLOYMENT STEPS
+========================================
+
+Your Droplet IP: 167.71.51.100
+Droplet Name: rayyanscorner-pos
+
+========================================
+STEP 1: Connect to Your Server
+========================================
+
+Open PowerShell, CMD, or Git Bash and run:
+
+ssh root@167.71.51.100
+
+(Enter your password when prompted)
+
+If "root" doesn't work, try:
+ssh ubuntu@167.71.51.100
+
+Once connected, you should see something like:
+root@rayyanscorner-pos:~#
+
+========================================
+STEP 2: Run Deployment Script
+========================================
+
+After connecting, copy and paste ALL the commands below one by one:
+
+# First, download and run the deployment script
+curl -fsSL https://raw.githubusercontent.com/Salahaddin50/rayfoodpos/master/deploy-to-server.sh | bash
+
+OR if the above doesn't work, copy the entire deploy-to-server.sh content and run it manually.
+
+========================================
+STEP 3: Set Up Database (After script completes)
+========================================
+
+Run these commands to create the database:
+
+mysql -u root -p
+
+(Enter your MySQL root password - might be empty, just press Enter)
+
+Then run these SQL commands:
+CREATE DATABASE rayfoodpos CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'rayfoodpos_user'@'localhost' IDENTIFIED BY 'YourSecurePassword123!';
+GRANT ALL PRIVILEGES ON rayfoodpos.* TO 'rayfoodpos_user'@'localhost';
+FLUSH PRIVILEGES;
+EXIT;
+
+========================================
+STEP 4: Update .env File
+========================================
+
+cd /var/www/rayfoodpos
+nano .env
+
+Update these lines:
+DB_DATABASE=rayfoodpos
+DB_USERNAME=rayfoodpos_user
+DB_PASSWORD=YourSecurePassword123!
+APP_URL=http://167.71.51.100
+
+Press Ctrl+X, then Y, then Enter to save.
+
+========================================
+STEP 5: Run Migrations
+========================================
+
+cd /var/www/rayfoodpos
+php artisan migrate --force
+
+(Optional - for demo data):
+php artisan db:seed --force
+
+========================================
+STEP 6: Optimize for Production
+========================================
+
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+
+========================================
+DONE! 
+========================================
+
+Your application should now be accessible at:
+http://167.71.51.100
+
+Default admin credentials (if seeded):
+Email: admin@example.com
+Password: 123456
+
+⚠️ IMPORTANT: Change the admin password immediately after first login!
+

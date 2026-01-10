@@ -283,3 +283,5 @@ If you need any adjustments or have questions about the implementation, the code
 
 **Enjoy your new takeaway types system!** 🚀
 
+
+

@@ -58,3 +58,5 @@ If PHP is not found:
 - Make sure Laragon is running
 - Use Laragon's terminal instead
 
+
+

@@ -65,9 +65,7 @@ return [
     |
     */
 
-    // NOTE: Some deployment environments set TIMEZONE to an empty string, which
-    // causes `date_default_timezone_set('')` to throw. Always fall back to UTC.
-    'timezone' => env('TIMEZONE', 'UTC') ?: 'UTC',
+    'timezone' => env('TIMEZONE'),
 
     /*
     |--------------------------------------------------------------------------

@@ -27,3 +27,5 @@ class TakeawayTypeResource extends JsonResource
     }
 }
 
+
+

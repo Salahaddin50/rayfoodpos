@@ -211,3 +211,5 @@ php artisan view:cache
 - **API:** http://localhost:8000/api
 - **Vite Dev Server:** http://localhost:5173 (if running separately)
 
+
+

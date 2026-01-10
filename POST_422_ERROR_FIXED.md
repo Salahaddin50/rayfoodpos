@@ -117,3 +117,5 @@ When you create takeaway types:
 7. Click "Save"
 8. ✅ Should save successfully and appear in the list!
 
+
+

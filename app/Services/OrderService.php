@@ -349,7 +349,7 @@ class OrderService
                 $this->order->delivery_time   = "$start - $end";
                 $this->order->save();
             });
-            return $this->order->load('user', 'orderItems', 'branch', 'transaction', 'diningTable', 'takeawayType', 'address');
+            return $this->order;
         } catch (Exception $exception) {
             DB::rollBack();
             Log::info($exception->getMessage());
@@ -444,12 +444,12 @@ class OrderService
         try {
             if ($auth) {
                 if ($order->user_id == Auth::user()->id) {
-                    return $order->load('user', 'orderItems', 'branch', 'transaction', 'diningTable', 'takeawayType', 'address');
+                    return $order;
                 } else {
                     return [];
                 }
             } else {
-                return $order->load('user', 'orderItems', 'branch', 'transaction', 'diningTable', 'takeawayType', 'address');
+                return $order;
             }
         } catch (Exception $exception) {
             Log::info($exception->getMessage());
@@ -520,7 +520,7 @@ class OrderService
                 $order->status = $request->status;
                 $order->save();
             }
-            return $order->load('user', 'orderItems', 'branch', 'transaction', 'diningTable', 'takeawayType', 'address');
+            return $order;
         } catch (Exception $exception) {
             Log::info($exception->getMessage());
             throw new Exception(QueryExceptionLibrary::message($exception), 422);
@@ -537,14 +537,14 @@ class OrderService
                 if ($order->user_id == Auth::user()->id) {
                     $order->payment_status = $request->payment_status;
                     $order->save();
-                    return $order->load('user', 'orderItems', 'branch', 'transaction', 'diningTable', 'takeawayType', 'address');
+                    return $order;
                 } else {
                     return [];
                 }
             } else {
                 $order->payment_status = $request->payment_status;
                 $order->save();
-                return $order->load('user', 'orderItems', 'branch', 'transaction', 'diningTable', 'takeawayType', 'address');
+                return $order;
             }
         } catch (Exception $exception) {
             Log::info($exception->getMessage());
@@ -560,14 +560,14 @@ class OrderService
                 if ($order->user_id == Auth::user()->id) {
                     $order->token = $request->token;
                     $order->save();
-                    return $order->load('user', 'orderItems', 'branch', 'transaction', 'diningTable', 'takeawayType', 'address');
+                    return $order;
                 } else {
                     return [];
                 }
             } else {
                 $order->token = $request->token;
                 $order->save();
-                return $order->load('user', 'orderItems', 'branch', 'transaction', 'diningTable', 'takeawayType', 'address');
+                return $order;
             }
         } catch (Exception $exception) {
             Log::info($exception->getMessage());

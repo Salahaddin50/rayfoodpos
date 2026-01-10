@@ -77,3 +77,5 @@ If you want to proceed without Imagick for now:
   - Check php.ini for syntax errors
   - Verify DLL file is in the correct ext folder
 
+
+

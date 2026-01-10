@@ -104,3 +104,5 @@ Since the admin user had `branch_id = 0`, the scope was filtering incorrectly.
 
 **Just logout and login again to refresh your session, then visit the Takeaway Types page!** 🚀
 
+
+

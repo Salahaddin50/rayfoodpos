@@ -47,3 +47,5 @@ If you see connection errors:
 - Check if ports 8000 and 5173 are available
 - Verify Laragon services are started
 
+
+

@@ -13137,20 +13137,11 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^8.3",
-        "ext-bcmath": "*",
-        "ext-curl": "*",
-        "ext-dom": "*",
+        "php": "^8.2",
         "ext-exif": "*",
-        "ext-fileinfo": "*",
+        "ext-http": "*",
         "ext-json": "*",
-        "ext-mbstring": "*",
-        "ext-openssl": "*",
         "ext-pdo": "*"
-        ,
-        "ext-pdo_mysql": "*",
-        "ext-xml": "*",
-        "ext-zip": "*"
     },
     "platform-dev": [],
     "plugin-api-version": "2.2.0"

@@ -71,3 +71,5 @@ composer run dev
 - Make sure MySQL is running in Laragon before starting the server
 - Default Laragon MySQL credentials: username `root`, password (empty)
 
+
+

@@ -113,7 +113,7 @@
                             <td class="db-table-body-td">
                                 <span v-if="order.table_name">{{ order.table_name }}</span>
                                 <span v-else>-</span>
-                                <span v-if="order.token"> / {{ order.token }}</span>
+                                <span v-if="order.token"> / #{{ order.token }}</span>
                             </td>
                             <td class="db-table-body-td">
                                 {{ textShortener(order.customer.name, 20) }}
