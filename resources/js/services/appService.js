@@ -354,11 +354,15 @@ export default {
         const checkboxes = document.querySelectorAll(".filter");
         checkboxes.forEach(function (otherBtn) {
             if (otherBtn != btn) {
-                console.log('ok')
                 const otherOptions = otherBtn.nextElementSibling;
                 if (otherBtn.getAttribute("aria-expanded") === "true") {
-                    otherOptions.style.height = "0px";
-                    otherOptions.style.margin = "0px";
+                    otherOptions.style.overflow = "hidden";
+                    // If the panel was previously set to height: auto, lock it to pixels first so it can animate closed.
+                    otherOptions.style.height = `${otherOptions.scrollHeight}px`;
+                    requestAnimationFrame(() => {
+                        otherOptions.style.height = "0px";
+                        otherOptions.style.margin = "0px";
+                    });
                     otherBtn.querySelector(".icon").classList.remove("fa-chevron-up");
                     otherBtn.querySelector(".icon").classList.add("fa-chevron-down");
                     otherBtn.setAttribute("aria-expanded", "false");
@@ -367,18 +371,40 @@ export default {
         });
 
         if (isExpanded) {
-            options.style.height = "0px";
-            options.style.margin = "0px";
+            options.style.overflow = "hidden";
+            // Lock to current height first (supports height: auto), then animate to 0.
+            options.style.height = `${options.scrollHeight}px`;
+            requestAnimationFrame(() => {
+                options.style.height = "0px";
+                options.style.margin = "0px";
+            });
             btn.querySelector(".icon").classList.remove("fa-chevron-up");
             btn.querySelector(".icon").classList.add("fa-chevron-down");
         } else {
-            options.style.height = `${options.scrollHeight}px`;
-            options.style.margin = "8px 0px 0px 0px";
+            options.style.overflow = "hidden";
+            // Measure full content height reliably, animate open, then set to auto to prevent clipping.
+            options.style.height = "auto";
+            const pixel = options.scrollHeight;
+            options.style.height = "0px";
+            requestAnimationFrame(() => {
+                options.style.height = `${pixel}px`;
+                options.style.margin = "8px 0px 0px 0px";
+            });
             btn.querySelector(".icon").classList.remove("fa-chevron-down");
             btn.querySelector(".icon").classList.add("fa-chevron-up");
         }
 
-        btn.setAttribute("aria-expanded", !isExpanded);
+        const willExpand = !isExpanded;
+        btn.setAttribute("aria-expanded", willExpand);
+        if (willExpand) {
+            setTimeout(() => {
+                // Only finalize if still expanded.
+                if (btn.getAttribute("aria-expanded") === "true") {
+                    options.style.height = "auto";
+                    options.style.overflow = "visible";
+                }
+            }, 550);
+        }
 
     },
 
