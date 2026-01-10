@@ -164,7 +164,7 @@
                             </span>
                           </p>
                         </li>
-                        <p v-if="item.instruction" class="text-xs font-normal font-client text-[#6E7191] mt-1">
+                        <p v-if="item.instruction && item.instruction.trim() !== ''" class="text-xs font-normal font-client text-[#6E7191] mt-1">
                           {{ $t('label.instruction') }}: {{ item.instruction }}
                         </p>
                       </div>
@@ -248,7 +248,7 @@
                             </span>
                           </p>
                         </li>
-                        <p v-if="item.instruction" class="text-xs font-normal font-client text-[#6E7191] mt-1">
+                        <p v-if="item.instruction && item.instruction.trim() !== ''" class="text-xs font-normal font-client text-[#6E7191] mt-1">
                           {{ $t('label.instruction') }}: {{ item.instruction }}
                         </p>
                       </div>
