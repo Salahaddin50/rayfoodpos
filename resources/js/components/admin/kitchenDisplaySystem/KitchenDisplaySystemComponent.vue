@@ -146,7 +146,7 @@
                     <div v-for="item in dineinOrder.order_items" :key="item"
                       class="flex items-start gap-2 py-3 border-b border-dashed border-[#EFF0F6] last:border-none">
                       <h4 class="text-sm font-medium">{{ item.quantity }}x</h4>
-                      <div>
+                      <div class="flex-1">
                         <h5 class="text-sm font-medium mb-1">{{ item.item_name }}</h5>
                         <p v-if="item.item_variations.length !== 0"
                           class="text-xs font-normal font-client capitalize text-[#6E7191]">
@@ -164,13 +164,9 @@
                             </span>
                           </p>
                         </li>
-                        <span class="flex gap-1" v-if="item.instruction">
-                          <h3 class="capitalize text-xs w-fit whitespace-nowrap">{{ $t('label.instruction') }}:
-                          </h3>
-                          <p class="text-xs font-normal font-client capitalize text-[#6E7191]">
-                            {{ item.instruction }}
-                          </p>
-                        </span>
+                        <p v-if="item.instruction" class="text-xs font-normal font-client text-[#6E7191] mt-1">
+                          {{ $t('label.instruction') }}: {{ item.instruction }}
+                        </p>
                       </div>
                     </div>
                     <button v-if="dineinOrder.status === enums.orderStatusEnum.ACCEPT" type="button"
@@ -234,7 +230,7 @@
                     <div v-for="item in takeawayOrder.order_items" :key="item"
                       class="flex items-start gap-2 py-3 border-b border-dashed border-[#EFF0F6] last:border-none">
                       <h4 class="text-sm font-medium">{{ item.quantity }}x</h4>
-                      <div>
+                      <div class="flex-1">
                         <h5 class="text-sm font-medium mb-1">{{ item.item_name }}</h5>
                         <p v-if="item.item_variations.length !== 0"
                           class="text-xs font-normal font-client capitalize text-[#6E7191]">
@@ -252,13 +248,9 @@
                             </span>
                           </p>
                         </li>
-                        <span class="flex gap-1" v-if="item.instruction">
-                          <h3 class="capitalize text-xs w-fit whitespace-nowrap">{{ $t('label.instruction') }}:
-                          </h3>
-                          <p class="text-xs font-normal font-client capitalize text-[#6E7191]">
-                            {{ item.instruction }}
-                          </p>
-                        </span>
+                        <p v-if="item.instruction" class="text-xs font-normal font-client text-[#6E7191] mt-1">
+                          {{ $t('label.instruction') }}: {{ item.instruction }}
+                        </p>
                       </div>
                     </div>
                     <button v-if="takeawayOrder.status === enums.orderStatusEnum.ACCEPT" type="button"
