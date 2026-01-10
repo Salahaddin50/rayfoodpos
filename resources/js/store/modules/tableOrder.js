@@ -113,7 +113,7 @@ export const tableOrder = {
         },
         destroy: function (context, payload) {
             return new Promise((resolve, reject) => {
-                axios.delete(`admin/table-order/destroy/${payload.id}`).then((res) => {
+                axios.delete(`admin/table-order/${payload.id}`).then((res) => {
                     context.dispatch('lists', payload.search).then().catch();
                     resolve(res);
                 }).catch((err) => {
