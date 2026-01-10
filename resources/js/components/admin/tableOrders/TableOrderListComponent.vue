@@ -90,7 +90,7 @@
                         <tr class="db-table-head-tr">
                             <th class="db-table-head-th">{{ $t("label.order_id") }}</th>
                             <th class="db-table-head-th">{{ $t("label.order_type") }}</th>
-                            <th class="db-table-head-th">{{ $t("label.token") }} / {{ $t("label.table_name") }}</th>
+                            <th class="db-table-head-th">{{ $t("label.table_name") }}</th>
                             <th class="db-table-head-th">{{ $t("label.note") }}</th>
                             <th class="db-table-head-th">{{ $t("label.customer") }}</th>
                             <th class="db-table-head-th">{{ $t("label.amount") }}</th>
@@ -112,20 +112,8 @@
                                 </span>
                             </td>
                             <td class="db-table-body-td">
-                                <template v-if="order.order_type === enums.orderTypeEnum.TAKEAWAY">
-                                    <span v-if="order.token">{{ order.token }}</span>
-                                    <span v-else>{{ $t('label.online') }}</span>
-                                    <span v-if="order.takeaway_type_name"> / {{ order.takeaway_type_name }}</span>
-                                </template>
-                                <template v-else-if="order.order_type === enums.orderTypeEnum.DINING_TABLE">
-                                    <span v-if="order.token">{{ order.token }}</span>
-                                    <span v-else>{{ $t('label.online') }}</span>
-                                    <span v-if="order.table_name"> / {{ order.table_name }}</span>
-                                </template>
-                                <template v-else>
-                                    <span v-if="order.token">{{ order.token }}</span>
-                                    <span v-else>{{ $t('label.online') }}</span>
-                                </template>
+                                <span v-if="order.table_name">{{ order.table_name }}</span>
+                                <span v-else class="text-[#D9DBE9]">-</span>
                             </td>
                             <td class="db-table-body-td">
                                 <span v-if="order.pos_note" class="text-sm">{{ order.pos_note }}</span>
