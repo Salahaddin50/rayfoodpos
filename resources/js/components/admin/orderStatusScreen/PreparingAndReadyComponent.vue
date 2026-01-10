@@ -7,7 +7,10 @@
     <div class="content-wrapper p-3 overflow-auto thin-scrolling h-full">
       <ul class="w-full text-center text-[#1F1F39] mb-20">
         <li v-for="preparingItem in preparingItems" :key="preparingItem.id" class="mb-6">
-          <div class="text-[40px] font-semibold leading-10">{{ preparingItem.token }}</div>
+          <div class="text-[40px] font-semibold leading-10">
+            <template v-if="preparingItem.token && preparingItem.token !== 'online'">{{ preparingItem.token }}</template>
+            <template v-else>{{ $t('label.online') }}</template>
+          </div>
           <div v-if="ossDetails(preparingItem)" class="text-sm font-medium text-[#6E7191] capitalize">
             {{ ossDetails(preparingItem) }}
           </div>
@@ -21,7 +24,10 @@
     <div class="content-wrapper p-3 overflow-auto thin-scrolling h-full">
       <ul class="w-full text-center text-[#1F1F39] mb-20">
         <li v-for="preparedItem in preparedItems" :key="preparedItem.id" class="mb-6">
-          <div class="text-[40px] font-semibold leading-10">{{ preparedItem.token }}</div>
+          <div class="text-[40px] font-semibold leading-10">
+            <template v-if="preparedItem.token && preparedItem.token !== 'online'">{{ preparedItem.token }}</template>
+            <template v-else>{{ $t('label.online') }}</template>
+          </div>
           <div v-if="ossDetails(preparedItem)" class="text-sm font-medium text-[#6E7191] capitalize">
             {{ ossDetails(preparedItem) }}
           </div>
