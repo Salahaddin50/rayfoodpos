@@ -111,6 +111,16 @@ export const tableOrder = {
                 });
             });
         },
+        destroy: function (context, payload) {
+            return new Promise((resolve, reject) => {
+                axios.delete(`admin/table-order/destroy/${payload.id}`).then((res) => {
+                    context.dispatch('lists', payload.search).then().catch();
+                    resolve(res);
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
+        },
         tokenCreate: function (context, payload) {
             return new Promise((resolve, reject) => {
                 axios.post(`admin/table-order/token-create/${payload.id}`,payload).then((res) => {
