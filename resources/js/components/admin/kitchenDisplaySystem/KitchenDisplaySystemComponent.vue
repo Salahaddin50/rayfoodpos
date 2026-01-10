@@ -148,14 +148,14 @@
                       <h4 class="text-sm font-medium">{{ item.quantity }}x</h4>
                       <div class="flex-1">
                         <h5 class="text-sm font-medium mb-1">{{ item.item_name }}</h5>
-                        <p v-if="item.item_variations.length !== 0"
+                        <p v-if="item.item_variations && item.item_variations.length !== 0"
                           class="text-xs font-normal font-client capitalize text-[#6E7191]">
                           <span v-for="(variation, index) in item.item_variations" class="text-heading">
                             {{ variation.variation_name }}: {{ variation.name }}<span
                               v-if="index + 1 < item.item_variations.length">,&nbsp;</span>
                           </span>
                         </p>
-                        <li class="flex gap-1" v-if="item.item_extras.length > 0">
+                        <li class="flex gap-1" v-if="item.item_extras && item.item_extras.length > 0">
                           <h3 class="capitalize text-xs w-fit whitespace-nowrap">{{ $t('label.extras') }}:
                           </h3>
                           <p class="text-xs font-normal font-client capitalize text-[#6E7191]">
@@ -164,7 +164,7 @@
                             </span>
                           </p>
                         </li>
-                        <p v-if="item.instruction && item.instruction.trim() !== ''" class="text-xs font-normal font-client text-[#6E7191] mt-1">
+                        <p v-if="item.instruction" class="text-xs font-normal font-client text-[#6E7191] mt-1">
                           {{ $t('label.instruction') }}: {{ item.instruction }}
                         </p>
                       </div>
@@ -232,14 +232,14 @@
                       <h4 class="text-sm font-medium">{{ item.quantity }}x</h4>
                       <div class="flex-1">
                         <h5 class="text-sm font-medium mb-1">{{ item.item_name }}</h5>
-                        <p v-if="item.item_variations.length !== 0"
+                        <p v-if="item.item_variations && item.item_variations.length !== 0"
                           class="text-xs font-normal font-client capitalize text-[#6E7191]">
                           <span v-for="(variation, index) in item.item_variations" class="text-heading">
                             {{ variation.variation_name }}: {{ variation.name }}<span
                               v-if="index + 1 < item.item_variations.length">,&nbsp;</span>
                           </span>
                         </p>
-                        <li class="flex gap-1" v-if="item.item_extras.length > 0">
+                        <li class="flex gap-1" v-if="item.item_extras && item.item_extras.length > 0">
                           <h3 class="capitalize text-xs w-fit whitespace-nowrap">{{ $t('label.extras') }}:
                           </h3>
                           <p class="text-xs font-normal font-client capitalize text-[#6E7191]">
@@ -248,7 +248,7 @@
                             </span>
                           </p>
                         </li>
-                        <p v-if="item.instruction && item.instruction.trim() !== ''" class="text-xs font-normal font-client text-[#6E7191] mt-1">
+                        <p v-if="item.instruction" class="text-xs font-normal font-client text-[#6E7191] mt-1">
                           {{ $t('label.instruction') }}: {{ item.instruction }}
                         </p>
                       </div>
