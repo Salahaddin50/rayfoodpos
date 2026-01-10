@@ -17,7 +17,8 @@ class OSSOrderDetailsResource extends JsonResource
         return [
             'id'                                  => $this->id,
             'order_serial_no'                     => $this->order_serial_no,
-            'token'                               => $this->token,
+            // Dining-table (and other) orders may not have tokens. Display these as "online".
+            'token'                               => $this->token ?: 'online',
             'order_type'                          => $this->order_type,
             'status'                              => $this->status,
             'dining_table_id'                     => $this->dining_table_id,

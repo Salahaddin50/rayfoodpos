@@ -48,7 +48,11 @@ class OrderStatusScreenOrderService
                 })->orWhere(function ($subQuery) {
                     $subQuery->where('is_advance_order', Ask::YES)->where('order_datetime', '<', Carbon::today());
                 });
-            })->orderBy('order_datetime', 'desc')
+            })
+                // Priority: online (no token) first, then token orders.
+                ->orderByRaw('CASE WHEN token IS NULL OR token = "" THEN 0 ELSE 1 END ASC')
+                ->orderByRaw('CAST(token AS UNSIGNED) ASC')
+                ->orderBy('order_datetime', 'desc')
                 ->orderBy('id', 'desc')
                 ->get();
         } catch (Exception $exception) {
