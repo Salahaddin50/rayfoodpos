@@ -615,7 +615,7 @@ Route::prefix('table')->name('table.')->middleware(['installed', 'apiKey', 'loca
 
     Route::prefix('dining-table')->name('dining-table.')->group(function () {
         Route::get('/', [TableDiningTableController::class, 'index']);
-        Route::get('/show/{frontendDiningTable:slug}', [TableDiningTableController::class, 'show']);
+        Route::get('/show/{slug}', [TableDiningTableController::class, 'show']);
     });
 
     Route::prefix('dining-order')->name('dining-order.')->group(function () {

@@ -10,6 +10,7 @@ use App\Services\DiningTableService;
 use App\Http\Requests\PaginateRequest;
 use App\Http\Resources\DiningTableResource;
 use App\Models\DiningTable;
+use Illuminate\Support\Str;
 
 class DiningTableController extends Controller
 {
@@ -29,10 +30,23 @@ class DiningTableController extends Controller
         }
     }
 
-    public function show(FrontendDiningTable $frontendDiningTable): DiningTableResource|\Illuminate\Http\Response|\Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Routing\ResponseFactory
+    public function show(string $slug): DiningTableResource|\Illuminate\Http\Response|\Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Routing\ResponseFactory
     {
         try {
-            return new DiningTableResource($frontendDiningTable);
+            $raw = urldecode($slug);
+            $slugified = Str::slug($raw);
+
+            $table = FrontendDiningTable::query()
+                ->where('slug', $raw)
+                ->orWhere('slug', $slugified)
+                ->orWhere('name', $raw)
+                ->first();
+
+            if (!$table) {
+                return response(['success' => false, 'message' => 'The specified URL cannot be found.'], 404);
+            }
+
+            return new DiningTableResource($table);
         } catch (Exception $exception) {
             return response(['status' => false, 'message' => $exception->getMessage()], 422);
         }
