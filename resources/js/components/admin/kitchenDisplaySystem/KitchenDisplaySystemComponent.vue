@@ -148,10 +148,6 @@
                       <h4 class="text-sm font-medium">{{ item.quantity }}x</h4>
                       <div class="flex-1">
                         <h5 class="text-sm font-medium mb-1">{{ item.item_name }}</h5>
-                        <div style="background: yellow; padding: 5px; font-size: 10px; margin: 5px 0;">
-                          DEBUG - instruction: {{ item.instruction || 'NO INSTRUCTION' }} | 
-                          Keys: {{ Object.keys(item).join(', ') }}
-                        </div>
                         <p v-if="item.item_variations && item.item_variations.length !== 0"
                           class="text-xs font-normal font-client capitalize text-[#6E7191]">
                           <span v-for="(variation, index) in item.item_variations" class="text-heading">
