@@ -90,6 +90,8 @@
                         <tr class="db-table-head-tr">
                             <th class="db-table-head-th">{{ $t("label.order_id") }}</th>
                             <th class="db-table-head-th">{{ $t("label.order_type") }}</th>
+                            <th class="db-table-head-th">{{ $t("label.token") }} / {{ $t("label.type") }}</th>
+                            <th class="db-table-head-th">{{ $t("label.note") }}</th>
                             <th class="db-table-head-th">{{ $t("label.customer") }}</th>
                             <th class="db-table-head-th">{{ $t("label.amount") }}</th>
                             <th class="db-table-head-th">{{ $t("label.date") }}</th>
@@ -109,14 +111,31 @@
                                     {{ enums.orderTypeEnumArray[order.order_type] }}
                                 </span>
                             </td>
-
                             <td class="db-table-body-td">
-                                {{ textShortener(order.customer.name, 20) }}
+                                <template v-if="order.order_type === enums.orderTypeEnum.TAKEAWAY">
+                                    <span v-if="order.token">{{ order.token }}</span>
+                                    <span v-else>{{ $t('label.online') }}</span>
+                                    <span v-if="order.takeaway_type_name"> / {{ order.takeaway_type_name }}</span>
+                                </template>
+                                <template v-else-if="order.order_type === enums.orderTypeEnum.DINING_TABLE">
+                                    <span v-if="order.token">{{ order.token }}</span>
+                                    <span v-else>{{ $t('label.online') }}</span>
+                                    <span v-if="order.table_name"> / {{ order.table_name }}</span>
+                                </template>
+                                <template v-else>
+                                    <span v-if="order.token">{{ order.token }}</span>
+                                    <span v-else>{{ $t('label.online') }}</span>
+                                </template>
+                            </td>
+                            <td class="db-table-body-td">
+                                <span v-if="order.pos_note" class="text-sm">{{ order.pos_note }}</span>
+                                <span v-else class="text-[#D9DBE9]">-</span>
+                            </td>
+                            <td class="db-table-body-td">
+                                {{ order.customer_name || textShortener(order.customer?.name, 20) }}
                             </td>
                             <td class="db-table-body-td">{{ order.total_amount_price }}</td>
-                            <td class="db-table-body-td">
-                                {{ order.order_datetime }}
-                            </td>
+                            <td class="db-table-body-td">{{ order.order_datetime }}</td>
                             <td class="db-table-body-td">
                                 <span :class="orderStatusClass(order.status)">
                                     {{ enums.orderStatusEnumArray[order.status] }}
@@ -130,13 +149,30 @@
                                 <div class="flex justify-start items-center sm:items-start sm:justify-start gap-1.5">
                                     <SmIconViewComponent :link="'admin.table.order.show'" :id="order.id"
                                         v-if="permissionChecker('table-orders')" />
+                                    <button type="button" 
+                                        @click="changeStatusToDelivered(order.id)"
+                                        :disabled="order.status === enums.orderStatusEnum.ACCEPT || order.status === enums.orderStatusEnum.PREPARING"
+                                        :class="[
+                                            'db-table-action',
+                                            {
+                                                'delivered-done': order.status === enums.orderStatusEnum.DELIVERED,
+                                                'delivered-ready': order.status === enums.orderStatusEnum.PREPARED,
+                                                'delivered-passive': order.status === enums.orderStatusEnum.ACCEPT || order.status === enums.orderStatusEnum.PREPARING
+                                            }
+                                        ]"
+                                        :title="$t('label.delivered')">
+                                        <i class="lab lab-tick-circle-2"></i>
+                                        <span class="db-tooltip">{{ $t('label.delivered') }}</span>
+                                    </button>
+                                    <SmIconDeleteComponent @click="destroy(order.id)"
+                                        v-if="permissionChecker('table-orders')" />
                                 </div>
                             </td>
                         </tr>
                     </tbody>
                     <tbody class="db-table-body" v-else>
                         <tr class="db-table-body-tr">
-                            <td class="db-table-body-td text-center" colspan="7">
+                            <td class="db-table-body-td text-center" colspan="9">
                                 <div class="p-4">
                                     <div class="max-w-[300px] mx-auto mt-2">
                                         <img class="w-full h-full" :src="ENV.API_URL + '/images/default/not-found.png'"
@@ -381,6 +417,53 @@ export default {
                     alertService.error(err.response.data.message);
                 });
         },
+        destroy: function (id) {
+            appService.destroyConfirmation().then((res) => {
+                try {
+                    this.loading.isActive = true;
+                    this.$store.dispatch('tableOrder/destroy', { id: id, search: this.props.search }).then((res) => {
+                        this.loading.isActive = false;
+                        alertService.successFlip(null, this.$t('menu.table_orders'));
+                    }).catch((err) => {
+                        this.loading.isActive = false;
+                        alertService.error(err.response.data.message);
+                    })
+                } catch (err) {
+                    this.loading.isActive = false;
+                    alertService.error(err.response.data.message);
+                }
+            }).catch((err) => {
+                this.loading.isActive = false;
+            })
+        },
+        changeStatusToDelivered: function (id) {
+            const order = this.orders.find(o => o.id === id);
+            if (order && (order.status === this.enums.orderStatusEnum.DELIVERED || 
+                order.status === this.enums.orderStatusEnum.ACCEPT || 
+                order.status === this.enums.orderStatusEnum.PREPARING)) {
+                return;
+            }
+            try {
+                this.loading.isActive = true;
+                this.$store.dispatch("tableOrder/changeStatus", {
+                    id: id,
+                    status: this.enums.orderStatusEnum.DELIVERED,
+                }).then((res) => {
+                    this.loading.isActive = false;
+                    alertService.successFlip(
+                        1,
+                        this.$t("label.status")
+                    );
+                    this.list();
+                }).catch((err) => {
+                    this.loading.isActive = false;
+                    alertService.error(err.response.data.message);
+                });
+            } catch (err) {
+                this.loading.isActive = false;
+                alertService.error(err.response.data.message);
+            }
+        },
     },
 };
 </script>
@@ -390,5 +473,25 @@ export default {
     .hidden-print {
         display: none !important;
     }
+}
+
+.db-table-action.delivered-done {
+    color: #1AB759;
+    cursor: default;
+}
+
+.db-table-action.delivered-ready {
+    color: #6E7191;
+    cursor: pointer;
+}
+
+.db-table-action.delivered-ready:hover {
+    color: #1AB759;
+}
+
+.db-table-action.delivered-passive {
+    color: #D9DBE9;
+    cursor: not-allowed;
+    opacity: 0.6;
 }
 </style>
