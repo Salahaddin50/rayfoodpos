@@ -127,9 +127,10 @@
                       }}</span>
                   </p>
                   <p class="text-sm font-normal leading-6 font-client capitalize text-[#6E7191]">
-                    {{ $t("label.token_no") }}: <span class="text-heading font-medium">{{ dineinOrder.token ?
-                      dineinOrder.token : $t("label.online")
-                      }}</span>
+                    {{ $t("label.token_no") }}: <span class="text-heading font-medium">
+                      <template v-if="dineinOrder.token">{{ dineinOrder.token }}</template>
+                      <template v-else>{{ $t("label.online") }}</template>
+                    </span>
                   </p>
                   <p v-if="dineinOrder.pos_note" class="text-sm font-normal leading-6 font-client text-[#6E7191]">
                     Note: <span class="text-heading font-medium">{{ dineinOrder.pos_note }}</span>
@@ -217,8 +218,10 @@
                     </span>
                   </p>
                   <p class="text-sm font-normal leading-6 font-client capitalize text-[#6E7191]">
-                    {{ $t("label.token_no") }}: <span class="text-heading font-medium">{{ takeawayOrder.token ?
-                      takeawayOrder.token : $t("label.online") }}</span>
+                    {{ $t("label.token_no") }}: <span class="text-heading font-medium">
+                      <template v-if="takeawayOrder.token">{{ takeawayOrder.token }}</template>
+                      <template v-else>{{ $t("label.online") }}</template>
+                    </span>
                   </p>
                   <p v-if="takeawayOrder.pos_note" class="text-sm font-normal leading-6 font-client text-[#6E7191]">
                     Note: <span class="text-heading font-medium">{{ takeawayOrder.pos_note }}</span>
