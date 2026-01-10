@@ -155,18 +155,23 @@
                               v-if="index + 1 < item.item_variations.length">,&nbsp;</span>
                           </span>
                         </p>
-                        <li class="flex gap-1" v-if="item.item_extras && item.item_extras.length > 0">
-                          <h3 class="capitalize text-xs w-fit whitespace-nowrap">{{ $t('label.extras') }}:
-                          </h3>
-                          <p class="text-xs font-normal font-client capitalize text-[#6E7191]">
-                            <span v-for="(extra, index) in item.item_extras" class="text-heading">
-                              {{ extra.name }}<span v-if="index + 1 < item.item_extras.length">,&nbsp;</span>
-                            </span>
-                          </p>
-                        </li>
-                        <p v-if="item.instruction" class="text-xs font-normal font-client text-[#6E7191] mt-1">
-                          {{ $t('label.instruction') }}: {{ item.instruction }}
-                        </p>
+                        <ul v-if="(item.item_extras && item.item_extras.length > 0) || getItemInstruction(item) !== ''"
+                          class="flex flex-col gap-1 mt-1">
+                          <li class="flex gap-1" v-if="item.item_extras && item.item_extras.length > 0">
+                            <h3 class="capitalize text-xs w-fit whitespace-nowrap">{{ $t('label.extras') }}:</h3>
+                            <p class="text-xs font-normal font-client capitalize text-[#6E7191]">
+                              <span v-for="(extra, index) in item.item_extras" class="text-heading">
+                                {{ extra.name }}<span v-if="index + 1 < item.item_extras.length">,&nbsp;</span>
+                              </span>
+                            </p>
+                          </li>
+                          <li class="flex gap-1" v-if="getItemInstruction(item) !== ''">
+                            <h3 class="capitalize text-xs w-fit whitespace-nowrap">{{ $t('label.instruction') }}:</h3>
+                            <p class="text-xs font-normal font-client text-[#6E7191]">
+                              {{ getItemInstruction(item) }}
+                            </p>
+                          </li>
+                        </ul>
                       </div>
                     </div>
                     <button v-if="dineinOrder.status === enums.orderStatusEnum.ACCEPT" type="button"
@@ -239,18 +244,23 @@
                               v-if="index + 1 < item.item_variations.length">,&nbsp;</span>
                           </span>
                         </p>
-                        <li class="flex gap-1" v-if="item.item_extras && item.item_extras.length > 0">
-                          <h3 class="capitalize text-xs w-fit whitespace-nowrap">{{ $t('label.extras') }}:
-                          </h3>
-                          <p class="text-xs font-normal font-client capitalize text-[#6E7191]">
-                            <span v-for="(extra, index) in item.item_extras" class="text-heading">
-                              {{ extra.name }}<span v-if="index + 1 < item.item_extras.length">,&nbsp;</span>
-                            </span>
-                          </p>
-                        </li>
-                        <p v-if="item.instruction" class="text-xs font-normal font-client text-[#6E7191] mt-1">
-                          {{ $t('label.instruction') }}: {{ item.instruction }}
-                        </p>
+                        <ul v-if="(item.item_extras && item.item_extras.length > 0) || getItemInstruction(item) !== ''"
+                          class="flex flex-col gap-1 mt-1">
+                          <li class="flex gap-1" v-if="item.item_extras && item.item_extras.length > 0">
+                            <h3 class="capitalize text-xs w-fit whitespace-nowrap">{{ $t('label.extras') }}:</h3>
+                            <p class="text-xs font-normal font-client capitalize text-[#6E7191]">
+                              <span v-for="(extra, index) in item.item_extras" class="text-heading">
+                                {{ extra.name }}<span v-if="index + 1 < item.item_extras.length">,&nbsp;</span>
+                              </span>
+                            </p>
+                          </li>
+                          <li class="flex gap-1" v-if="getItemInstruction(item) !== ''">
+                            <h3 class="capitalize text-xs w-fit whitespace-nowrap">{{ $t('label.instruction') }}:</h3>
+                            <p class="text-xs font-normal font-client text-[#6E7191]">
+                              {{ getItemInstruction(item) }}
+                            </p>
+                          </li>
+                        </ul>
                       </div>
                     </div>
                     <button v-if="takeawayOrder.status === enums.orderStatusEnum.ACCEPT" type="button"
@@ -439,6 +449,20 @@ export default {
       } else {
         this.expandedFilter = index; // Expand the clicked button
       }
+    },
+    getItemInstruction(item) {
+      if (!item) {
+        return "";
+      }
+      const val =
+        item.instruction ??
+        item.instructions ??
+        item.special_instruction ??
+        item.special_instructions ??
+        item.note ??
+        "";
+
+      return typeof val === "string" ? val.trim() : "";
     },
   },
   beforeUnmount() {
