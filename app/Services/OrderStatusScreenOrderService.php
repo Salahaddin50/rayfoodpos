@@ -36,7 +36,11 @@ class OrderStatusScreenOrderService
     {
         try {
             return Order::with(['diningTable', 'takeawayType'])
-                ->whereNotNull('token')
+                // OSS should include token-based orders AND dining-table orders (which may not have tokens).
+                ->where(function ($query) {
+                    $query->whereNotNull('token')
+                        ->orWhereNotNull('dining_table_id');
+                })
                 ->whereIn('status', [OrderStatus::PREPARING, OrderStatus::PREPARED])
                 ->where(function ($query) {
                 $query->where(function ($subQuery) {
