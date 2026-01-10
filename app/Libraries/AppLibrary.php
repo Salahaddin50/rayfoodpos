@@ -17,7 +17,10 @@ class AppLibrary
     public static function date($date, $pattern = null): string
     {
         if (!$pattern) {
-            $pattern = env('DATE_FORMAT');
+            $pattern = env('DATE_FORMAT') ?: 'd-m-Y';
+        }
+        if (!$date) {
+            return '';
         }
         return Carbon::parse($date)->format($pattern);
     }
@@ -25,7 +28,10 @@ class AppLibrary
     public static function time($time, $pattern = null): string
     {
         if (!$pattern) {
-            $pattern = env('TIME_FORMAT');
+            $pattern = env('TIME_FORMAT') ?: 'h:i A';
+        }
+        if (!$time) {
+            return '';
         }
         return Carbon::parse($time)->format($pattern);
     }
@@ -33,7 +39,10 @@ class AppLibrary
     public static function datetime($dateTime, $pattern = null): string
     {
         if (!$pattern) {
-            $pattern = env('TIME_FORMAT') . ', ' . env('DATE_FORMAT');
+            $pattern = (env('TIME_FORMAT') ?: 'h:i A') . ', ' . (env('DATE_FORMAT') ?: 'd-m-Y');
+        }
+        if (!$dateTime) {
+            return '';
         }
         return Carbon::parse($dateTime)->format($pattern);
     }
@@ -41,7 +50,10 @@ class AppLibrary
     public static function increaseDate($dateTime, $days, $pattern = null): string
     {
         if (!$pattern) {
-            $pattern = env('DATE_FORMAT');
+            $pattern = env('DATE_FORMAT') ?: 'd-m-Y';
+        }
+        if (!$dateTime) {
+            return '';
         }
         return Carbon::parse($dateTime)->addDays($days)->format($pattern);
     }
@@ -49,7 +61,10 @@ class AppLibrary
     public static function deliveryTime($dateTime, $pattern = null): string
     {
         if (!$pattern) {
-            $pattern = env('TIME_FORMAT');
+            $pattern = env('TIME_FORMAT') ?: 'h:i A';
+        }
+        if (!$dateTime) {
+            return '';
         }
         $explode = explode('-', $dateTime);
         if (count($explode) == 2) {
