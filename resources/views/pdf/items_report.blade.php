@@ -113,15 +113,17 @@
                 <tbody>
                     @foreach ($items as $item)
                         @php
-                            $total_quantity += $item->total_quantity;
-                            $total_income += $item->total_income;
+                            $quantity = $item->total_quantity ?? 0;
+                            $income = $item->total_income ?? 0;
+                            $total_quantity += $quantity;
+                            $total_income += $income;
                          @endphp
                         <tr>
                             <td>{{ $item->item_name }}</td>
                             <td>{{ $item->category_name ?? '' }}</td>
                             <td>{{ trans('itemType.' . $item->item_type, [], 'en') }}</td>
                             <td>{{ $item->first_order_date ? date('Y-m-d', strtotime($item->first_order_date)) : '' }}</td>
-                            <td>{{ App\Libraries\AppLibrary::flatAmountFormat($item->unit_price) }}</td>
+                            <td>{{ App\Libraries\AppLibrary::flatAmountFormat($item->unit_price ?? 0) }}</td>
                             <td>
                                 @php
                                     $optionsParts = [];
@@ -155,8 +157,8 @@
                                 @endphp
                                 {{ implode(' | ', $optionsParts) }}
                             </td>
-                            <td>{{ $item->total_quantity }}</td>
-                            <td>{{ App\Libraries\AppLibrary::flatAmountFormat($item->total_income) }}</td>
+                            <td>{{ $quantity }}</td>
+                            <td>{{ App\Libraries\AppLibrary::flatAmountFormat($income) }}</td>
                         </tr>
                     @endforeach
                     <tr class="total">

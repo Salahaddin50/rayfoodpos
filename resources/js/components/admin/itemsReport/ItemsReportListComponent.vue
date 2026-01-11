@@ -104,13 +104,13 @@
                             <td class="db-table-body-td">
                                 {{ enums.itemTypeEnumArray[itemsReport.item_type] }}
                             </td>
-                            <td class="db-table-body-td">{{ itemsReport.created_at }}</td>
-                            <td class="db-table-body-td">{{ itemsReport.currency_price }}</td>
+                            <td class="db-table-body-td">{{ itemsReport.created_at || '-' }}</td>
+                            <td class="db-table-body-td">{{ itemsReport.currency_price || '-' }}</td>
                             <td class="db-table-body-td">
-                                {{ formatOptions(itemsReport) }}
+                                {{ formatOptions(itemsReport) || '-' }}
                             </td>
-                            <td class="db-table-body-td">{{ itemsReport.order }}</td>
-                            <td class="db-table-body-td">{{ itemsReport.currency_total_income }}</td>
+                            <td class="db-table-body-td">{{ itemsReport.order || 0 }}</td>
+                            <td class="db-table-body-td">{{ itemsReport.currency_total_income || '$0.00' }}</td>
                         </tr>
                     </tbody>
                     <tbody class="db-table-body" v-else>
@@ -341,7 +341,12 @@ export default {
             const total = items.reduce((acc, ele) => {
                 return acc + parseFloat(ele.total_income || 0);
             }, 0);
-            return total.toFixed(2);
+            // Format as currency based on the first item's currency format
+            if (items.length > 0 && items[0].currency_total_income) {
+                const currencySymbol = items[0].currency_total_income.replace(/[0-9.,\s]/g, '');
+                return currencySymbol + total.toFixed(2);
+            }
+            return '$' + total.toFixed(2);
         },
         formatOptions(item) {
             const parts = [];

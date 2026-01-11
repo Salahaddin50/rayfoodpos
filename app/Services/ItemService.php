@@ -256,8 +256,8 @@ class ItemService
             $requests    = $request->all();
             $method      = $request->get('paginate', 0) == 1 ? 'paginate' : 'get';
             $methodValue = $request->get('paginate', 0) == 1 ? $request->get('per_page', 10) : '*';
-            
-            // Build the base query with date filtering
+
+            // Build from order_items so each price (with addons/extras) is grouped separately
             $query = DB::table('order_items')
                 ->join('items', 'order_items.item_id', '=', 'items.id')
                 ->join('orders', 'order_items.order_id', '=', 'orders.id')
@@ -267,44 +267,35 @@ class ItemService
                     'items.name as item_name',
                     'items.item_type',
                     'item_categories.name as category_name',
-                    // "Final unit price" based on what was actually charged on the order line.
-                    // total_price is stored per order line (and used for tax calculation), so we derive unit from it.
+                    // price that includes variations/extras/addons for that order line
                     DB::raw('ROUND(order_items.total_price / NULLIF(order_items.quantity, 0), 6) as unit_price'),
-                    // Keep a signature of the configuration so we can separate different variation/extra selections
-                    // even when the base item is the same.
                     DB::raw('MD5(CONCAT(IFNULL(order_items.item_variations, \'\'), \'|\', IFNULL(order_items.item_extras, \'\'))) as options_key'),
                     DB::raw('MIN(order_items.item_variations) as item_variations'),
                     DB::raw('MIN(order_items.item_extras) as item_extras'),
                     DB::raw('SUM(order_items.quantity) as total_quantity'),
-                    // Total income should reflect the final charged amount (variations/extras/addons/etc).
                     DB::raw('SUM(order_items.total_price) as total_income'),
-                    // Orders use order_datetime as the order's business datetime.
                     DB::raw('MIN(orders.order_datetime) as first_order_date')
                 );
-            
-            // Apply date filtering
+
             if (isset($requests['from_date']) && isset($requests['to_date'])) {
                 $first_date = date('Y-m-d', strtotime($requests['from_date']));
                 $last_date  = date('Y-m-d', strtotime($requests['to_date']));
                 $query->whereDate('orders.order_datetime', '>=', $first_date)
-                      ->whereDate('orders.order_datetime', '<=', $last_date);
+                    ->whereDate('orders.order_datetime', '<=', $last_date);
             }
-            
-            // Apply filters
+
             if (isset($requests['name']) && !empty($requests['name'])) {
                 $query->where('items.name', 'like', '%' . $requests['name'] . '%');
             }
-            
+
             if (isset($requests['item_category_id']) && !empty($requests['item_category_id'])) {
                 $query->where('items.item_category_id', $requests['item_category_id']);
             }
-            
+
             if (isset($requests['item_type']) && !empty($requests['item_type'])) {
                 $query->where('items.item_type', $requests['item_type']);
             }
-            
-            // Group by item_id and final unit_price to separate items with different final prices
-            // Also group by options_key so different addon/variation combinations appear as separate rows.
+
             $query->groupBy(
                 'items.id',
                 'items.name',
@@ -312,16 +303,9 @@ class ItemService
                 'item_categories.name',
                 DB::raw('ROUND(order_items.total_price / NULLIF(order_items.quantity, 0), 6)'),
                 DB::raw('MD5(CONCAT(IFNULL(order_items.item_variations, \'\'), \'|\', IFNULL(order_items.item_extras, \'\')))')
-            )
-                  ->orderBy('total_income', 'desc');
-            
-            // Execute query based on pagination
-            if ($method === 'paginate') {
-                return $query->paginate($methodValue);
-            } else {
-                return $query->get();
-            }
-            
+            )->orderBy('total_income', 'desc');
+
+            return $method === 'paginate' ? $query->paginate($methodValue) : $query->get();
         } catch (Exception $exception) {
             Log::info($exception->getMessage());
             throw new Exception(QueryExceptionLibrary::message($exception), 422);

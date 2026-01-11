@@ -29,23 +29,28 @@ class ItemsReportExport implements FromCollection, WithHeadings
         $totalIncome = 0;
         
         foreach ($itemsReportsArray as $item) {
-            $totalQuantity += $item->total_quantity;
-            $totalIncome += $item->total_income;
+            $quantity = (float)($item->total_quantity ?? 0);
+            $income   = (float)($item->total_income ?? 0);
+            $unit     = (float)($item->unit_price ?? 0);
+            
+            $totalQuantity += $quantity;
+            $totalIncome += $income;
             
             $itemsReportArray[] = [
                 $item->item_name,
                 $item->category_name ?? '',
                 trans('itemType.' . $item->item_type),
                 $item->first_order_date ? date('Y-m-d', strtotime($item->first_order_date)) : '',
-                AppLibrary::flatAmountFormat($item->unit_price),
+                AppLibrary::flatAmountFormat($unit),
                 $this->formatOptions($item->item_variations ?? null, $item->item_extras ?? null),
-                $item->total_quantity,
-                AppLibrary::flatAmountFormat($item->total_income)
+                $quantity,
+                AppLibrary::flatAmountFormat($income)
             ];
         }
         
         $itemsReportArray[] = [
             trans('all.label.total'),
+            '',
             '',
             '',
             '',
