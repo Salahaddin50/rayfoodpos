@@ -82,7 +82,7 @@ class DiningTableService
 
             $filename = Str::random(10) . '.svg';
             $slug     = Str::slug($branch_name . "-" . $request->name);
-            $url      = URL::to('/') . "/menu/" . $slug;
+            $url      = config('app.url') . "/menu/" . $slug;
 
             if (!File::exists(storage_path('app/public/qr_codes/'))) {
                 File::makeDirectory(storage_path('app/public/qr_codes/'), 0755, true);
@@ -115,7 +115,7 @@ class DiningTableService
 
             $filename = Str::random(10) . '.svg';
             $slug     = Str::slug($branch_name . "-" . $request->name);
-            $url      = URL::to('/') . "/menu/" . $slug;
+            $url      = config('app.url') . "/menu/" . $slug;
 
             if (!File::exists(storage_path('app/public/qr_codes/'))) {
                 File::makeDirectory(storage_path('app/public/qr_codes/'), 0755, true);
