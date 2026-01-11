@@ -257,17 +257,17 @@ class ItemService
             $method      = $request->get('paginate', 0) == 1 ? 'paginate' : 'get';
             $methodValue = $request->get('paginate', 0) == 1 ? $request->get('per_page', 10) : '*';
 
-            // Build from order_items so each price (with addons/extras) is grouped separately.
-            // Use fallback formulas so we still get meaningful numbers even if total_price was not stored.
-            $unitPriceExpr = "COALESCE(
+            // Calculate unit price per order line (with fallbacks)
+            $unitPriceExpr = "ROUND(COALESCE(
                 NULLIF(order_items.total_price, 0) / NULLIF(order_items.quantity, 0),
                 order_items.price
                     + COALESCE(order_items.item_variation_total, 0) / NULLIF(order_items.quantity, 1)
                     + COALESCE(order_items.item_extra_total, 0) / NULLIF(order_items.quantity, 1)
                     - COALESCE(order_items.discount, 0) / NULLIF(order_items.quantity, 1),
                 items.price
-            )";
+            ), 6)";
 
+            // Calculate line total (with fallbacks)
             $lineTotalExpr = "COALESCE(
                 NULLIF(order_items.total_price, 0),
                 (order_items.price
@@ -278,6 +278,9 @@ class ItemService
                 items.price * COALESCE(order_items.quantity, 1)
             )";
 
+            // Create options signature for grouping
+            $optionsKeyExpr = "MD5(CONCAT(IFNULL(order_items.item_variations, ''), '|', IFNULL(order_items.item_extras, '')))";
+
             $query = DB::table('order_items')
                 ->join('items', 'order_items.item_id', '=', 'items.id')
                 ->join('orders', 'order_items.order_id', '=', 'orders.id')
@@ -287,8 +290,8 @@ class ItemService
                     'items.name as item_name',
                     'items.item_type',
                     'item_categories.name as category_name',
-                    DB::raw('ROUND(' . $unitPriceExpr . ', 6) as unit_price'),
-                    DB::raw('MD5(CONCAT(IFNULL(order_items.item_variations, \'\'), \'|\', IFNULL(order_items.item_extras, \'\'))) as options_key'),
+                    DB::raw($unitPriceExpr . ' as unit_price'),
+                    DB::raw($optionsKeyExpr . ' as options_key'),
                     DB::raw('MIN(order_items.item_variations) as item_variations'),
                     DB::raw('MIN(order_items.item_extras) as item_extras'),
                     DB::raw('SUM(order_items.quantity) as total_quantity'),
@@ -317,16 +320,16 @@ class ItemService
                 $query->where('items.item_type', $requests['item_type']);
             }
 
-            // Group by item and calculated unit price to separate different price points
+            // Group by item and calculated fields to separate different price points
             $query->groupBy(
                 'items.id',
                 'items.name',
                 'items.item_type',
                 'item_categories.name',
-                DB::raw('ROUND(' . $unitPriceExpr . ', 6)'),
-                DB::raw('MD5(CONCAT(IFNULL(order_items.item_variations, \'\'), \'|\', IFNULL(order_items.item_extras, \'\')))')
+                DB::raw($unitPriceExpr),
+                DB::raw($optionsKeyExpr)
             )
-            ->orderByDesc('total_income');
+            ->orderByDesc(DB::raw('SUM(' . $lineTotalExpr . ')'));
 
             return $method === 'paginate' ? $query->paginate($methodValue) : $query->get();
         } catch (Exception $exception) {
