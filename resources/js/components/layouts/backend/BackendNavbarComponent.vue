@@ -74,9 +74,9 @@
                     <button
                         @click="refreshPage"
                         type="button"
-                        class="w-9 h-9 rounded-lg flex items-center justify-center bg-[#E8F4FD] hover:bg-[#D0E9FC] transition-colors"
-                        :title="$t('button.refresh') || 'Refresh'">
-                        <i class="lab lab-refresh-line lab-font-size-16 text-[#1776FF]"></i>
+                        class="w-9 h-9 rounded-lg flex items-center justify-center bg-[#E8F4FD] hover:bg-[#D0E9FC] transition-colors cursor-pointer"
+                        title="Refresh Page">
+                        <i class="fa-solid fa-rotate-right text-[#1776FF] text-base"></i>
                     </button>
                 </div>
             </div>
