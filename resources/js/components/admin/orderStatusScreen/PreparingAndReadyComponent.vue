@@ -1,9 +1,18 @@
 <template>
   <LoadingContentComponent :props="loading" />
   <div class="col-span-1 customer-screen db-card rounded-[10px] h-screen md:h-[calc(100vh-117px)] overflow-hidden">
-    <h3 class="text-lg font-semibold text-white p-3 pb-2 bg-primary mb-2 rounded-t-[10px] text-center">{{
-      $t("label.preparing") }}
-    </h3>
+    <div class="flex items-center justify-between bg-primary mb-2 rounded-t-[10px]">
+      <h3 class="text-lg font-semibold text-white p-3 pb-2 text-center flex-1">{{
+        $t("label.preparing") }}
+      </h3>
+      <button
+        @click="refreshPage"
+        type="button"
+        class="mr-2 w-8 h-8 rounded-lg flex items-center justify-center bg-white/20 hover:bg-white/30 transition-colors"
+        :title="$t('button.refresh') || 'Refresh'">
+        <i class="lab lab-refresh-line lab-font-size-14 text-white"></i>
+      </button>
+    </div>
     <div class="content-wrapper p-3 overflow-auto thin-scrolling h-full">
       <ul class="w-full text-center text-[#1F1F39] mb-20">
         <li v-for="preparingItem in preparingItems" :key="preparingItem.id" class="mb-6">
@@ -19,8 +28,17 @@
     </div>
   </div>
   <div class="col-span-1 customer-screen db-card rounded-[10px] h-screen md:h-[calc(100vh-117px)] overflow-hidden">
-    <h3 class="text-lg font-semibold text-white p-3 pb-2 bg-[#1AB759] mb-2 rounded-t-[10px] text-center">{{
-      $t("label.ready") }}</h3>
+    <div class="flex items-center justify-between bg-[#1AB759] mb-2 rounded-t-[10px]">
+      <h3 class="text-lg font-semibold text-white p-3 pb-2 text-center flex-1">{{
+        $t("label.ready") }}</h3>
+      <button
+        @click="refreshPage"
+        type="button"
+        class="mr-2 w-8 h-8 rounded-lg flex items-center justify-center bg-white/20 hover:bg-white/30 transition-colors"
+        :title="$t('button.refresh') || 'Refresh'">
+        <i class="lab lab-refresh-line lab-font-size-14 text-white"></i>
+      </button>
+    </div>
     <div class="content-wrapper p-3 overflow-auto thin-scrolling h-full">
       <ul class="w-full text-center text-[#1F1F39] mb-20">
         <li v-for="preparedItem in preparedItems" :key="preparedItem.id" class="mb-6">
@@ -113,6 +131,14 @@ export default {
         .catch((err) => {
           this.loading.isActive = false;
         });
+    },
+    refreshPage: function () {
+      // Refresh current route using Vue Router (fast, no full page reload)
+      this.$router.replace({
+        name: this.$route.name,
+        params: this.$route.params,
+        query: { ...this.$route.query, _t: Date.now() }
+      });
     },
   },
   beforeUnmount() {

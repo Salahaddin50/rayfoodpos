@@ -89,6 +89,14 @@
               </SwiperSlide>
             </Swiper>
 
+            <button
+              @click="refreshPage"
+              type="button"
+              class="w-9 h-9 rounded-lg flex items-center justify-center bg-[#E8F4FD] hover:bg-[#D0E9FC] transition-colors"
+              :title="$t('button.refresh') || 'Refresh'">
+              <i class="lab lab-refresh-line lab-font-size-16 text-[#1776FF]"></i>
+            </button>
+
             <form @submit.prevent="search"
               class="header-search-group group flex items-center justify-center border border-solid gap-2 px-3 xl:!max-w-[305px] w-full h-11 rounded-lg transition border-[#D9DBE9] focus-within:bg-white focus-within:border-primary">
               <i class="lab lab-search-normal lab-font-size-16"></i>
@@ -422,6 +430,14 @@ export default {
     searchReset: function () {
       this.props.search.order_serial_no = "";
       this.list();
+    },
+    refreshPage: function () {
+      // Refresh current route using Vue Router (fast, no full page reload)
+      this.$router.replace({
+        name: this.$route.name,
+        params: this.$route.params,
+        query: { ...this.$route.query, _t: Date.now() }
+      });
     },
     orderStatus: function (id, status) {
       try {
