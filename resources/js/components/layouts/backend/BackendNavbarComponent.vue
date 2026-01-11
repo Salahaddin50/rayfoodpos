@@ -1,9 +1,18 @@
 <template>
     <div class="backdrop"></div>
     <header class="db-header">
-        <router-link class="w-40 flex-shrink-0" :to="{ name: 'admin.dashboard' }" @click="closeFullScreen">
-            <img class="w-full" :src="setting.theme_logo" alt="logo">
-        </router-link>
+        <div class="flex items-center gap-3 flex-shrink-0">
+            <router-link class="w-40" :to="{ name: 'admin.dashboard' }" @click="closeFullScreen">
+                <img class="w-full" :src="setting.theme_logo" alt="logo">
+            </router-link>
+            <button
+                @click="refreshPage"
+                type="button"
+                class="w-9 h-9 rounded-lg flex items-center justify-center bg-[#E8F4FD] hover:bg-[#D0E9FC] transition-colors"
+                :title="$t('button.refresh') || 'Refresh'">
+                <i class="lab lab-refresh-line lab-font-size-16 text-[#1776FF]"></i>
+            </button>
+        </div>
         <div class="flex items-center justify-end w-full gap-4">
             <div
                 class="sub-header flex items-center gap-4 transition xh:justify-between xh:fixed xh:left-0 xh:w-full xh:p-4 xh:border-y xh:border-[#EFF0F6] xh:bg-white">
@@ -70,14 +79,6 @@
                         :to="{ path: '/admin/' + pos.url }">
                         <i class="lab lab-pos-bold lab-font-size-16 font-fill-pos"></i>
                     </router-link>
-
-                    <button
-                        @click="refreshPage"
-                        type="button"
-                        class="w-9 h-9 rounded-lg flex items-center justify-center bg-[#E8F4FD] hover:bg-[#D0E9FC] transition-colors"
-                        :title="$t('button.refresh') || 'Refresh'">
-                        <i class="lab lab-refresh-line lab-font-size-16 text-[#1776FF]"></i>
-                    </button>
                 </div>
             </div>
             <button @click.prevent="handleSidebar"
