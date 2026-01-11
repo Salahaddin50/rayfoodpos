@@ -23,6 +23,18 @@
 
                         <OrderStatusComponent :props="order" />
 
+                        <div class="flex justify-end mt-4">
+                            <button
+                                type="button"
+                                @click="refreshStatus"
+                                :disabled="loading.isActive"
+                                class="db-btn h-9 px-4 rounded-lg flex items-center justify-center gap-2 transition text-primary bg-primary/5 hover:bg-primary/10 disabled:opacity-60 disabled:cursor-not-allowed"
+                                title="Refresh status">
+                                <i class="fa-solid fa-rotate-right text-sm"></i>
+                                <span class="text-sm font-medium">Refresh status</span>
+                            </button>
+                        </div>
+
                         <div>
                             <h3 class="font-medium mb-2">{{ orderBranch.name }}</h3>
                             <div class="flex items-center justify-between gap-5">
@@ -227,6 +239,17 @@ export default {
             });
         } else {
             router.push({ name: 'table.menu.table', params: { slug: this.table.slug } });
+        }
+    },
+    methods: {
+        refreshStatus() {
+            if (!this.$route.params.id) return;
+            this.loading.isActive = true;
+            this.$store
+                .dispatch("tableDiningOrder/show", this.$route.params.id)
+                .finally(() => {
+                    this.loading.isActive = false;
+                });
         }
     },
     beforeUnmount() {
