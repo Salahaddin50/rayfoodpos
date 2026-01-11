@@ -259,29 +259,24 @@ class ItemService
 
             // Build from order_items so each price (with addons/extras) is grouped separately.
             // Use fallback formulas so we still get meaningful numbers even if total_price was not stored.
-            $unitPriceExpr = "
-                COALESCE(
-                    NULLIF(order_items.total_price, 0) / NULLIF(order_items.quantity, 0),
-                    order_items.price
-                        + COALESCE(order_items.item_variation_total, 0) / NULLIF(order_items.quantity, 0)
-                        + COALESCE(order_items.item_extra_total, 0) / NULLIF(order_items.quantity, 0)
-                        - COALESCE(order_items.discount, 0) / NULLIF(order_items.quantity, 0),
-                    items.price
-                )
-            ";
+            $unitPriceExpr = "COALESCE(
+                NULLIF(order_items.total_price, 0) / NULLIF(order_items.quantity, 0),
+                order_items.price
+                    + COALESCE(order_items.item_variation_total, 0) / NULLIF(order_items.quantity, 1)
+                    + COALESCE(order_items.item_extra_total, 0) / NULLIF(order_items.quantity, 1)
+                    - COALESCE(order_items.discount, 0) / NULLIF(order_items.quantity, 1),
+                items.price
+            )";
 
-            $lineTotalExpr = "
-                COALESCE(
-                    NULLIF(order_items.total_price, 0),
-                    (
-                        order_items.price
-                        + COALESCE(order_items.item_variation_total, 0)
-                        + COALESCE(order_items.item_extra_total, 0)
-                        - COALESCE(order_items.discount, 0)
-                    ) * COALESCE(order_items.quantity, 0),
-                    items.price * COALESCE(order_items.quantity, 0)
-                )
-            ";
+            $lineTotalExpr = "COALESCE(
+                NULLIF(order_items.total_price, 0),
+                (order_items.price
+                    + COALESCE(order_items.item_variation_total, 0)
+                    + COALESCE(order_items.item_extra_total, 0)
+                    - COALESCE(order_items.discount, 0)
+                ) * COALESCE(order_items.quantity, 1),
+                items.price * COALESCE(order_items.quantity, 1)
+            )";
 
             $query = DB::table('order_items')
                 ->join('items', 'order_items.item_id', '=', 'items.id')
@@ -301,13 +296,15 @@ class ItemService
                     DB::raw('MIN(orders.order_datetime) as first_order_date')
                 );
 
-            if (isset($requests['from_date']) && isset($requests['to_date'])) {
+            // Apply date filtering
+            if (isset($requests['from_date']) && !empty($requests['from_date']) && isset($requests['to_date']) && !empty($requests['to_date'])) {
                 $first_date = date('Y-m-d', strtotime($requests['from_date']));
                 $last_date  = date('Y-m-d', strtotime($requests['to_date']));
                 $query->whereDate('orders.order_datetime', '>=', $first_date)
                     ->whereDate('orders.order_datetime', '<=', $last_date);
             }
 
+            // Apply filters
             if (isset($requests['name']) && !empty($requests['name'])) {
                 $query->where('items.name', 'like', '%' . $requests['name'] . '%');
             }
@@ -320,6 +317,7 @@ class ItemService
                 $query->where('items.item_type', $requests['item_type']);
             }
 
+            // Group by item and calculated unit price to separate different price points
             $query->groupBy(
                 'items.id',
                 'items.name',
@@ -327,11 +325,13 @@ class ItemService
                 'item_categories.name',
                 DB::raw('ROUND(' . $unitPriceExpr . ', 6)'),
                 DB::raw('MD5(CONCAT(IFNULL(order_items.item_variations, \'\'), \'|\', IFNULL(order_items.item_extras, \'\')))')
-            )->orderBy('total_income', 'desc');
+            )
+            ->orderByDesc('total_income');
 
             return $method === 'paginate' ? $query->paginate($methodValue) : $query->get();
         } catch (Exception $exception) {
-            Log::info($exception->getMessage());
+            Log::error('ItemReport Error: ' . $exception->getMessage());
+            Log::error('ItemReport Trace: ' . $exception->getTraceAsString());
             throw new Exception(QueryExceptionLibrary::message($exception), 422);
         }
     }
