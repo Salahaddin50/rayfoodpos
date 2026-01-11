@@ -16,11 +16,11 @@
                     {{ $t('menu.'+val.meta.breadcrumb) }}
                 </span>
             </li>
-            <li v-if="showRefreshButton" class="db-breadcrumb-item">
+            <li v-if="showRefreshButton" class="db-breadcrumb-item db-breadcrumb-item-action">
                 <button
                     @click="refreshPage"
                     type="button"
-                    class="db-breadcrumb-link inline-flex items-center justify-center w-9 h-9 rounded-lg bg-[#E8F4FD] hover:bg-[#D0E9FC] transition-colors"
+                    class="db-breadcrumb-link db-breadcrumb-link-action inline-flex items-center justify-center w-9 h-9 rounded-lg bg-[#E8F4FD] hover:bg-[#D0E9FC] transition-colors"
                     title="Refresh">
                     <i class="fa-solid fa-rotate-right text-[#1776FF] text-base opacity-100"></i>
                 </button>
@@ -81,5 +81,14 @@ export default {
 </script>
 
 <style scoped>
+/* Breadcrumb links add a "/" via ::after. Disable it for the refresh action. */
+.db-breadcrumb-link-action::after {
+    content: '' !important;
+    padding: 0 !important;
+}
 
+/* Keep consistent spacing from the last breadcrumb item */
+.db-breadcrumb-item-action {
+    margin-left: 8px;
+}
 </style>
