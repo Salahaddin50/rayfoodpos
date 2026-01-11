@@ -69,22 +69,20 @@ export default {
             this.breadcrumbs = routeArray;
         },
         refreshPage: function () {
-            // Refresh current route using Vue Router (fast, no full page reload)
-            // Add a temporary query param to trigger route update, then remove it to keep URL clean.
-            const originalQuery = { ...this.$route.query };
-            this.$router.replace({
-                name: this.$route.name,
-                params: this.$route.params,
-                query: { ...originalQuery, _t: Date.now() }
-            }).then(() => {
-                this.$nextTick(() => {
-                    this.$router.replace({
-                        name: this.$route.name,
-                        params: this.$route.params,
-                        query: originalQuery
-                    }).catch(() => { });
-                });
-            });
+            // Refresh should re-fetch list data, not reload the page/route.
+            // Emit a global event that the relevant list pages listen to.
+            const isPos = this.$route.matched?.some((r) => r?.meta?.breadcrumb === 'pos_orders');
+            const isTable = this.$route.matched?.some((r) => r?.meta?.breadcrumb === 'table_orders');
+
+            if (isPos) {
+                window.dispatchEvent(new CustomEvent('rayfood:refresh-pos-orders'));
+                return;
+            }
+
+            if (isTable) {
+                window.dispatchEvent(new CustomEvent('rayfood:refresh-table-orders'));
+                return;
+            }
         }
     }
 }

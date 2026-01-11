@@ -321,6 +321,12 @@ export default {
             order_type: 'asc',
             status: statusEnum.ACTIVE
         });
+
+        // Listen for breadcrumb refresh button (POS Orders)
+        window.addEventListener('rayfood:refresh-pos-orders', this.onExternalRefresh);
+    },
+    beforeUnmount() {
+        window.removeEventListener('rayfood:refresh-pos-orders', this.onExternalRefresh);
     },
     computed: {
         orders: function () {
@@ -340,6 +346,9 @@ export default {
         },
     },
     methods: {
+        onExternalRefresh() {
+            this.list(this.paginationPage || 1);
+        },
         permissionChecker(e) {
             return appService.permissionChecker(e);
         },

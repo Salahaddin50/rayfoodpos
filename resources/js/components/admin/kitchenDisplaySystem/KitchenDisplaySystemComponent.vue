@@ -433,22 +433,9 @@ export default {
       this.list();
     },
     refreshPage: function () {
-      // Refresh current route using Vue Router (fast, no full page reload)
-      // Add a temporary query param to trigger route update, then remove it to keep URL clean.
-      const originalQuery = { ...this.$route.query };
-      this.$router.replace({
-        name: this.$route.name,
-        params: this.$route.params,
-        query: { ...originalQuery, _t: Date.now() }
-      }).then(() => {
-        this.$nextTick(() => {
-          this.$router.replace({
-            name: this.$route.name,
-            params: this.$route.params,
-            query: originalQuery
-          }).catch(() => { });
-        });
-      });
+      // Refresh KDS data (orders + items) without reloading the page
+      this.items();
+      this.list(this.props.search.status);
     },
     orderStatus: function (id, status) {
       try {
