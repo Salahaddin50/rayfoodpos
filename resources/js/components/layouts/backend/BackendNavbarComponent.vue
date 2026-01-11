@@ -70,16 +70,15 @@
                         :to="{ path: '/admin/' + pos.url }">
                         <i class="lab lab-pos-bold lab-font-size-16 font-fill-pos"></i>
                     </router-link>
-
-                    <button
-                        @click="refreshPage"
-                        type="button"
-                        class="w-9 h-9 rounded-lg flex items-center justify-center bg-[#E8F4FD] hover:bg-[#D0E9FC] transition-colors cursor-pointer"
-                        title="Refresh Page">
-                        <i class="fa-solid fa-rotate-right text-[#1776FF] text-base"></i>
-                    </button>
                 </div>
             </div>
+            <button
+                @click="refreshPage"
+                type="button"
+                class="w-9 h-9 rounded-lg flex items-center justify-center bg-[#E8F4FD] hover:bg-[#D0E9FC] transition-colors cursor-pointer"
+                title="Refresh Page">
+                <i class="fa-solid fa-rotate-right text-[#1776FF] text-base"></i>
+            </button>
             <button @click.prevent="handleSidebar"
                 class="fa-solid db-header-nav w-9 h-9 rounded-lg text-primary bg-primary/5"
                 :class="sidebar ? 'fa-align-left' : 'fa-bars'"></button>
