@@ -265,7 +265,8 @@ class ItemService
                     order_items.price
                         + COALESCE(order_items.item_variation_total, 0) / NULLIF(order_items.quantity, 0)
                         + COALESCE(order_items.item_extra_total, 0) / NULLIF(order_items.quantity, 0)
-                        - COALESCE(order_items.discount, 0) / NULLIF(order_items.quantity, 0)
+                        - COALESCE(order_items.discount, 0) / NULLIF(order_items.quantity, 0),
+                    items.price
                 )
             ";
 
@@ -277,7 +278,8 @@ class ItemService
                         + COALESCE(order_items.item_variation_total, 0)
                         + COALESCE(order_items.item_extra_total, 0)
                         - COALESCE(order_items.discount, 0)
-                    ) * COALESCE(order_items.quantity, 0)
+                    ) * COALESCE(order_items.quantity, 0),
+                    items.price * COALESCE(order_items.quantity, 0)
                 )
             ";
 
