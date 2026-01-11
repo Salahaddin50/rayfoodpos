@@ -257,7 +257,8 @@ class ItemService
             $method      = $request->get('paginate', 0) == 1 ? 'paginate' : 'get';
             $methodValue = $request->get('paginate', 0) == 1 ? $request->get('per_page', 10) : '*';
 
-            // Simplified approach: calculate unit price and group by it
+            // Simpler query that groups by item ID and a hash of variations/extras
+            // This avoids complex expressions in GROUP BY
             $query = DB::table('order_items')
                 ->join('items', 'order_items.item_id', '=', 'items.id')
                 ->join('orders', 'order_items.order_id', '=', 'orders.id')
@@ -267,35 +268,36 @@ class ItemService
                     'items.name as item_name',
                     'items.item_type',
                     'item_categories.name as category_name',
-                    DB::raw('ROUND(COALESCE(
-                        NULLIF(order_items.total_price, 0) / NULLIF(order_items.quantity, 0),
-                        order_items.price + 
-                        COALESCE(order_items.item_variation_total, 0) / NULLIF(order_items.quantity, 1) +
-                        COALESCE(order_items.item_extra_total, 0) / NULLIF(order_items.quantity, 1) -
-                        COALESCE(order_items.discount, 0) / NULLIF(order_items.quantity, 1),
-                        items.price
-                    ), 6) as unit_price'),
-                    DB::raw('MD5(CONCAT(IFNULL(order_items.item_variations, \'\'), \'|\', IFNULL(order_items.item_extras, \'\'))) as options_key'),
+                    // Calculate average unit price for this grouping
+                    DB::raw('ROUND(AVG(CASE 
+                        WHEN order_items.total_price > 0 AND order_items.quantity > 0 
+                        THEN order_items.total_price / order_items.quantity 
+                        ELSE items.price 
+                    END), 2) as unit_price'),
+                    // Hash of variations+extras for grouping
+                    DB::raw('MD5(CONCAT(
+                        COALESCE(order_items.item_variations, \'\'), 
+                        \'|\', 
+                        COALESCE(order_items.item_extras, \'\')
+                    )) as options_key'),
                     DB::raw('MIN(order_items.item_variations) as item_variations'),
                     DB::raw('MIN(order_items.item_extras) as item_extras'),
                     DB::raw('SUM(order_items.quantity) as total_quantity'),
-                    DB::raw('SUM(COALESCE(
-                        NULLIF(order_items.total_price, 0),
-                        (order_items.price + 
-                         COALESCE(order_items.item_variation_total, 0) +
-                         COALESCE(order_items.item_extra_total, 0) -
-                         COALESCE(order_items.discount, 0)) * COALESCE(order_items.quantity, 1),
-                        items.price * COALESCE(order_items.quantity, 1)
-                    )) as total_income'),
+                    DB::raw('SUM(CASE 
+                        WHEN order_items.total_price > 0 
+                        THEN order_items.total_price 
+                        ELSE items.price * order_items.quantity 
+                    END) as total_income'),
                     DB::raw('MIN(orders.order_datetime) as first_order_date')
                 );
 
             // Apply date filtering
-            if (isset($requests['from_date']) && !empty($requests['from_date']) && isset($requests['to_date']) && !empty($requests['to_date'])) {
+            if (isset($requests['from_date']) && !empty($requests['from_date']) && 
+                isset($requests['to_date']) && !empty($requests['to_date'])) {
                 $first_date = date('Y-m-d', strtotime($requests['from_date']));
                 $last_date  = date('Y-m-d', strtotime($requests['to_date']));
                 $query->whereDate('orders.order_datetime', '>=', $first_date)
-                    ->whereDate('orders.order_datetime', '<=', $last_date);
+                      ->whereDate('orders.order_datetime', '<=', $last_date);
             }
 
             // Apply filters
@@ -311,36 +313,24 @@ class ItemService
                 $query->where('items.item_type', $requests['item_type']);
             }
 
-            // Group by - use the exact same expression as in SELECT for unit_price
-            $unitPriceGroupBy = 'ROUND(COALESCE(
-                NULLIF(order_items.total_price, 0) / NULLIF(order_items.quantity, 0),
-                order_items.price + 
-                COALESCE(order_items.item_variation_total, 0) / NULLIF(order_items.quantity, 1) +
-                COALESCE(order_items.item_extra_total, 0) / NULLIF(order_items.quantity, 1) -
-                COALESCE(order_items.discount, 0) / NULLIF(order_items.quantity, 1),
-                items.price
-            ), 6)';
-            
-            $optionsKeyGroupBy = 'MD5(CONCAT(IFNULL(order_items.item_variations, \'\'), \'|\', IFNULL(order_items.item_extras, \'\')))';
-
+            // Simple GROUP BY - just item and options hash
             $query->groupBy(
                 'items.id',
                 'items.name',
                 'items.item_type',
+                'items.price',
                 'item_categories.name',
-                DB::raw($unitPriceGroupBy),
-                DB::raw($optionsKeyGroupBy)
+                DB::raw('MD5(CONCAT(
+                    COALESCE(order_items.item_variations, \'\'), 
+                    \'|\', 
+                    COALESCE(order_items.item_extras, \'\')
+                ))')
             )
-            ->orderByDesc(DB::raw('SUM(COALESCE(
-                NULLIF(order_items.total_price, 0),
-                (order_items.price + 
-                 COALESCE(order_items.item_variation_total, 0) +
-                 COALESCE(order_items.item_extra_total, 0) -
-                 COALESCE(order_items.discount, 0)) * COALESCE(order_items.quantity, 1),
-                items.price * COALESCE(order_items.quantity, 1)
-            ))'));
+            ->orderByDesc('total_income');
 
             $result = $method === 'paginate' ? $query->paginate($methodValue) : $query->get();
+            
+            Log::info('ItemReport Success: Returned ' . (is_countable($result) ? count($result) : $result->count()) . ' rows');
             
             return $result;
         } catch (Exception $exception) {
