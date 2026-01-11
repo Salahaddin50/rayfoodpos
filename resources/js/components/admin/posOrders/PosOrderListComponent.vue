@@ -140,6 +140,21 @@
                                 <div class="flex justify-start items-center sm:items-start sm:justify-start gap-1.5">
                                     <SmIconViewComponent :link="'admin.pos.orders.show'" :id="order.id"
                                         v-if="permissionChecker('pos-orders')" />
+                                    <button
+                                        type="button"
+                                        @click="togglePaymentStatus(order)"
+                                        :class="[
+                                            'db-table-action',
+                                            order.payment_status === enums.paymentStatusEnum.PAID
+                                                ? 'bg-[#E0FFED] text-[#1AB759]'
+                                                : 'bg-[#FFDADA] text-[#FB4E4E]'
+                                        ]"
+                                        :title="order.payment_status === enums.paymentStatusEnum.PAID ? $t('label.paid') : $t('label.unpaid')">
+                                        <i class="lab lab-cash"></i>
+                                        <span class="db-tooltip">
+                                            {{ order.payment_status === enums.paymentStatusEnum.PAID ? $t('label.paid') : $t('label.unpaid') }}
+                                        </span>
+                                    </button>
                                     <button type="button" 
                                         @click="changeStatusToDelivered(order.id)"
                                         :disabled="order.status === enums.orderStatusEnum.ACCEPT || order.status === enums.orderStatusEnum.PREPARING"
@@ -212,6 +227,7 @@ import statusEnum from "../../../enums/modules/statusEnum";
 import displayModeEnum from "../../../enums/modules/displayModeEnum";
 import sourceEnum from "../../../enums/modules/sourceEnum";
 import ENV from "../../../config/env";
+import paymentStatusEnum from "../../../enums/modules/paymentStatusEnum";
 
 export default {
     name: "PosOrderListComponent",
@@ -260,6 +276,7 @@ export default {
             enums: {
                 orderStatusEnum: orderStatusEnum,
                 orderTypeEnum: orderTypeEnum,
+                paymentStatusEnum: paymentStatusEnum,
                 orderStatusEnumArray: {
                     [orderStatusEnum.ACCEPT]: this.$t("label.accept"),
                     [orderStatusEnum.PREPARING]: this.$t("label.preparing"),
@@ -434,6 +451,29 @@ export default {
             } catch (err) {
                 this.loading.isActive = false;
                 alertService.error(err.response.data.message);
+            }
+        },
+        togglePaymentStatus: function (order) {
+            try {
+                this.loading.isActive = true;
+                const nextStatus =
+                    order.payment_status === this.enums.paymentStatusEnum.PAID
+                        ? this.enums.paymentStatusEnum.UNPAID
+                        : this.enums.paymentStatusEnum.PAID;
+
+                this.$store.dispatch("posOrder/changePaymentStatus", {
+                    id: order.id,
+                    payment_status: nextStatus,
+                }).then(() => {
+                    this.loading.isActive = false;
+                    this.list(this.paginationPage);
+                }).catch((err) => {
+                    this.loading.isActive = false;
+                    alertService.error(err?.response?.data?.message ?? err);
+                });
+            } catch (err) {
+                this.loading.isActive = false;
+                alertService.error(err?.response?.data?.message ?? err);
             }
         },
     }
