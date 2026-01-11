@@ -70,6 +70,14 @@
                         :to="{ path: '/admin/' + pos.url }">
                         <i class="lab lab-pos-bold lab-font-size-16 font-fill-pos"></i>
                     </router-link>
+
+                    <button
+                        @click="refreshPage"
+                        type="button"
+                        class="w-9 h-9 rounded-lg flex items-center justify-center bg-[#E8F4FD] hover:bg-[#D0E9FC] transition-colors"
+                        :title="$t('button.refresh') || 'Refresh'">
+                        <i class="lab lab-refresh-line lab-font-size-16 text-[#1776FF]"></i>
+                    </button>
                 </div>
             </div>
             <button @click.prevent="handleSidebar"
@@ -477,6 +485,9 @@ export default {
                 }
                 document.removeEventListener('mousemove', handleMouseMove);
             }
+        },
+        refreshPage: function () {
+            location.reload();
         }
     }
 }
