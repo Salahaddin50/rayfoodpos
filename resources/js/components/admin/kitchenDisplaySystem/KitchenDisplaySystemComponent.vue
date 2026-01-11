@@ -87,15 +87,16 @@
                   <span class="capitalize whitespace-nowrap text-sm font-medium">{{ $t("label.done") }}</span>
                 </button>
               </SwiperSlide>
+              <SwiperSlide class="!w-fit">
+                <button
+                  @click="refreshPage"
+                  type="button"
+                  class="db-btn text-[#1F1F39] w-fit flex items-center justify-center gap-3 h-11 px-4 rounded-lg transition bg-white hover:text-primary border border-[#D9DBE9] hover:bg-primary/5"
+                  title="Refresh">
+                  <i class="lab lab-refresh-line lab-font-size-16 text-primary"></i>
+                </button>
+              </SwiperSlide>
             </Swiper>
-
-            <button
-              @click="refreshPage"
-              type="button"
-              class="w-9 h-9 rounded-lg flex items-center justify-center bg-[#E8F4FD] hover:bg-[#D0E9FC] transition-colors"
-              :title="$t('button.refresh') || 'Refresh'">
-              <i class="lab lab-refresh-line lab-font-size-16 text-[#1776FF]"></i>
-            </button>
 
             <form @submit.prevent="search"
               class="header-search-group group flex items-center justify-center border border-solid gap-2 px-3 xl:!max-w-[305px] w-full h-11 rounded-lg transition border-[#D9DBE9] focus-within:bg-white focus-within:border-primary">
