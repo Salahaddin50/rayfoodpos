@@ -25,11 +25,11 @@ class ValidPhone implements Rule
      */
     public function passes($attribute, $value): bool
     {
-        $countryCode = Settings::group('company')->get('company_country_code');
-        $country = Countries::where('cca3', $countryCode)->first();
-
-        if ($country->dialling['national_number_lengths'][0] !== strlen($value)) {
-            $this->message = 'The :attribute number should be ' . $country->dialling['national_number_lengths'][0] . ' digits long.';
+        $phoneLength = strlen($value);
+        
+        // Allow phone numbers between 8 and 15 digits
+        if ($phoneLength < 8 || $phoneLength > 15) {
+            $this->message = 'The :attribute number should be between 8 and 15 digits long.';
             return false;
         }
 
