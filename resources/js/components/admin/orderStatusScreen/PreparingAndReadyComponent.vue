@@ -7,7 +7,7 @@
         @click="refreshPage"
         type="button"
         class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center bg-white/20 hover:bg-white/30 transition-colors"
-        title="Refresh">
+        :title="$t('button.refresh')">
         <i class="fa-solid fa-rotate-right text-white text-sm opacity-100"></i>
       </button>
     </h3>
@@ -32,7 +32,7 @@
         @click="refreshPage"
         type="button"
         class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center bg-white/20 hover:bg-white/30 transition-colors"
-        title="Refresh">
+        :title="$t('button.refresh')">
         <i class="fa-solid fa-rotate-right text-white text-sm opacity-100"></i>
       </button>
     </h3>

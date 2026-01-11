@@ -1,15 +1,15 @@
 <template>
     <h4 v-if="parseInt(props.status) === parseInt(enums.orderStatusEnum.CANCELED)"
         class=" text-xl font-medium text-center mb-4">
-        {{ $t("label.your_order", { order: enums.orderStatusEnumArray[props.status] }) }}
+        {{ $t("label.your_order", { order: orderStatusEnumArray[props.status] }) }}
     </h4>
     <h4 v-if="parseInt(props.status) === parseInt(enums.orderStatusEnum.REJECTED)"
         class=" text-xl font-medium text-center mb-4">
-        {{ $t("label.your_order", { order: enums.orderStatusEnumArray[props.status] }) }}
+        {{ $t("label.your_order", { order: orderStatusEnumArray[props.status] }) }}
     </h4>
     <h4 v-if="parseInt(props.status) === parseInt(enums.orderStatusEnum.RETURNED)"
         class=" text-xl font-medium text-center mb-4">
-        {{ $t("label.your_order", { order: enums.orderStatusEnumArray[props.status] }) }}
+        {{ $t("label.your_order", { order: orderStatusEnumArray[props.status] }) }}
     </h4>
 
     <img v-if="parseInt(props.status) === parseInt(enums.orderStatusEnum.CANCELED)" class="h-32 mx-auto mb-3"
@@ -65,12 +65,12 @@
 
         <ul
             class="flex items-center justify-between px-2 mx-2 mb-[70px] relative before:absolute before:top-0 before:left-0 before:w-full before:h-1 before:bg-primary">
-            <li v-for="(delivery, index) in enums.deliveryArray" :key="index"
+            <li v-for="(delivery, index) in deliveryArray" :key="index"
                 class="db-order-status relative before:absolute before:-top-2 before:left-1/2 before:-translate-x-1/2 before:w-5 before:h-5 before:rounded-full before:border-[3px] before:border-primary before:bg-white"
                 :class="parseInt(props.status) >= parseInt(index) ? 'check' : ''">
                 <span
                     class="absolute -bottom-12 left-1/2 -translate-x-1/2 text-[10px] leading-4 text-center text-heading">
-                    {{ $t('menu.order') }} {{ delivery }}
+                    {{ delivery }}
                 </span>
             </li>
         </ul>
@@ -92,28 +92,6 @@ export default {
             enums: {
                 orderStatusEnum: orderStatusEnum,
                 orderTypeEnum: orderTypeEnum,
-                orderStatusEnumArray: {
-                    [orderStatusEnum.PENDING]: this.$t("label.pending"),
-                    [orderStatusEnum.ACCEPT]: this.$t("label.accept"),
-                    [orderStatusEnum.PREPARING]: this.$t("label.preparing"),
-                    [orderStatusEnum.PREPARED]: this.$t("label.prepared"),
-                    [orderStatusEnum.OUT_FOR_DELIVERY]: this.$t("label.out_for_delivery"),
-                    [orderStatusEnum.DELIVERED]: this.$t("label.delivered"),
-                    [orderStatusEnum.CANCELED]: this.$t("label.canceled"),
-                    [orderStatusEnum.REJECTED]: this.$t("label.rejected"),
-                    [orderStatusEnum.RETURNED]: this.$t("label.returned"),
-                },
-                orderTypeEnumArray: {
-                    [orderTypeEnum.DELIVERY]: this.$t("label.delivery"),
-                    [orderTypeEnum.TAKEAWAY]: this.$t("label.takeaway")
-                },
-                deliveryArray: {
-                    [orderStatusEnum.PENDING]: this.$t("label.placed"),
-                    [orderStatusEnum.ACCEPT]: this.$t("label.accept"),
-                    [orderStatusEnum.PREPARING]: this.$t("label.preparing"),
-                    [orderStatusEnum.PREPARED]: this.$t("label.prepared"),
-                    [orderStatusEnum.DELIVERED]: this.$t("label.delivered"),
-                }
             },
         }
     },
@@ -124,6 +102,35 @@ export default {
         profile: function () {
             return this.$store.getters.authInfo;
         },
+        // IMPORTANT: keep translations reactive when changing language
+        orderStatusEnumArray() {
+            return {
+                [orderStatusEnum.PENDING]: this.$t("label.pending"),
+                [orderStatusEnum.ACCEPT]: this.$t("label.accept"),
+                [orderStatusEnum.PREPARING]: this.$t("label.preparing"),
+                [orderStatusEnum.PREPARED]: this.$t("label.prepared"),
+                [orderStatusEnum.OUT_FOR_DELIVERY]: this.$t("label.out_for_delivery"),
+                [orderStatusEnum.DELIVERED]: this.$t("label.delivered"),
+                [orderStatusEnum.CANCELED]: this.$t("label.canceled"),
+                [orderStatusEnum.REJECTED]: this.$t("label.rejected"),
+                [orderStatusEnum.RETURNED]: this.$t("label.returned"),
+            };
+        },
+        orderTypeEnumArray() {
+            return {
+                [orderTypeEnum.DELIVERY]: this.$t("label.delivery"),
+                [orderTypeEnum.TAKEAWAY]: this.$t("label.takeaway"),
+            };
+        },
+        deliveryArray() {
+            return {
+                [orderStatusEnum.PENDING]: this.$t("label.placed"),
+                [orderStatusEnum.ACCEPT]: this.$t("label.accept"),
+                [orderStatusEnum.PREPARING]: this.$t("label.preparing"),
+                [orderStatusEnum.PREPARED]: this.$t("label.prepared"),
+                [orderStatusEnum.DELIVERED]: this.$t("label.delivered"),
+            };
+        }
     },
 }
 </script>

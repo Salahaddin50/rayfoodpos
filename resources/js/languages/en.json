@@ -643,6 +643,8 @@
         "add_role": "Add Role",
         "next": "Next",
         "previous": "Previous",
+        "refresh": "Refresh",
+        "refresh_status": "Refresh Status",
         "add_item_attribute": "Add Item Attribute",
         "add_slider": "Add Slider",
         "add_offer": "Add Offer",

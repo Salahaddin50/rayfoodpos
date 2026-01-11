@@ -11,7 +11,7 @@
                         <div class="flex flex-wrap items-center gap-2 mb-1">
                             <span class="text-sm capitalize">{{ $t("label.order_type") }}:</span>
                             <span class="text-sm capitalize text-heading">
-                                {{ enums.orderTypeEnumArray[order.order_type] }}
+                                {{ orderTypeEnumArray[order.order_type] }}
                             </span>
                         </div>
                         <div class="flex flex-wrap items-center gap-2 mb-5">
@@ -29,9 +29,9 @@
                                 @click="refreshStatus"
                                 :disabled="loading.isActive"
                                 class="db-btn h-9 px-4 rounded-lg flex items-center justify-center gap-2 transition text-primary bg-primary/5 hover:bg-primary/10 disabled:opacity-60 disabled:cursor-not-allowed"
-                                title="Refresh status">
+                                :title="$t('button.refresh_status')">
                                 <i class="fa-solid fa-rotate-right text-sm"></i>
-                                <span class="text-sm font-medium">Refresh status</span>
+                                <span class="text-sm font-medium">{{ $t('button.refresh_status') }}</span>
                             </button>
                         </div>
 
@@ -72,14 +72,14 @@
                                     {{ $t('label.digital_payment') }}
                                 </span>
                                 <span v-else class="capitalize text-sm leading-6 text-heading">
-                                    {{ enums.paymentTypeEnumArray[order.payment_method] }}
+                                    {{ paymentTypeEnumArray[order.payment_method] }}
                                 </span>
                             </li>
                             <li class="flex items-center gap-2">
                                 <span class="capitalize text-sm leading-6">{{ $t("label.status") }}:</span>
                                 <span class="capitalize text-sm leading-6"
                                     :class="enums.paymentStatusEnum.PAID === order.payment_status ? 'text-green-600' : 'text-[#FB4E4E]'">
-                                    {{ enums.paymentStatusEnumArray[order.payment_status] }}
+                                    {{ paymentStatusEnumArray[order.payment_status] }}
                                 </span>
                             </li>
                         </ul>
@@ -191,20 +191,6 @@ export default {
                 activityEnum: activityEnum,
                 orderStatusEnum: orderStatusEnum,
                 paymentStatusEnum: paymentStatusEnum,
-                orderTypeEnumArray: {
-                    [orderTypeEnum.DELIVERY]: this.$t("label.delivery"),
-                    [orderTypeEnum.TAKEAWAY]: this.$t("label.takeaway"),
-                    [orderTypeEnum.DINING_TABLE]: this.$t("label.dining_table")
-                },
-                paymentStatusEnumArray: {
-                    [paymentStatusEnum.PAID]: this.$t("label.paid"),
-                    [paymentStatusEnum.UNPAID]: this.$t("label.unpaid")
-                },
-                paymentTypeEnumArray: {
-                    [paymentTypeEnum.CASH_ON_DELIVERY]: this.$t("label.cash_card"),
-                    [paymentTypeEnum.E_WALLET]: this.$t("label.e_wallet"),
-                    [paymentTypeEnum.PAYPAL]: this.$t("label.paypal")
-                },
             }
         }
     },
@@ -226,6 +212,27 @@ export default {
         },
         table: function () {
             return this.$store.getters['tableCart/table'];
+        },
+        // Keep translations reactive when changing language
+        orderTypeEnumArray() {
+            return {
+                [orderTypeEnum.DELIVERY]: this.$t("label.delivery"),
+                [orderTypeEnum.TAKEAWAY]: this.$t("label.takeaway"),
+                [orderTypeEnum.DINING_TABLE]: this.$t("label.dining_table"),
+            };
+        },
+        paymentStatusEnumArray() {
+            return {
+                [paymentStatusEnum.PAID]: this.$t("label.paid"),
+                [paymentStatusEnum.UNPAID]: this.$t("label.unpaid"),
+            };
+        },
+        paymentTypeEnumArray() {
+            return {
+                [paymentTypeEnum.CASH_ON_DELIVERY]: this.$t("label.cash_card"),
+                [paymentTypeEnum.E_WALLET]: this.$t("label.e_wallet"),
+                [paymentTypeEnum.PAYPAL]: this.$t("label.paypal"),
+            };
         }
     },
     mounted() {

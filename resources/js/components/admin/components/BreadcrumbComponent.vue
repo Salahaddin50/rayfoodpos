@@ -21,7 +21,7 @@
                     @click="refreshPage"
                     type="button"
                     class="db-breadcrumb-link db-breadcrumb-link-action inline-flex items-center justify-center w-9 h-9 rounded-lg bg-[#E8F4FD] hover:bg-[#D0E9FC] transition-colors"
-                    title="Refresh">
+                    :title="$t('button.refresh')">
                     <i class="fa-solid fa-rotate-right text-[#1776FF] text-base opacity-100"></i>
                 </button>
             </li>
