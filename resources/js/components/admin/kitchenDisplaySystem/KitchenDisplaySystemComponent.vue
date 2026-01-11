@@ -93,7 +93,7 @@
                   type="button"
                   class="db-btn text-[#1F1F39] w-fit flex items-center justify-center gap-3 h-11 px-4 rounded-lg transition bg-white hover:text-primary border border-[#D9DBE9] hover:bg-primary/5"
                   title="Refresh">
-                  <i class="lab lab-refresh-line lab-font-size-16 text-primary"></i>
+                  <i class="fa-solid fa-rotate-right text-primary text-base opacity-100"></i>
                 </button>
               </SwiperSlide>
             </Swiper>

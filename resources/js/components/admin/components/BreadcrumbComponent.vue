@@ -22,7 +22,7 @@
                     type="button"
                     class="db-breadcrumb-link inline-flex items-center justify-center w-9 h-9 rounded-lg bg-[#E8F4FD] hover:bg-[#D0E9FC] transition-colors"
                     title="Refresh">
-                    <i class="lab lab-refresh-line lab-font-size-16 text-[#1776FF]"></i>
+                    <i class="fa-solid fa-rotate-right text-[#1776FF] text-base opacity-100"></i>
                 </button>
             </li>
         </ul>

@@ -8,7 +8,7 @@
         type="button"
         class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center bg-white/20 hover:bg-white/30 transition-colors"
         title="Refresh">
-        <i class="lab lab-refresh-line lab-font-size-14 text-white"></i>
+        <i class="fa-solid fa-rotate-right text-white text-sm opacity-100"></i>
       </button>
     </h3>
     <div class="content-wrapper p-3 overflow-auto thin-scrolling h-full">
@@ -33,7 +33,7 @@
         type="button"
         class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center bg-white/20 hover:bg-white/30 transition-colors"
         title="Refresh">
-        <i class="lab lab-refresh-line lab-font-size-14 text-white"></i>
+        <i class="fa-solid fa-rotate-right text-white text-sm opacity-100"></i>
       </button>
     </h3>
     <div class="content-wrapper p-3 overflow-auto thin-scrolling h-full">
