@@ -419,11 +419,16 @@ export default {
             if (!this.currentBranchId) return;
             const current = item.effective_status ?? item.status;
             const next = current === this.enums.statusEnum.ACTIVE ? this.enums.statusEnum.INACTIVE : this.enums.statusEnum.ACTIVE;
+            const branchId = parseInt(String(this.currentBranchId).split(':')[0], 10);
+            if (isNaN(branchId)) {
+                alertService.error(this.$t('message.invalid_branch'));
+                return;
+            }
 
             this.loading.isActive = true;
             this.$store.dispatch('item/setBranchStatus', {
                 item_id: item.id,
-                branch_id: parseInt(String(this.currentBranchId).split(':')[0], 10),
+                branch_id: branchId,
                 status: next
             }).then(() => {
                 // refresh list so effective_status reflects latest override

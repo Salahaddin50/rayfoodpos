@@ -771,6 +771,7 @@
         "order_ready_for_delivery": "Sifarişiniz çatdırılma üçün hazırdır.",
         "no_items_found": "Axtarışınıza uyğun heç bir məhsul tapılmadı! Fərqli açar sözlər istifadə edin.",
         "no_data_available": "Məlumat mövcud deyil.",
+        "invalid_branch": "Filial düzgün deyil. Zəhmət olmasa filialı yenidən seçin və cəhd edin.",
         "branch_status_note": "{branch} üçün məhsul statusunu dəyişmək üçün məhsul cədvəlindəki 'Filial Statusu' düyməsindən istifadə edin. Bu forma yalnız qlobal statusu dəyişir (bütün filiallar).",
         "payment_method": "Ödəniş metodu tələb olunur.",
         "special_instructions_limit": "Xüsusi təlimatlar limiti 190 simvoldur."
