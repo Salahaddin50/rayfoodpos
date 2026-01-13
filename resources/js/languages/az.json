@@ -772,6 +772,7 @@
         "no_items_found": "Axtarışınıza uyğun heç bir məhsul tapılmadı! Fərqli açar sözlər istifadə edin.",
         "no_data_available": "Məlumat mövcud deyil.",
         "payment_method": "Ödəniş metodu tələb olunur.",
-        "special_instructions_limit": "Xüsusi təlimatlar limiti 190 simvoldur."
+        "special_instructions_limit": "Xüsusi təlimatlar limiti 190 simvoldur.",
+        "branch_status_note": "Filial statusu ayrıca idarə olunur. Filial statusunu dəyişdirmək üçün siyahıdakı düyməni istifadə edin."
     }
 }

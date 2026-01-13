@@ -99,22 +99,28 @@
 
                     <div class="form-col-12 sm:form-col-6">
                         <label class="db-field-title">{{ $t("label.status") }}</label>
+                        <div v-if="isBranchSelected" class="db-field-alert-info mb-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm text-blue-700">
+                            <i class="lab lab-info-circle"></i>
+                            {{ $t('message.branch_status_note') }} {{ currentBranchName ? '(' + currentBranchName + ')' : '' }}
+                        </div>
                         <div class="db-field-radio-group">
                             <div class="db-field-radio">
                                 <div class="custom-radio">
                                     <input type="radio" v-model="props.form.status" id="active"
-                                        :value="enums.statusEnum.ACTIVE" class="custom-radio-field">
+                                        :value="enums.statusEnum.ACTIVE" class="custom-radio-field"
+                                        :disabled="isBranchSelected">
                                     <span class="custom-radio-span"></span>
                                 </div>
-                                <label for="active" class="db-field-label">{{ $t('label.active') }}</label>
+                                <label for="active" class="db-field-label" :class="{ 'opacity-50': isBranchSelected }">{{ $t('label.active') }}</label>
                             </div>
                             <div class="db-field-radio">
                                 <div class="custom-radio">
                                     <input type="radio" class="custom-radio-field" v-model="props.form.status"
-                                        id="inactive" :value="enums.statusEnum.INACTIVE">
+                                        id="inactive" :value="enums.statusEnum.INACTIVE"
+                                        :disabled="isBranchSelected">
                                     <span class="custom-radio-span"></span>
                                 </div>
-                                <label for="inactive" class="db-field-label">{{ $t('label.inactive') }}</label>
+                                <label for="inactive" class="db-field-label" :class="{ 'opacity-50': isBranchSelected }">{{ $t('label.inactive') }}</label>
                             </div>
                         </div>
                     </div>
@@ -201,6 +207,17 @@ export default {
         },
         taxes: function () {
             return this.$store.getters['tax/lists'];
+        },
+        currentBranchId: function () {
+            const b = this.$store.getters['backendGlobalState/branchShow'];
+            return b && b.id ? b.id : null;
+        },
+        currentBranchName: function () {
+            const b = this.$store.getters['backendGlobalState/branchShow'];
+            return b && b.name ? b.name : null;
+        },
+        isBranchSelected: function () {
+            return this.currentBranchId !== null;
         }
     },
     mounted() {
@@ -275,33 +292,42 @@ export default {
                 fd.append('description', this.props.form.description);
                 fd.append('caution', this.props.form.caution);
                 fd.append('order', 1);
-                fd.append('status', this.props.form.status);
+                
+                const tempId = this.$store.getters['item/temp'].temp_id;
+                const isEditing = tempId !== null;
+                
+                // Only append status if not editing with branch selected (branch status is handled separately)
+                if (!(isEditing && this.isBranchSelected)) {
+                    fd.append('status', this.props.form.status);
+                }
+                
                 if (this.image) {
                     fd.append('image', this.image);
                 }
-                const tempId = this.$store.getters['item/temp'].temp_id;
+                
                 this.loading.isActive = true;
                 this.$store.dispatch('item/save', {
                     form: fd,
                     search: this.props.search
                 }).then((res) => {
-                    appService.sideDrawerHide();
-                    this.loading.isActive = false;
-                    alertService.successFlip((tempId === null ? 0 : 1), this.$t('menu.items'));
-                    this.props.form = {
-                        name: "",
-                        price: "",
-                        description: "",
-                        caution: "",
-                        is_featured: askEnum.YES,
-                        item_type: itemTypeEnum.VEG,
-                        item_category_id: null,
-                        tax_id: null,
-                        status: statusEnum.ACTIVE,
-                    };
-                    this.image = "";
-                    this.errors = {};
-                    this.$refs.imageProperty.value = null;
+                    // If editing with a branch selected, update branch status separately
+                    if (isEditing && this.isBranchSelected && this.props.form.status !== undefined) {
+                        const branchId = parseInt(String(this.currentBranchId).split(':')[0], 10);
+                        if (!isNaN(branchId)) {
+                            this.$store.dispatch('item/setBranchStatus', {
+                                item_id: tempId,
+                                branch_id: branchId,
+                                status: this.props.form.status
+                            }).then(() => {
+                                this.finishSave(tempId);
+                            }).catch((err) => {
+                                this.loading.isActive = false;
+                                alertService.error(err.response?.data?.message || err);
+                            });
+                            return;
+                        }
+                    }
+                    this.finishSave(tempId);
                 }).catch((err) => {
                     this.loading.isActive = false;
                     this.errors = {};
@@ -314,6 +340,27 @@ export default {
             } catch (err) {
                 this.loading.isActive = false;
                 alertService.error(err)
+            }
+        },
+        finishSave: function (tempId) {
+            appService.sideDrawerHide();
+            this.loading.isActive = false;
+            alertService.successFlip((tempId === null ? 0 : 1), this.$t('menu.items'));
+            this.props.form = {
+                name: "",
+                price: "",
+                description: "",
+                caution: "",
+                is_featured: askEnum.YES,
+                item_type: itemTypeEnum.VEG,
+                item_category_id: null,
+                tax_id: null,
+                status: statusEnum.ACTIVE,
+            };
+            this.image = "";
+            this.errors = {};
+            if (this.$refs.imageProperty) {
+                this.$refs.imageProperty.value = null;
             }
         }
     }
