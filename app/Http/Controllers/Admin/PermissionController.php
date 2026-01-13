@@ -46,6 +46,31 @@ class PermissionController extends AdminController
             )->where("role_has_permissions.role_id", $role->id)->get()->pluck('name', 'id');
             $permissions     = AppLibrary::permissionWithAccess($permissions, $rolePermissions);
             $permissions     = AppLibrary::numericToAssociativeArrayBuilder($permissions->toArray());
+
+            // Keep a stable, user-friendly order in the Role & Permissions UI.
+            // This also ensures newly added modules (e.g. Takeaway Types) appear near related sections.
+            $priority = [
+                'dashboard'     => 10,
+                'items'         => 20,
+                'dining-tables' => 30,
+                'takeaway-types'=> 31,
+            ];
+            $indexed = [];
+            foreach ($permissions as $idx => $p) {
+                $p['_idx'] = $idx;
+                $indexed[] = $p;
+            }
+            usort($indexed, function ($a, $b) use ($priority) {
+                $ar = $priority[$a['name'] ?? ''] ?? 1000;
+                $br = $priority[$b['name'] ?? ''] ?? 1000;
+                if ($ar !== $br) return $ar <=> $br;
+                return ($a['_idx'] ?? 0) <=> ($b['_idx'] ?? 0);
+            });
+            foreach ($indexed as &$p) {
+                unset($p['_idx']);
+            }
+            $permissions = $indexed;
+
             return new JsonResponse(['data' => $permissions], 201);
         } catch (Exception $exception) {
             return response(['status' => false, 'message' => $exception->getMessage()], 422);
