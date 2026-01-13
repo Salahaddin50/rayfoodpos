@@ -7,8 +7,6 @@ use App\Enums\Status;
 use App\Libraries\AppLibrary;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-use function PHPUnit\Framework\isNull;
-
 class ItemAddonResource extends JsonResource
 {
 
@@ -35,7 +33,7 @@ class ItemAddonResource extends JsonResource
                 return $offer;
             }
         });
-        if (isNull($offer)) {
+        if (is_null($offer)) {
             $offer = [];
         }
         $total           = $this->variation?->price + (count($offer) ? $offer[0]->convert_price : $this->addonItem?->price);
