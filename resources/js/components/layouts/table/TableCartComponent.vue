@@ -3,7 +3,7 @@
         class="w-screen h-full fixed top-[58px] lg:top-[74px] left-0 z-60 opacity-0 invisible bg-black/60 transition">
         <div class="max-w-sm w-full h-screen absolute top-0 right-0 translate-x-full bg-white transition">
 
-            <div :class="carts.length === 0 ? 'flex items-center justify-center flex-col text-center' : 'h-[calc(96vh-200px)] lg:h-[calc(100vh-220px)] thin-scrolling overflow-y-auto'"
+            <div :class="carts.length === 0 ? 'flex items-center justify-center flex-col text-center' : 'h-[calc(100vh-240px)] lg:h-[calc(100vh-260px)] thin-scrolling overflow-y-auto'"
                 class="p-4 relative">
                 <h3 :class="carts.length === 0 ? 'mb-16' : 'mb-5'" class="text-xl font-semibold capitalize text-center">
                     {{ $t('label.my_cart') }}
