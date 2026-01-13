@@ -433,12 +433,13 @@ class OrderService
                 $this->order->save();
             });
             
-            // Dispatch notifications after transaction commits to prevent rollback on notification failures
+            // Dispatch notifications after transaction commits to prevent checkout failure when notification services fail.
+            // IMPORTANT: Some providers (e.g., Twilio) can throw TypeError (which is not an Exception), so we catch Throwable.
             try {
                 SendOrderGotMail::dispatch(['order_id' => $this->order->id]);
                 SendOrderGotSms::dispatch(['order_id' => $this->order->id]);
                 SendOrderGotPush::dispatch(['order_id' => $this->order->id]);
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 Log::warning("Order notification failed but order was created successfully: " . $e->getMessage());
             }
             

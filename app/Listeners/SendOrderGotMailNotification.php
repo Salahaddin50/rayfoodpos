@@ -14,7 +14,7 @@ class SendOrderGotMailNotification
         try{
             $orderMailNotificationBuilderService = new OrderGotMailNotificationBuilder($event->info['order_id']);
             $orderMailNotificationBuilderService->send();
-        } catch(\Exception $e) {
+        } catch(\Throwable $e) {
             Log::info($e->getMessage());
         }
     }

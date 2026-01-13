@@ -14,7 +14,7 @@ class SendOrderGotSmsNotification
         try {
             $orderGotSmsNotificationBuilderService = new OrderGotSmsNotificationBuilder($event->info['order_id']);
             $orderGotSmsNotificationBuilderService->send();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::info($e->getMessage());
         }
     }

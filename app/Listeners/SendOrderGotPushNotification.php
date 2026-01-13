@@ -14,7 +14,7 @@ class SendOrderGotPushNotification
         try{
             $orderPushNotificationBuilderService = new OrderGotPushNotificationBuilder($event->info['order_id']);
             $orderPushNotificationBuilderService->send();
-        } catch(\Exception $e) {
+        } catch(\Throwable $e) {
             Log::info($e->getMessage());
         }
     }
