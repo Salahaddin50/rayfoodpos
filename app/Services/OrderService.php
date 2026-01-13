@@ -365,9 +365,17 @@ class OrderService
     {
         try {
             DB::transaction(function () use ($request) {
+                $customer = User::find($request->customer_id);
+                if (!$customer) {
+                    $customer = User::where('username', 'default-customer')->first();
+                }
+                if (!$customer) {
+                    throw new Exception("Default customer not found. Please create/restore a customer user with username 'default-customer' (Walking Customer).", 422);
+                }
+
                 $this->order = FrontendOrder::create(
                     $request->validated() + [
-                        'user_id'          => $request->customer_id,
+                        'user_id'          => $customer->id,
                         'status'           => OrderStatus::PENDING,
                         'order_datetime'   => date('Y-m-d H:i:s'),
                         'preparation_time' => Settings::group('site')->get('site_food_preparation_time')

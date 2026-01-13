@@ -293,10 +293,14 @@ export default {
                 }).catch();
             }).catch((err) => {
                 this.loading.isActive = false;
-                if (typeof err.response.data.errors === 'object') {
+                if (typeof err?.response?.data?.errors === 'object') {
                     _.forEach(err.response.data.errors, (error) => {
                         alertService.error(error[0]);
                     });
+                } else if (err?.response?.data?.message) {
+                    alertService.error(err.response.data.message);
+                } else {
+                    alertService.error('Something went wrong.');
                 }
             })
         }
