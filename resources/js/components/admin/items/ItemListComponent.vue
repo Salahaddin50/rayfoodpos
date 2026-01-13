@@ -24,7 +24,7 @@
                         </div>
                     </div>
                     <ItemUploadComponent v-on:list="list" />
-                    <ItemCreateComponent :props="props" v-if="permissionChecker('items_create')" />
+                    <ItemCreateComponent :props="props" :currentBranchId="currentBranchId" :currentBranchName="currentBranchName" v-if="permissionChecker('items_create')" />
                 </div>
             </div>
 
@@ -441,10 +441,6 @@ export default {
             this.$store.dispatch('item/edit', item.id);
             this.loading.isActive = false;
             this.props.errors = {};
-            // Use effective_status if branch is selected, otherwise use global status
-            const statusToUse = this.currentBranchId && item.effective_status !== undefined 
-                ? item.effective_status 
-                : item.status;
             this.props.form = {
                 name: item.name,
                 price: item.flat_price,
@@ -454,7 +450,7 @@ export default {
                 item_type: item.item_type,
                 tax_id: item.tax_id,
                 item_category_id: item.item_category_id,
-                status: statusToUse,
+                status: item.status,
             };
         },
         destroy: function (id) {
