@@ -217,25 +217,28 @@ export default {
             if (!this.paymentMethod) {
                 return alertService.error(this.$t('message.payment_method'));
             }
-            // Ensure table/branch are loaded (branch_id is required by TableOrderRequest)
-            if (!this.table || !this.table.id || !this.table.branch_id) {
-                this.loading.isActive = true;
-                return this.$store.dispatch('tableDiningTable/show', this.$route.params.slug).then((res) => {
-                    this.$store.dispatch('tableCart/initTable', res.data.data);
-                    this.loading.isActive = false;
-                    if (!res.data.data || !res.data.data.id || !res.data.data.branch_id) {
-                        return alertService.error(this.$t('message.something_wrong'));
-                    }
-                    // retry submit now that we have table info
-                    this.orderSubmit();
-                }).catch(() => {
-                    this.loading.isActive = false;
-                    alertService.error(this.$t('message.something_wrong'));
-                });
-            }
+
             this.loading.isActive = true;
-            this.checkoutProps.form.dining_table_id = this.table.id;
-            this.checkoutProps.form.branch_id = this.table.branch_id;
+
+            const ensureTable = () => {
+                if (this.table && this.table.id && this.table.branch_id) {
+                    return Promise.resolve(this.table);
+                }
+                return this.$store.dispatch('tableDiningTable/show', this.$route.params.slug).then((res) => {
+                    this.$store.dispatch('tableCart/initTable', res.data.data).then().catch();
+                    return res.data.data;
+                });
+            };
+
+            ensureTable().then((table) => {
+                if (!table || !table.id || !table.branch_id) {
+                    this.loading.isActive = false;
+                    alertService.error(this.$t('message.something_went_wrong'));
+                    return this.$router.push({ name: 'table.menu.table', params: { slug: this.$route.params.slug } });
+                }
+
+                this.checkoutProps.form.dining_table_id = table.id;
+                this.checkoutProps.form.branch_id = table.branch_id;
             this.checkoutProps.form.subtotal = this.subtotal;
             this.checkoutProps.form.total = parseFloat(this.subtotal).toFixed(this.setting.site_digit_after_decimal_point);
             this.checkoutProps.form.items = [];
@@ -314,7 +317,11 @@ export default {
                         alertService.error(error[0]);
                     });
                 }
-            })
+            });
+            }).catch(() => {
+                this.loading.isActive = false;
+                alertService.error(this.$t('message.something_went_wrong'));
+            });
         }
     },
     watch: {
