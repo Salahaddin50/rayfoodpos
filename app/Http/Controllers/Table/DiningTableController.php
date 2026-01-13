@@ -35,10 +35,14 @@ class DiningTableController extends Controller
         try {
             $raw = urldecode($slug);
             $slugified = Str::slug($raw);
+            // Handle slugs where numbers are attached to words (e.g. "masa4" vs "masa-4")
+            $spacedAlphaNumeric = preg_replace('/([\pL])([0-9]+)/u', '$1 $2', $raw);
+            $slugifiedAlphaNumeric = Str::slug($spacedAlphaNumeric);
 
             $table = FrontendDiningTable::query()
                 ->where('slug', $raw)
                 ->orWhere('slug', $slugified)
+                ->orWhere('slug', $slugifiedAlphaNumeric)
                 ->orWhere('name', $raw)
                 ->first();
 
