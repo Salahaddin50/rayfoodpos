@@ -12,7 +12,6 @@ use App\Models\ItemVariation;
 use App\Http\Requests\ItemRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Schema;
 use App\Http\Requests\PaginateRequest;
 use App\Libraries\QueryExceptionLibrary;
 use App\Http\Requests\ChangeImageRequest;
@@ -41,16 +40,16 @@ class ItemService
     {
         try {
             $requests    = $request->all();
-            $branchIdRaw = $request->get('branch_id');
-            $branchId    = is_numeric($branchIdRaw) ? (int) $branchIdRaw : null;
-            unset($requests['branch_id']);
+            $branchId    = $request->get('branch_id');
+            $statusFilter = $requests['status'] ?? null;
+            unset($requests['branch_id'], $requests['status']);
             $method      = $request->get('paginate', 0) == 1 ? 'paginate' : 'get';
             $methodValue = $request->get('paginate', 0) == 1 ? $request->get('per_page', 10) : '*';
             $orderColumn = $request->get('order_column') ?? 'id';
             $orderType   = $request->get('order_type') ?? 'desc';
 
             $query = Item::with('media', 'category', 'tax')
-                ->when($branchId && Schema::hasTable('branch_item_statuses'), function ($q) use ($branchId) {
+                ->when($branchId, function ($q) use ($branchId) {
                     $q->with(['branchItemStatuses' => function ($sub) use ($branchId) {
                         $sub->where('branch_id', $branchId);
                     }]);
@@ -74,6 +73,22 @@ class ItemService
                         }
                     }
                 }
+            })->when($statusFilter !== null, function ($q) use ($statusFilter, $branchId) {
+                // Apply status filter using branch override when a branch is selected.
+                $q->where(function ($sub) use ($statusFilter, $branchId) {
+                    if ($branchId) {
+                        $sub->whereHas('branchItemStatuses', function ($bis) use ($branchId, $statusFilter) {
+                            $bis->where('branch_id', $branchId)->where('status', $statusFilter);
+                        })->orWhere(function ($fallback) use ($branchId, $statusFilter) {
+                            // No override for this branch, fall back to global item status
+                            $fallback->whereDoesntHave('branchItemStatuses', function ($bis) use ($branchId) {
+                                $bis->where('branch_id', $branchId);
+                            })->where('status', $statusFilter);
+                        });
+                    } else {
+                        $sub->where('status', $statusFilter);
+                    }
+                });
             })->orderBy($orderColumn, $orderType);
 
             return $query->$method($methodValue);
@@ -87,9 +102,9 @@ class ItemService
     {
         try {
             $requests    = $request->all();
-            $branchIdRaw = $request->get('branch_id');
-            $branchId    = is_numeric($branchIdRaw) ? (int) $branchIdRaw : null;
-            unset($requests['branch_id']);
+            $branchId    = $request->get('branch_id');
+            $statusFilter = $requests['status'] ?? null;
+            unset($requests['branch_id'], $requests['status']);
             $method      = $request->get('paginate', 0) == 1 ? 'paginate' : 'get';
             $methodValue = $request->get('paginate', 0) == 1 ? $request->get('per_page', 10) : '*';
             $orderColumn = $request->get('order_column') ?? 'id';
@@ -97,7 +112,7 @@ class ItemService
 
             $query = Item::with('media', 'category', 'tax', 'offer', 'variations.itemAttribute', 'extras', 'addons')
                 ->withCount('orders')
-                ->when($branchId && Schema::hasTable('branch_item_statuses'), function ($q) use ($branchId) {
+                ->when($branchId, function ($q) use ($branchId) {
                     $q->with(['branchItemStatuses' => function ($sub) use ($branchId) {
                         $sub->where('branch_id', $branchId);
                     }]);
@@ -121,6 +136,22 @@ class ItemService
                         }
                     }
                 }
+            })->when($statusFilter !== null, function ($q) use ($statusFilter, $branchId) {
+                // Apply status filter using branch override when a branch is selected.
+                $q->where(function ($sub) use ($statusFilter, $branchId) {
+                    if ($branchId) {
+                        $sub->whereHas('branchItemStatuses', function ($bis) use ($branchId, $statusFilter) {
+                            $bis->where('branch_id', $branchId)->where('status', $statusFilter);
+                        })->orWhere(function ($fallback) use ($branchId, $statusFilter) {
+                            // No override for this branch, fall back to global item status
+                            $fallback->whereDoesntHave('branchItemStatuses', function ($bis) use ($branchId) {
+                                $bis->where('branch_id', $branchId);
+                            })->where('status', $statusFilter);
+                        });
+                    } else {
+                        $sub->where('status', $statusFilter);
+                    }
+                });
             })->orderBy($orderColumn, $orderType);
 
             return $query->$method($methodValue);
@@ -138,15 +169,28 @@ class ItemService
     public function saveBranchItemStatus(int $branchId, Item $item, int $status): void
     {
         try {
-            // Check if table exists before trying to update/insert
-            if (!Schema::hasTable('branch_item_statuses')) {
-                throw new Exception('Branch item statuses feature is not available. Please run migrations.', 422);
-            }
+            $existing = DB::table('branch_item_statuses')
+                ->where('branch_id', $branchId)
+                ->where('item_id', $item->id)
+                ->first();
             
-            DB::table('branch_item_statuses')->updateOrInsert(
-                ['branch_id' => $branchId, 'item_id' => $item->id],
-                ['status' => $status, 'updated_at' => now(), 'created_at' => now()]
-            );
+            if ($existing) {
+                DB::table('branch_item_statuses')
+                    ->where('branch_id', $branchId)
+                    ->where('item_id', $item->id)
+                    ->update([
+                        'status' => $status,
+                        'updated_at' => now()
+                    ]);
+            } else {
+                DB::table('branch_item_statuses')->insert([
+                    'branch_id' => $branchId,
+                    'item_id' => $item->id,
+                    'status' => $status,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+            }
         } catch (Exception $exception) {
             Log::info($exception->getMessage());
             throw new Exception(QueryExceptionLibrary::message($exception), 422);

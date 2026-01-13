@@ -359,6 +359,14 @@ export default {
         },
 
     },
+    watch: {
+        currentBranchId: function(newBranchId, oldBranchId) {
+            // Reload the list when branch changes
+            if (newBranchId !== oldBranchId && oldBranchId !== undefined) {
+                this.list();
+            }
+        }
+    },
     methods: {
         permissionChecker(e) {
             return appService.permissionChecker(e);
@@ -395,6 +403,9 @@ export default {
             this.props.search.page = page;
             if (this.currentBranchId) {
                 this.props.search.branch_id = this.currentBranchId;
+            } else {
+                // Remove branch_id if no branch selected to avoid stale data
+                delete this.props.search.branch_id;
             }
             this.$store.dispatch('item/lists', this.props.search).then(res => {
                 this.loading.isActive = false;
@@ -438,6 +449,7 @@ export default {
                 tax_id: item.tax_id,
                 item_category_id: item.item_category_id,
                 status: item.status,
+                branch_status: item.branch_status !== null ? item.branch_status : undefined,
             };
         },
         destroy: function (id) {

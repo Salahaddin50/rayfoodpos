@@ -24,10 +24,8 @@ class SimpleItemResource extends JsonResource
             $branchOverrideStatus = $this->branchItemStatuses->first()->status;
         }
 
-        $effectiveStatus = $this->status;
-        if ($this->status === \App\Enums\Status::ACTIVE && $branchOverrideStatus !== null) {
-            $effectiveStatus = $branchOverrideStatus;
-        }
+        // If a branch-specific status exists, use it; otherwise fall back to the item status.
+        $effectiveStatus = $branchOverrideStatus !== null ? $branchOverrideStatus : $this->status;
         return [
             "id"               => $this->id,
             "name"             => $this->name,

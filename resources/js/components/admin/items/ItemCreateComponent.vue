@@ -97,8 +97,8 @@
                         </div>
                     </div>
 
-                    <div class="form-col-12 sm:form-col-6" v-if="!currentBranchId">
-                        <label class="db-field-title">{{ $t("label.status") }}</label>
+                    <div class="form-col-12 sm:form-col-6">
+                        <label class="db-field-title">{{ $t("label.status") }} ({{ $t('label.global') }})</label>
                         <div class="db-field-radio-group">
                             <div class="db-field-radio">
                                 <div class="custom-radio">
@@ -117,16 +117,38 @@
                                 <label for="inactive" class="db-field-label">{{ $t('label.inactive') }}</label>
                             </div>
                         </div>
+                        <small class="text-xs text-gray-500 mt-1">{{ $t('label.applies_to_all_branches') }}</small>
                     </div>
-                    
-                    <div class="form-col-12 sm:form-col-6" v-if="currentBranchId">
-                        <label class="db-field-title">{{ $t("label.status") }}</label>
-                        <div class="px-3 py-2 bg-blue-50 border border-blue-200 rounded-md">
-                            <p class="text-xs text-blue-800">
-                                <i class="fa-solid fa-info-circle mr-1"></i>
-                                {{ $t('message.branch_status_note', { branch: currentBranchName }) }}
-                            </p>
+
+                    <div class="form-col-12 sm:form-col-6" v-if="currentBranchId && temp.isEditing">
+                        <label class="db-field-title">{{ $t("label.status") }} ({{ currentBranchName || $t('label.current_branch') }})</label>
+                        <div class="db-field-radio-group">
+                            <div class="db-field-radio">
+                                <div class="custom-radio">
+                                    <input type="radio" v-model="props.form.branch_status" id="branch_active"
+                                        :value="enums.statusEnum.ACTIVE" class="custom-radio-field">
+                                    <span class="custom-radio-span"></span>
+                                </div>
+                                <label for="branch_active" class="db-field-label">{{ $t('label.active') }}</label>
+                            </div>
+                            <div class="db-field-radio">
+                                <div class="custom-radio">
+                                    <input type="radio" class="custom-radio-field" v-model="props.form.branch_status"
+                                        id="branch_inactive" :value="enums.statusEnum.INACTIVE">
+                                    <span class="custom-radio-span"></span>
+                                </div>
+                                <label for="branch_inactive" class="db-field-label">{{ $t('label.inactive') }}</label>
+                            </div>
+                            <div class="db-field-radio">
+                                <div class="custom-radio">
+                                    <input type="radio" class="custom-radio-field" v-model="props.form.branch_status"
+                                        id="branch_default" :value="null">
+                                    <span class="custom-radio-span"></span>
+                                </div>
+                                <label for="branch_default" class="db-field-label">{{ $t('label.use_global') }}</label>
+                            </div>
                         </div>
+                        <small class="text-xs text-gray-500 mt-1">{{ $t('label.branch_specific_override') }}</small>
                     </div>
 
                     <div class="form-col-12">
@@ -177,7 +199,7 @@ import appService from "../../../services/appService";
 export default {
     name: "ItemCreateComponent",
     components: { SmSidebarModalCreateComponent, LoadingComponent },
-    props: ['props', 'currentBranchId', 'currentBranchName'],
+    props: ['props'],
     data() {
         return {
             loading: {
@@ -211,6 +233,17 @@ export default {
         },
         taxes: function () {
             return this.$store.getters['tax/lists'];
+        },
+        temp: function () {
+            return this.$store.getters['item/temp'];
+        },
+        currentBranchId: function () {
+            const b = this.$store.getters['backendGlobalState/branchShow'];
+            return b && b.id ? b.id : null;
+        },
+        currentBranchName: function () {
+            const b = this.$store.getters['backendGlobalState/branchShow'];
+            return b && b.name ? b.name : null;
         }
     },
     mounted() {
@@ -295,6 +328,16 @@ export default {
                     form: fd,
                     search: this.props.search
                 }).then((res) => {
+                    // Save branch-specific status if editing and branch is selected
+                    if (tempId !== null && this.currentBranchId && this.props.form.branch_status !== undefined) {
+                        return this.$store.dispatch('item/setBranchStatus', {
+                            item_id: tempId,
+                            branch_id: this.currentBranchId,
+                            status: this.props.form.branch_status === null ? this.props.form.status : this.props.form.branch_status
+                        }).then(() => res);
+                    }
+                    return res;
+                }).then((res) => {
                     appService.sideDrawerHide();
                     this.loading.isActive = false;
                     alertService.successFlip((tempId === null ? 0 : 1), this.$t('menu.items'));
@@ -308,6 +351,7 @@ export default {
                         item_category_id: null,
                         tax_id: null,
                         status: statusEnum.ACTIVE,
+                        branch_status: undefined,
                     };
                     this.image = "";
                     this.errors = {};
