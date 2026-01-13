@@ -431,11 +431,17 @@ class OrderService
                 $end = $endTime->format('H:i');
                 $this->order->delivery_time   = "$start - $end";
                 $this->order->save();
-
+            });
+            
+            // Dispatch notifications after transaction commits to prevent rollback on notification failures
+            try {
                 SendOrderGotMail::dispatch(['order_id' => $this->order->id]);
                 SendOrderGotSms::dispatch(['order_id' => $this->order->id]);
                 SendOrderGotPush::dispatch(['order_id' => $this->order->id]);
-            });
+            } catch (\Exception $e) {
+                Log::warning("Order notification failed but order was created successfully: " . $e->getMessage());
+            }
+            
             return $this->order;
         } catch (Exception $exception) {
             DB::rollBack();
