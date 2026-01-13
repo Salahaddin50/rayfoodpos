@@ -11,16 +11,17 @@
                     class="hidden db-header-toggle lg:flex items-center justify-center w-9 h-9 px-3 rounded-lg bg-[#E0FFED]">
                     <i class="lab lab-maximize lab-font-size-24 text-[#1AB759]"></i>
                 </button>
-                <div v-if="branch && branch.name" class="relative dropdown-group">
-                    <button class="flex items-center text-left gap-2 dropdown-btn">
+                <!-- Branch display (always). Only allow switching when authBranch === 0 -->
+                <div v-if="branch && branch.name" class="relative" :class="authBranch === 0 ? 'dropdown-group' : ''">
+                    <button class="flex items-center text-left gap-2" :class="authBranch === 0 ? 'dropdown-btn' : ''">
                         <i class="lab lab-shop lab-font-size-24 font-fill-primary"></i>
                         <h3 class="capitalize text-xs font-medium text-heading">
                             <span class="block font-normal mb-0.5">{{ $t('label.branch') }}</span>
                             <b class="font-semibold whitespace-nowrap">{{ branch.name }}</b>
                         </h3>
-                        <i class="lab lab-arrow-down text-xs ml-1.5 lab-font-size-14"></i>
+                        <i v-if="authBranch === 0" class="lab lab-arrow-down text-xs ml-1.5 lab-font-size-14"></i>
                     </button>
-                    <ul v-if="branches.length > 0"
+                    <ul v-if="authBranch === 0 && branches.length > 0"
                         class="p-2 w-fit rounded-lg shadow-xl absolute top-14 left-0 z-10 border border-gray-200 bg-white dropdown-list transition-all duration-300 scale-y-0 origin-top">
                         <li v-for="branch in branches"
                             class="flex items-center gap-2 w-full px-2.5 rounded-md transition hover:bg-gray-100">
