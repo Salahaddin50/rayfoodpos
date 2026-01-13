@@ -100,6 +100,7 @@
         "status": "Status",
         "active": "Aktiv",
         "inactive": "Qeyri-aktiv",
+        "not_available": "Mövcud deyil",
         "branch_specific_status": "Yalnız bu filial üçün",
         "branch": "Filial",
         "role": "Rol",

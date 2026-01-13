@@ -219,8 +219,7 @@ export default {
                     paginate: 0,
                     order_column: "id",
                     order_type: "asc",
-                    item_category_id: "",
-                    status: statusEnum.ACTIVE
+                    item_category_id: ""
                 },
                 property: {
                     design: itemDesignEnum.LIST,

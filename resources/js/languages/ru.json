@@ -100,6 +100,7 @@
         "status": "Статус",
         "active": "Активный",
         "inactive": "Неактивный",
+        "not_available": "Недоступно",
         "branch_specific_status": "Статус для филиала",
         "branch": "Филиал",
         "role": "Роль",

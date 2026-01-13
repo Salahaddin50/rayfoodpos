@@ -2,8 +2,11 @@
     <!--========ITEM PART START=========-->
     <div v-if="design === itemDesignEnum.LIST" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
         <div v-for="item in items" :key="item" v-show="type === null || type === item.item_type"
-            class="product-card-list" :class="isPassive(item) ? 'opacity-60' : ''">
+            class="product-card-list relative" :class="isPassive(item) ? 'opacity-50 grayscale' : ''">
             <img class="product-card-list-image" :src="item.thumb" alt="thumbnail">
+            <div v-if="isPassive(item)" class="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                {{ $t('label.not_available') }}
+            </div>
             <div class="product-card-list-content-group">
                 <div class="product-card-list-header-group">
                     <h3 class="product-card-list-title">{{ textShortener(item.name, 25) }}</h3>
@@ -25,10 +28,10 @@
                         </h4>
                     </div>
                     <button :disabled="isPassive(item)" @click.prevent="variationModalShow(item)" data-modal="#item-variation-modal"
-                        class="product-card-list-cart-btn add-btn">
-                        <i class="lab lab-bag-2 font-fill-primary transition lab-font-size-14"></i>
-                        <span class="text-xs text-primary transition">
-                            {{ isPassive(item) ? $t('label.inactive') : $t('button.add') }}
+                        class="product-card-list-cart-btn add-btn" :class="isPassive(item) ? 'cursor-not-allowed' : ''">
+                        <i class="lab lab-bag-2 transition lab-font-size-14" :class="isPassive(item) ? 'text-gray-400' : 'font-fill-primary'"></i>
+                        <span class="text-xs transition" :class="isPassive(item) ? 'text-gray-400' : 'text-primary'">
+                            {{ isPassive(item) ? $t('label.not_available') : $t('button.add') }}
                         </span>
                     </button>
                 </div>
@@ -38,8 +41,11 @@
     <div v-else-if="design === itemDesignEnum.GRID"
         class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 lg:gap-6">
         <div v-for="item in items" :key="item" v-show="type === null || type === item.item_type"
-            class="product-card-grid" :class="isPassive(item) ? 'opacity-60' : ''">
+            class="product-card-grid relative" :class="isPassive(item) ? 'opacity-50 grayscale' : ''">
             <img class="product-card-grid-image" :src="item.cover" alt="product">
+            <div v-if="isPassive(item)" class="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                {{ $t('label.not_available') }}
+            </div>
             <div class="product-card-grid-content-group">
                 <div class="product-card-grid-header-group">
                     <h3 class="product-card-grid-title">{{ textShortener(item.name, 26) }}</h3>
@@ -59,10 +65,10 @@
                         </h4>
                     </div>
                     <button :disabled="isPassive(item)" @click.prevent="variationModalShow(item)" data-modal="#item-variation-modal"
-                        class="product-card-grid-cart-btn add-btn">
-                        <i class="lab lab-bag-2 font-fill-primary transition lab-font-size-14"></i>
-                        <span class="text-xs text-primary transition">
-                            {{ isPassive(item) ? $t('label.inactive') : $t('button.add') }}
+                        class="product-card-grid-cart-btn add-btn" :class="isPassive(item) ? 'cursor-not-allowed' : ''">
+                        <i class="lab lab-bag-2 transition lab-font-size-14" :class="isPassive(item) ? 'text-gray-400' : 'font-fill-primary'"></i>
+                        <span class="text-xs transition" :class="isPassive(item) ? 'text-gray-400' : 'text-primary'">
+                            {{ isPassive(item) ? $t('label.not_available') : $t('button.add') }}
                         </span>
                     </button>
                 </div>
