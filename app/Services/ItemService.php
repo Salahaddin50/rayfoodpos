@@ -138,6 +138,11 @@ class ItemService
     public function saveBranchItemStatus(int $branchId, Item $item, int $status): void
     {
         try {
+            // Check if table exists before trying to update/insert
+            if (!Schema::hasTable('branch_item_statuses')) {
+                throw new Exception('Branch item statuses feature is not available. Please run migrations.', 422);
+            }
+            
             DB::table('branch_item_statuses')->updateOrInsert(
                 ['branch_id' => $branchId, 'item_id' => $item->id],
                 ['status' => $status, 'updated_at' => now(), 'created_at' => now()]
