@@ -53,6 +53,28 @@
                     </button>
                 </form>
 
+                <!-- Branch / Table info (restored) -->
+                <div v-if="table && (table.branch_name || table.name)" class="relative dropdown-group w-full sm:w-fit">
+                    <button
+                        class="flex items-center justify-center gap-1.5 w-fit rounded-3xl capitalize text-sm font-medium h-8 px-3 border transition text-heading bg-white border-gray-200 dropdown-btn">
+                        <i class="fa-solid fa-store text-sm"></i>
+                        <span class="whitespace-nowrap">{{ table.branch_name ? table.branch_name : table.name }}</span>
+                        <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                    </button>
+                    <ul
+                        class="p-2 min-w-[220px] rounded-lg shadow-xl absolute top-14 ltr:right-0 rtl:left-0 z-10 border border-gray-200 bg-white transition-all duration-300 origin-top scale-y-0 dropdown-list">
+                        <li v-if="table.name" class="py-1.5 px-2.5 rounded-md">
+                            <div class="text-xs font-semibold text-heading">{{ table.name }}</div>
+                        </li>
+                        <li v-if="table.branch_address" class="py-1.5 px-2.5 rounded-md">
+                            <div class="text-xs text-paragraph">{{ table.branch_address }}</div>
+                        </li>
+                        <li v-if="table.branch_phone" class="py-1.5 px-2.5 rounded-md">
+                            <div class="text-xs text-paragraph">{{ table.branch_phone }}</div>
+                        </li>
+                    </ul>
+                </div>
+
                 <div v-if="setting.site_language_switch === enums.activityEnum.ENABLE"
                     class="hidden lg:block relative dropdown-group w-full sm:w-fit">
                     <button
@@ -121,6 +143,9 @@ export default {
         },
         subtotal: function () {
             return this.$store.getters['tableCart/subtotal'];
+        },
+        table: function () {
+            return this.$store.getters['tableCart/table'];
         }
     },
     mounted() {
@@ -161,11 +186,9 @@ export default {
                 });
             }).catch();
 
-            window.setTimeout(() => {
-                this.$store.dispatch('tableDiningTable/show', this.$route.params.slug).then(res => {
-                    this.$store.dispatch('tableCart/initTable', res.data.data);
-                }).catch((err) => { });
-            }, 300);
+            this.$store.dispatch('tableDiningTable/show', this.$route.params.slug).then(res => {
+                this.$store.dispatch('tableCart/initTable', res.data.data);
+            }).catch((err) => { });
 
             this.loading.isActive = false;
         }).catch((err) => {
