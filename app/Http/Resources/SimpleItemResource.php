@@ -39,12 +39,24 @@ class SimpleItemResource extends JsonResource
             "cover"            => $this->cover,
             "preview"          => $this->preview,
             "category_name"    => optional($this->category)->name,
-            "category"         => new ItemCategoryResource($this->category),
-            "tax"              => new TaxResource($this->tax),
-            "variations"       => $this->variations->groupBy('item_attribute_id'),
-            "itemAttributes"   => ItemAttributeResource::collection($this->itemAttributeList($this->variations)),
-            "extras"           => ItemExtraResource::collection($this->extras),
-            "addons"           => ItemAddonResource::collection($this->addons),
+            "category"         => $this->whenLoaded('category', function() {
+                return new ItemCategoryResource($this->category);
+            }),
+            "tax"              => $this->whenLoaded('tax', function() {
+                return new TaxResource($this->tax);
+            }),
+            "variations"       => $this->whenLoaded('variations', function() {
+                return $this->variations->groupBy('item_attribute_id');
+            }),
+            "itemAttributes"   => $this->whenLoaded('variations', function() {
+                return ItemAttributeResource::collection($this->itemAttributeList($this->variations));
+            }),
+            "extras"           => $this->whenLoaded('extras', function() {
+                return ItemExtraResource::collection($this->extras);
+            }),
+            "addons"           => $this->whenLoaded('addons', function() {
+                return ItemAddonResource::collection($this->addons);
+            }),
             "offer"            => SimpleOfferResource::collection(
                 $this->offer->filter(function ($offer) use ($price) {
                     if (AppLibrary::isBetweenDate($offer->start_date, $offer->end_date) && $offer->status === Status::ACTIVE) {

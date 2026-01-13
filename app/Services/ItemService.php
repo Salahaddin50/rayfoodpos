@@ -82,7 +82,7 @@ class ItemService
             $orderColumn = $request->get('order_column') ?? 'id';
             $orderType   = $request->get('order_type') ?? 'desc';
 
-            return Item::with('media', 'category', 'offer', 'variations.itemAttribute', 'extras', 'addons')
+            return Item::with('media', 'category', 'tax', 'offer', 'variations.itemAttribute', 'extras', 'addons')
                 ->withCount('orders')
                 ->where(function ($query) use ($requests) {
                 foreach ($requests as $key => $request) {
