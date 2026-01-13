@@ -402,7 +402,12 @@ export default {
             this.loading.isActive = true;
             this.props.search.page = page;
             if (this.currentBranchId) {
-                this.props.search.branch_id = this.currentBranchId;
+                const bid = parseInt(String(this.currentBranchId).split(':')[0], 10);
+                if (!isNaN(bid)) {
+                    this.props.search.branch_id = bid;
+                } else {
+                    delete this.props.search.branch_id;
+                }
             }
             this.$store.dispatch('item/lists', this.props.search).then(res => {
                 this.loading.isActive = false;
@@ -418,7 +423,7 @@ export default {
             this.loading.isActive = true;
             this.$store.dispatch('item/setBranchStatus', {
                 item_id: item.id,
-                branch_id: this.currentBranchId,
+                branch_id: parseInt(String(this.currentBranchId).split(':')[0], 10),
                 status: next
             }).then(() => {
                 // refresh list so effective_status reflects latest override

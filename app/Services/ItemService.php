@@ -40,7 +40,8 @@ class ItemService
     {
         try {
             $requests    = $request->all();
-            $branchId    = $request->get('branch_id');
+            $branchIdRaw = $request->get('branch_id');
+            $branchId    = is_numeric($branchIdRaw) ? (int) $branchIdRaw : null;
             unset($requests['branch_id']);
             $method      = $request->get('paginate', 0) == 1 ? 'paginate' : 'get';
             $methodValue = $request->get('paginate', 0) == 1 ? $request->get('per_page', 10) : '*';
@@ -85,7 +86,8 @@ class ItemService
     {
         try {
             $requests    = $request->all();
-            $branchId    = $request->get('branch_id');
+            $branchIdRaw = $request->get('branch_id');
+            $branchId    = is_numeric($branchIdRaw) ? (int) $branchIdRaw : null;
             unset($requests['branch_id']);
             $method      = $request->get('paginate', 0) == 1 ? 'paginate' : 'get';
             $methodValue = $request->get('paginate', 0) == 1 ? $request->get('per_page', 10) : '*';
