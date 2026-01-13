@@ -34,15 +34,15 @@ class SimpleItemResource extends JsonResource
             "status"           => $this->status,
             "description"      => $this->description === null ? '' : $this->description,
             "caution"          => $this->caution === null ? '' : $this->caution,
-            "order"            => $this->orders_count ?? $this->orders->count() ?? 0,
+            "order"            => $this->orders_count ?? 0,
             "thumb"            => $this->thumb,
             "cover"            => $this->cover,
             "preview"          => $this->preview,
             "category_name"    => optional($this->category)->name,
-            "category"         => $this->whenLoaded('category', function() {
+            "category"         => $this->when($this->category, function() {
                 return new ItemCategoryResource($this->category);
             }),
-            "tax"              => $this->whenLoaded('tax', function() {
+            "tax"              => $this->when($this->tax, function() {
                 return new TaxResource($this->tax);
             }),
             "variations"       => $this->whenLoaded('variations', function() {
@@ -57,17 +57,19 @@ class SimpleItemResource extends JsonResource
             "addons"           => $this->whenLoaded('addons', function() {
                 return ItemAddonResource::collection($this->addons);
             }),
-            "offer"            => SimpleOfferResource::collection(
-                $this->offer->filter(function ($offer) use ($price) {
-                    if (AppLibrary::isBetweenDate($offer->start_date, $offer->end_date) && $offer->status === Status::ACTIVE) {
-                        $amount                = ($price - ($price / 100 * $offer->amount));
-                        $offer->flat_price     = AppLibrary::flatAmountFormat($amount);
-                        $offer->convert_price  = AppLibrary::convertAmountFormat($amount);
-                        $offer->currency_price = AppLibrary::currencyAmountFormat($amount);
-                        return $offer;
-                    }
-                })
-            )
+            "offer"            => $this->whenLoaded('offer', function() use ($price) {
+                return SimpleOfferResource::collection(
+                    $this->offer->filter(function ($offer) use ($price) {
+                        if (AppLibrary::isBetweenDate($offer->start_date, $offer->end_date) && $offer->status === Status::ACTIVE) {
+                            $amount                = ($price - ($price / 100 * $offer->amount));
+                            $offer->flat_price     = AppLibrary::flatAmountFormat($amount);
+                            $offer->convert_price  = AppLibrary::convertAmountFormat($amount);
+                            $offer->currency_price = AppLibrary::currencyAmountFormat($amount);
+                            return $offer;
+                        }
+                    })
+                );
+            })
         ];
     }
 
