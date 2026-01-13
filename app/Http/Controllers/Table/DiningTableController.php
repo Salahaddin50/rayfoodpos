@@ -39,10 +39,21 @@ class DiningTableController extends Controller
             $spacedAlphaNumeric = preg_replace('/([\pL])([0-9]+)/u', '$1 $2', $raw);
             $slugifiedAlphaNumeric = Str::slug($spacedAlphaNumeric);
 
+            $candidates = array_values(array_unique(array_filter([
+                $raw,
+                $slugified,
+                $slugifiedAlphaNumeric,
+                // Common transliteration/typo variants we've seen in production data/QR codes:
+                str_replace('filiali', 'filial', $raw),
+                str_replace('filiali', 'filial', $slugified),
+                str_replace('filiali', 'filial', $slugifiedAlphaNumeric),
+                str_replace('filial', 'filiali', $raw),
+                str_replace('filial', 'filiali', $slugified),
+                str_replace('filial', 'filiali', $slugifiedAlphaNumeric),
+            ])));
+
             $table = FrontendDiningTable::query()
-                ->where('slug', $raw)
-                ->orWhere('slug', $slugified)
-                ->orWhere('slug', $slugifiedAlphaNumeric)
+                ->whereIn('slug', $candidates)
                 ->orWhere('name', $raw)
                 ->first();
 
