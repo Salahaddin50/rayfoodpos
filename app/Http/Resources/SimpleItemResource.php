@@ -34,7 +34,7 @@ class SimpleItemResource extends JsonResource
             "status"           => $this->status,
             "description"      => $this->description === null ? '' : $this->description,
             "caution"          => $this->caution === null ? '' : $this->caution,
-            "order"            => $this->orders->count(),
+            "order"            => $this->orders_count ?? $this->orders->count() ?? 0,
             "thumb"            => $this->thumb,
             "cover"            => $this->cover,
             "preview"          => $this->preview,
@@ -63,7 +63,7 @@ class SimpleItemResource extends JsonResource
     {
         $array = [];
         foreach ($variations as $b) {
-            if (!isset($array[$b->itemAttribute->id])) {
+            if ($b->itemAttribute && !isset($array[$b->itemAttribute->id])) {
                 $array[$b->itemAttribute->id] = (object)[
                     'id'     => $b->itemAttribute->id,
                     'name'   => $b->itemAttribute->name,
