@@ -159,7 +159,7 @@
                     <h3 class="text-sm leading-6 font-medium capitalize mb-2 text-heading">{{ $t('label.addons') }}</h3>
                     <div class="swiper addon-swiper">
                         <Swiper :speed="1000" slidesPerView="auto" :spaceBetween="16">
-                            <SwiperSlide v-for="addon in item.addons" :key="addon">
+                            <SwiperSlide v-for="addon in item.addons" :key="addon" class="!w-fit !relative">
                                 <div class="!w-fit !relative">
                                     <div @click.prevent="changeAddon(addon)"
                                         class="addon cursor-pointer w-fit min-w-[200px] h-[70px] rounded-lg flex border border-[#EFF0F6]">

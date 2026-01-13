@@ -210,7 +210,7 @@
                     <div class="swiper addon-swiper">
                         <Swiper :speed="1000" slidesPerView="auto" :spaceBetween="16">
                             <SwiperSlide v-for="addon in item.addons" :key="addon" class="!w-fit !relative">
-                                <div class="swiper-slide">
+                                <div>
                                     <div @click.prevent="changeAddon(addon)"
                                         class="addon cursor-pointer w-fit min-w-[200px] h-[70px] rounded-lg flex border border-[#EFF0F6]">
                                         <img class="w-[68px] h-full object-cover ltr:rounded-l-lg rtl:rounded-r-lg flex-shrink-0"
