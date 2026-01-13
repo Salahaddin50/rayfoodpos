@@ -24,7 +24,7 @@
                         </div>
                     </div>
                     <ItemUploadComponent v-on:list="list" />
-                    <ItemCreateComponent :props="props" :currentBranchId="currentBranchId" :currentBranchName="currentBranchName" v-if="permissionChecker('items_create')" />
+                    <ItemCreateComponent :props="props" v-if="permissionChecker('items_create')" />
                 </div>
             </div>
 
@@ -134,9 +134,6 @@
                             <th class="db-table-head-th">
                                 {{ $t('label.status') }}
                             </th>
-                            <th class="db-table-head-th" v-if="currentBranchId">
-                                {{ $t('label.branch') }} {{ $t('label.status') }}
-                            </th>
                             <th class="db-table-head-th hidden-print"
                                 v-if="permissionChecker('items_show') || permissionChecker('items_edit') || permissionChecker('items_delete')">
                                 {{ $t('label.action') }}
@@ -151,13 +148,8 @@
                             <td class="db-table-body-td">{{ item.category_name }}</td>
                             <td class="db-table-body-td">{{ item.flat_price }}</td>
                             <td class="db-table-body-td">
-                                <span :class="statusClass(item.status)">
-                                    {{ enums.statusEnumArray[item.status] }}
-                                </span>
-                            </td>
-                            <td class="db-table-body-td" v-if="currentBranchId">
                                 <button
-                                    v-if="permissionChecker('items_edit')"
+                                    v-if="currentBranchId && permissionChecker('items_edit')"
                                     type="button"
                                     :class="statusClass(item.effective_status ?? item.status)"
                                     @click.prevent="toggleBranchStatus(item)"
@@ -402,12 +394,7 @@ export default {
             this.loading.isActive = true;
             this.props.search.page = page;
             if (this.currentBranchId) {
-                const bid = parseInt(String(this.currentBranchId).split(':')[0], 10);
-                if (!isNaN(bid)) {
-                    this.props.search.branch_id = bid;
-                } else {
-                    delete this.props.search.branch_id;
-                }
+                this.props.search.branch_id = this.currentBranchId;
             }
             this.$store.dispatch('item/lists', this.props.search).then(res => {
                 this.loading.isActive = false;
@@ -419,16 +406,11 @@ export default {
             if (!this.currentBranchId) return;
             const current = item.effective_status ?? item.status;
             const next = current === this.enums.statusEnum.ACTIVE ? this.enums.statusEnum.INACTIVE : this.enums.statusEnum.ACTIVE;
-            const branchId = parseInt(String(this.currentBranchId).split(':')[0], 10);
-            if (isNaN(branchId)) {
-                alertService.error(this.$t('message.invalid_branch'));
-                return;
-            }
 
             this.loading.isActive = true;
             this.$store.dispatch('item/setBranchStatus', {
                 item_id: item.id,
-                branch_id: branchId,
+                branch_id: this.currentBranchId,
                 status: next
             }).then(() => {
                 // refresh list so effective_status reflects latest override
