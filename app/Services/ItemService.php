@@ -12,6 +12,7 @@ use App\Models\ItemVariation;
 use App\Http\Requests\ItemRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use App\Http\Requests\PaginateRequest;
 use App\Libraries\QueryExceptionLibrary;
 use App\Http\Requests\ChangeImageRequest;
@@ -49,7 +50,7 @@ class ItemService
             $orderType   = $request->get('order_type') ?? 'desc';
 
             $query = Item::with('media', 'category', 'tax')
-                ->when($branchId, function ($q) use ($branchId) {
+                ->when($branchId && Schema::hasTable('branch_item_statuses'), function ($q) use ($branchId) {
                     $q->with(['branchItemStatuses' => function ($sub) use ($branchId) {
                         $sub->where('branch_id', $branchId);
                     }]);
@@ -96,7 +97,7 @@ class ItemService
 
             $query = Item::with('media', 'category', 'tax', 'offer', 'variations.itemAttribute', 'extras', 'addons')
                 ->withCount('orders')
-                ->when($branchId, function ($q) use ($branchId) {
+                ->when($branchId && Schema::hasTable('branch_item_statuses'), function ($q) use ($branchId) {
                     $q->with(['branchItemStatuses' => function ($sub) use ($branchId) {
                         $sub->where('branch_id', $branchId);
                     }]);
