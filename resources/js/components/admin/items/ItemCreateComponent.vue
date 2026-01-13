@@ -97,8 +97,8 @@
                         </div>
                     </div>
 
-                    <div class="form-col-12 sm:form-col-6">
-                        <label class="db-field-title">{{ $t("label.status") }} ({{ $t('label.global') }})</label>
+                    <div class="form-col-12 sm:form-col-6" v-if="!currentBranchId || !temp.isEditing">
+                        <label class="db-field-title">{{ $t("label.status") }}</label>
                         <div class="db-field-radio-group">
                             <div class="db-field-radio">
                                 <div class="custom-radio">
@@ -117,11 +117,10 @@
                                 <label for="inactive" class="db-field-label">{{ $t('label.inactive') }}</label>
                             </div>
                         </div>
-                        <small class="text-xs text-gray-500 mt-1">{{ $t('label.applies_to_all_branches') }}</small>
                     </div>
 
                     <div class="form-col-12 sm:form-col-6" v-if="currentBranchId && temp.isEditing">
-                        <label class="db-field-title">{{ $t("label.status") }} ({{ currentBranchName || $t('label.current_branch') }})</label>
+                        <label class="db-field-title">{{ $t("label.status") }} ({{ currentBranchName }})</label>
                         <div class="db-field-radio-group">
                             <div class="db-field-radio">
                                 <div class="custom-radio">
@@ -139,16 +138,8 @@
                                 </div>
                                 <label for="branch_inactive" class="db-field-label">{{ $t('label.inactive') }}</label>
                             </div>
-                            <div class="db-field-radio">
-                                <div class="custom-radio">
-                                    <input type="radio" class="custom-radio-field" v-model="props.form.branch_status"
-                                        id="branch_default" :value="null">
-                                    <span class="custom-radio-span"></span>
-                                </div>
-                                <label for="branch_default" class="db-field-label">{{ $t('label.use_global') }}</label>
-                            </div>
                         </div>
-                        <small class="text-xs text-gray-500 mt-1">{{ $t('label.branch_specific_override') }}</small>
+                        <small class="text-xs text-gray-500 mt-1">{{ $t('label.branch_specific_status') }}</small>
                     </div>
 
                     <div class="form-col-12">
@@ -333,7 +324,7 @@ export default {
                         return this.$store.dispatch('item/setBranchStatus', {
                             item_id: tempId,
                             branch_id: this.currentBranchId,
-                            status: this.props.form.branch_status === null ? this.props.form.status : this.props.form.branch_status
+                            status: this.props.form.branch_status
                         }).then(() => res);
                     }
                     return res;
