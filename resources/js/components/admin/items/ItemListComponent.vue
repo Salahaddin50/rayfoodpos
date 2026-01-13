@@ -134,6 +134,9 @@
                             <th class="db-table-head-th">
                                 {{ $t('label.status') }}
                             </th>
+                            <th class="db-table-head-th" v-if="currentBranchId">
+                                {{ $t('label.branch') }} {{ $t('label.status') }}
+                            </th>
                             <th class="db-table-head-th hidden-print"
                                 v-if="permissionChecker('items_show') || permissionChecker('items_edit') || permissionChecker('items_delete')">
                                 {{ $t('label.action') }}
@@ -150,6 +153,24 @@
                             <td class="db-table-body-td">
                                 <span :class="statusClass(item.status)">
                                     {{ enums.statusEnumArray[item.status] }}
+                                </span>
+                            </td>
+                            <td class="db-table-body-td" v-if="currentBranchId">
+                                <button
+                                    v-if="permissionChecker('items_edit')"
+                                    type="button"
+                                    :class="statusClass(item.effective_status ?? item.status)"
+                                    @click.prevent="toggleBranchStatus(item)"
+                                    :title="currentBranchName ? (currentBranchName + ' - ' + $t('label.status')) : $t('label.status')"
+                                >
+                                    {{ enums.statusEnumArray[item.effective_status ?? item.status] }}
+                                </button>
+                                <span
+                                    v-else
+                                    class="db-table-badge"
+                                    :class="statusClass(item.effective_status ?? item.status)"
+                                >
+                                    {{ enums.statusEnumArray[item.effective_status ?? item.status] }}
                                 </span>
                             </td>
                             <td class="db-table-body-td hidden-print"
@@ -336,6 +357,14 @@ export default {
         direction: function () {
             return this.$store.getters['frontendLanguage/show'].display_mode === displayModeEnum.RTL ? 'rtl' : 'ltr';
         },
+        currentBranchId: function () {
+            const b = this.$store.getters['backendGlobalState/branchShow'];
+            return b && b.id ? b.id : null;
+        },
+        currentBranchName: function () {
+            const b = this.$store.getters['backendGlobalState/branchShow'];
+            return b && b.name ? b.name : null;
+        },
 
     },
     methods: {
@@ -372,10 +401,33 @@ export default {
         list: function (page = 1) {
             this.loading.isActive = true;
             this.props.search.page = page;
+            if (this.currentBranchId) {
+                this.props.search.branch_id = this.currentBranchId;
+            }
             this.$store.dispatch('item/lists', this.props.search).then(res => {
                 this.loading.isActive = false;
             }).catch((err) => {
                 this.loading.isActive = false;
+            });
+        },
+        toggleBranchStatus: function (item) {
+            if (!this.currentBranchId) return;
+            const current = item.effective_status ?? item.status;
+            const next = current === this.enums.statusEnum.ACTIVE ? this.enums.statusEnum.INACTIVE : this.enums.statusEnum.ACTIVE;
+
+            this.loading.isActive = true;
+            this.$store.dispatch('item/setBranchStatus', {
+                item_id: item.id,
+                branch_id: this.currentBranchId,
+                status: next
+            }).then(() => {
+                // refresh list so effective_status reflects latest override
+                this.list(this.props.search.page);
+                alertService.successFlip(null, this.$t('menu.items'));
+                this.loading.isActive = false;
+            }).catch((err) => {
+                this.loading.isActive = false;
+                alertService.error(err.response?.data?.message || err);
             });
         },
         edit: function (item) {

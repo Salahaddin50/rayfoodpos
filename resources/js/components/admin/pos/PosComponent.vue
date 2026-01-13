@@ -558,11 +558,11 @@ export default {
         this.closeSidebar();
         this.$refs.dineIn.click();
         this.itemCategories();
-        this.itemList();
         try {
             this.loading.isActive = true;
             this.$store.dispatch("defaultAccess/show").then((res) => {
                 this.checkoutProps.form.branch_id = res.data.data.branch_id;
+                this.itemList();
             }).catch((err) => {
                 this.loading.isActive = false;
             });
@@ -714,6 +714,9 @@ export default {
         itemList: function (page = 1) {
             this.loading.isActive = true;
             this.props.search.page = page;
+            if (this.checkoutProps.form.branch_id) {
+                this.props.search.branch_id = this.checkoutProps.form.branch_id;
+            }
             this.$store.dispatch("item/lists", this.props.search).then((res) => {
                 this.loading.isActive = false;
             }).catch((err) => {

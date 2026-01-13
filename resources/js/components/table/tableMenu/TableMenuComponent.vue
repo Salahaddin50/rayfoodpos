@@ -311,9 +311,25 @@ export default {
         },
         itemList: function () {
             this.loading.isActive = true;
-            this.$store.dispatch("frontendItem/lists", this.itemProps.search).then((res) => {
+            const currentTable = this.$store.getters['tableCart/table'];
+            const ensureTable = () => {
+                if (currentTable && currentTable.branch_id) {
+                    return Promise.resolve(currentTable);
+                }
+                return this.$store.dispatch('tableDiningTable/show', this.$route.params.slug).then((res) => {
+                    this.$store.dispatch('tableCart/initTable', res.data.data).then().catch();
+                    return res.data.data;
+                });
+            };
+
+            ensureTable().then((table) => {
+                if (table && table.branch_id) {
+                    this.itemProps.search.branch_id = table.branch_id;
+                }
+                return this.$store.dispatch("frontendItem/lists", this.itemProps.search);
+            }).then(() => {
                 this.loading.isActive = false;
-            }).catch((err) => {
+            }).catch(() => {
                 this.loading.isActive = false;
             });
         },

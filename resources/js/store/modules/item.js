@@ -156,6 +156,18 @@ export const item = {
                 });
             });
         },
+        setBranchStatus: function (context, payload) {
+            return new Promise((resolve, reject) => {
+                axios.post(`admin/item/${payload.item_id}/branch-status`, {
+                    branch_id: payload.branch_id,
+                    status: payload.status,
+                }).then((res) => {
+                    resolve(res);
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
+        },
     },
     mutations: {
         lists: function (state, payload) {

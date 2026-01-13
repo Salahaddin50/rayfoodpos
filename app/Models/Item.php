@@ -118,4 +118,9 @@ class Item extends Model implements HasMedia
     {
         return $this->belongsToMany(Offer::class, 'offer_items');
     }
+
+    public function branchItemStatuses(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(BranchItemStatus::class);
+    }
 }

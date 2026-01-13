@@ -377,6 +377,7 @@ Route::prefix('admin')->name('admin.')->middleware(['installed', 'apiKey', 'auth
         Route::get('/show/{item}', [ItemController::class, 'show']);
         Route::post('/', [ItemController::class, 'store']);
         Route::match(['post', 'put', 'patch'], '/{item}', [ItemController::class, 'update']);
+        Route::post('/{item}/branch-status', [ItemController::class, 'branchStatus']);
         Route::delete('/{item}', [ItemController::class, 'destroy']);
         Route::post('/change-image/{item}', [ItemController::class, 'changeImage']);
         Route::get('/export', [ItemController::class, 'export']);

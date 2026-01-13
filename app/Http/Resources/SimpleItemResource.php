@@ -19,6 +19,15 @@ class SimpleItemResource extends JsonResource
     public function toArray($request): array
     {
         $price = $this->price;
+        $branchOverrideStatus = null;
+        if ($this->relationLoaded('branchItemStatuses') && $this->branchItemStatuses && $this->branchItemStatuses->count() > 0) {
+            $branchOverrideStatus = $this->branchItemStatuses->first()->status;
+        }
+
+        $effectiveStatus = $this->status;
+        if ($this->status === \App\Enums\Status::ACTIVE && $branchOverrideStatus !== null) {
+            $effectiveStatus = $branchOverrideStatus;
+        }
         return [
             "id"               => $this->id,
             "name"             => $this->name,
@@ -32,6 +41,8 @@ class SimpleItemResource extends JsonResource
             "item_type"        => $this->item_type,
             "is_featured"      => $this->is_featured,
             "status"           => $this->status,
+            "branch_status"    => $branchOverrideStatus,
+            "effective_status" => $effectiveStatus,
             "description"      => $this->description === null ? '' : $this->description,
             "caution"          => $this->caution === null ? '' : $this->caution,
             "order"            => $this->orders_count ?? 0,

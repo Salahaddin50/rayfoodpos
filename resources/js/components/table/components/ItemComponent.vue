@@ -2,7 +2,7 @@
     <!--========ITEM PART START=========-->
     <div v-if="design === itemDesignEnum.LIST" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
         <div v-for="item in items" :key="item" v-show="type === null || type === item.item_type"
-            class="product-card-list">
+            class="product-card-list" :class="isPassive(item) ? 'opacity-60' : ''">
             <img class="product-card-list-image" :src="item.thumb" alt="thumbnail">
             <div class="product-card-list-content-group">
                 <div class="product-card-list-header-group">
@@ -24,10 +24,12 @@
                             {{ item.offer.length > 0 ? item.offer[0].currency_price : item.currency_price }}
                         </h4>
                     </div>
-                    <button @click.prevent="variationModalShow(item)" data-modal="#item-variation-modal"
+                    <button :disabled="isPassive(item)" @click.prevent="variationModalShow(item)" data-modal="#item-variation-modal"
                         class="product-card-list-cart-btn add-btn">
                         <i class="lab lab-bag-2 font-fill-primary transition lab-font-size-14"></i>
-                        <span class="text-xs text-primary transition">{{ $t('button.add') }}</span>
+                        <span class="text-xs text-primary transition">
+                            {{ isPassive(item) ? $t('label.inactive') : $t('button.add') }}
+                        </span>
                     </button>
                 </div>
             </div>
@@ -36,7 +38,7 @@
     <div v-else-if="design === itemDesignEnum.GRID"
         class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 lg:gap-6">
         <div v-for="item in items" :key="item" v-show="type === null || type === item.item_type"
-            class="product-card-grid">
+            class="product-card-grid" :class="isPassive(item) ? 'opacity-60' : ''">
             <img class="product-card-grid-image" :src="item.cover" alt="product">
             <div class="product-card-grid-content-group">
                 <div class="product-card-grid-header-group">
@@ -56,10 +58,12 @@
                             {{ item.offer.length > 0 ? item.offer[0].currency_price : item.currency_price }}
                         </h4>
                     </div>
-                    <button @click.prevent="variationModalShow(item)" data-modal="#item-variation-modal"
+                    <button :disabled="isPassive(item)" @click.prevent="variationModalShow(item)" data-modal="#item-variation-modal"
                         class="product-card-grid-cart-btn add-btn">
                         <i class="lab lab-bag-2 font-fill-primary transition lab-font-size-14"></i>
-                        <span class="text-xs text-primary transition">{{ $t('button.add') }}</span>
+                        <span class="text-xs text-primary transition">
+                            {{ isPassive(item) ? $t('label.inactive') : $t('button.add') }}
+                        </span>
                     </button>
                 </div>
             </div>
@@ -284,6 +288,7 @@
 </template>
 <script>
 import itemDesignEnum from "../../../enums/modules/itemDesignEnum";
+import statusEnum from "../../../enums/modules/statusEnum";
 import appService from "../../../services/appService";
 import { Swiper, SwiperSlide } from 'swiper/vue';
 import 'swiper/css';
@@ -309,6 +314,9 @@ export default {
             addonQuantity: {},
             itemArrays: [],
             itemDesignEnum: itemDesignEnum,
+            enums: {
+                statusEnum: statusEnum,
+            },
             settings: {
                 itemsToShow: 4.3,
                 wrapAround: false,
@@ -349,6 +357,9 @@ export default {
         },
     },
     methods: {
+        isPassive(item) {
+            return item && typeof item.effective_status !== "undefined" && item.effective_status !== this.enums.statusEnum.ACTIVE;
+        },
         onlyNumber: function (e) {
             return appService.onlyNumber(e);
         },
@@ -374,6 +385,9 @@ export default {
             document.body.style.overflowY = "auto";
         },
         variationModalShow: function (selectedItem) {
+            if (this.isPassive(selectedItem)) {
+                return;
+            }
             this.$store.dispatch('frontendItem/details', selectedItem.id)
                 .then((res) => {
                     const item = res.data.data;

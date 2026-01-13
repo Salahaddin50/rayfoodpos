@@ -2,7 +2,8 @@
     <div
         class="grid gap-3 sm:gap-[18px] grid-cols-[repeat(auto-fill,_minmax(140px,_1fr))] sm:grid-cols-[repeat(auto-fill,_minmax(185px,_1fr))] mb-8 md:mb-0">
         <div v-for="item in items" :key="item"
-            class="pos-card-height rounded-2xl border transition border-[#EFF0F6] bg-white hover:shadow-xs">
+            class="pos-card-height rounded-2xl border transition border-[#EFF0F6] bg-white hover:shadow-xs"
+            :class="isPassive(item) ? 'opacity-60' : ''">
             <img class="pos-image-height w-full rounded-t-2xl" :src="item.thumb" alt="item">
             <div class="py-3 px-3 rounded-b-2xl">
                 <h3
@@ -11,10 +12,12 @@
                 <div class="flex items-center justify-between gap-2">
                     <h4 class="font-rubik">{{ item.offer.length > 0 ? item.offer[0].currency_price : item.currency_price
                     }}</h4>
-                    <button @click.prevent="variationModalShow(item)" data-modal="#item-variation-modal"
+                    <button :disabled="isPassive(item)" @click.prevent="variationModalShow(item)" data-modal="#item-variation-modal"
                         class="db-product-cart pos-add-button flex items-center gap-1.5 rounded-3xl capitalize text-sm font-medium font-rubik py-1 px-2 shadow-cardCart transition bg-white hover:bg-primary">
                         <i class="lab lab-bag-2 font-fill-primary transition lab-font-size-14"></i>
-                        <span class="text-xs font-rubik text-primary transition">{{ $t('button.add') }}</span>
+                        <span class="text-xs font-rubik text-primary transition">
+                            {{ isPassive(item) ? $t('label.inactive') : $t('button.add') }}
+                        </span>
                     </button>
                 </div>
             </div>
@@ -238,6 +241,7 @@
 import appService from "../../../services/appService";
 import _ from "lodash";
 import alertService from "../../../services/alertService";
+import statusEnum from "../../../enums/modules/statusEnum";
 import { Swiper, SwiperSlide } from 'swiper/vue';
 import 'swiper/css';
 export default {
@@ -253,6 +257,9 @@ export default {
         return {
             item: null,
             itemInfo: null,
+            enums: {
+                statusEnum: statusEnum,
+            },
             addons: {},
             addonQuantity: {},
             itemArrays: [],
@@ -296,6 +303,9 @@ export default {
         },
     },
     methods: {
+        isPassive(item) {
+            return item && typeof item.effective_status !== "undefined" && item.effective_status !== this.enums.statusEnum.ACTIVE;
+        },
         onlyNumber: function (e) {
             return appService.onlyNumber(e);
         },
@@ -321,6 +331,9 @@ export default {
             document.body.style.overflowY = "auto";
         },
         variationModalShow: function (selectedItem) {
+            if (this.isPassive(selectedItem)) {
+                return;
+            }
             this.$store.dispatch('item/details', selectedItem.id)
                 .then((res) => {
                     const item = res.data.data;

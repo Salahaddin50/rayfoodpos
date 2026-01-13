@@ -15,6 +15,7 @@ use App\Http\Requests\ItemImportRequest;
 use App\Http\Requests\ChangeImageRequest;
 use App\Http\Resources\NormalItemResource;
 use App\Http\Resources\SimpleItemResource;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 
@@ -35,6 +36,7 @@ class ItemController extends AdminController implements HasMiddleware
             new Middleware('permission:items', only: ['export','changeImage']),
             new Middleware('permission:items_create', only: ['store','import']),
             new Middleware('permission:items_edit', only: ['update']),
+            new Middleware('permission:items_edit', only: ['branchStatus']),
             new Middleware('permission:items_delete', only: ['destroy']),
             new Middleware('permission:items_show', only: ['show'])
         ];
@@ -129,6 +131,22 @@ class ItemController extends AdminController implements HasMiddleware
         try {
             return new NormalItemResource($this->itemService->itemDetails($item));
         } catch (Exception $exception) {
+            return response(['status' => false, 'message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function branchStatus(Request $request, Item $item)
+    {
+        try {
+            $data = $request->validate([
+                'branch_id' => ['required', 'numeric', 'exists:branches,id'],
+                'status' => ['required', 'numeric', 'in:' . \App\Enums\Status::ACTIVE . ',' . \App\Enums\Status::INACTIVE],
+            ]);
+
+            $this->itemService->saveBranchItemStatus((int) $data['branch_id'], $item, (int) $data['status']);
+
+            return response(['status' => true], 202);
+        } catch (\Throwable $exception) {
             return response(['status' => false, 'message' => $exception->getMessage()], 422);
         }
     }

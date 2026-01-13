@@ -40,50 +40,19 @@ class ItemService
     {
         try {
             $requests    = $request->all();
+            $branchId    = $request->get('branch_id');
+            unset($requests['branch_id']);
             $method      = $request->get('paginate', 0) == 1 ? 'paginate' : 'get';
             $methodValue = $request->get('paginate', 0) == 1 ? $request->get('per_page', 10) : '*';
             $orderColumn = $request->get('order_column') ?? 'id';
             $orderType   = $request->get('order_type') ?? 'desc';
 
-            return Item::with('media', 'category', 'tax')->where(function ($query) use ($requests) {
-                foreach ($requests as $key => $request) {
-                    if (in_array($key, $this->itemFilter)) {
-                        if ($key == "except") {
-                            $explodes = explode('|', $request);
-                            if (count($explodes)) {
-                                foreach ($explodes as $explode) {
-                                    $query->where('id', '!=', $explode);
-                                }
-                            }
-                        } else {
-                            if ($key == "item_category_id") {
-                                $query->where($key, $request);
-                            } else {
-                                $query->where($key, 'like', '%' . $request . '%');
-                            }
-                        }
-                    }
-                }
-            })->orderBy($orderColumn, $orderType)->$method(
-                $methodValue
-            );
-        } catch (Exception $exception) {
-            Log::info($exception->getMessage());
-            throw new Exception(QueryExceptionLibrary::message($exception), 422);
-        }
-    }
-
-    public function simpleList(PaginateRequest $request)
-    {
-        try {
-            $requests    = $request->all();
-            $method      = $request->get('paginate', 0) == 1 ? 'paginate' : 'get';
-            $methodValue = $request->get('paginate', 0) == 1 ? $request->get('per_page', 10) : '*';
-            $orderColumn = $request->get('order_column') ?? 'id';
-            $orderType   = $request->get('order_type') ?? 'desc';
-
-            return Item::with('media', 'category', 'tax', 'offer', 'variations.itemAttribute', 'extras', 'addons')
-                ->withCount('orders')
+            $query = Item::with('media', 'category', 'tax')
+                ->when($branchId, function ($q) use ($branchId) {
+                    $q->with(['branchItemStatuses' => function ($sub) use ($branchId) {
+                        $sub->where('branch_id', $branchId);
+                    }]);
+                })
                 ->where(function ($query) use ($requests) {
                 foreach ($requests as $key => $request) {
                     if (in_array($key, $this->itemFilter)) {
@@ -103,8 +72,72 @@ class ItemService
                         }
                     }
                 }
-            })->orderBy($orderColumn, $orderType)->$method(
-                $methodValue
+            })->orderBy($orderColumn, $orderType);
+
+            return $query->$method($methodValue);
+        } catch (Exception $exception) {
+            Log::info($exception->getMessage());
+            throw new Exception(QueryExceptionLibrary::message($exception), 422);
+        }
+    }
+
+    public function simpleList(PaginateRequest $request)
+    {
+        try {
+            $requests    = $request->all();
+            $branchId    = $request->get('branch_id');
+            unset($requests['branch_id']);
+            $method      = $request->get('paginate', 0) == 1 ? 'paginate' : 'get';
+            $methodValue = $request->get('paginate', 0) == 1 ? $request->get('per_page', 10) : '*';
+            $orderColumn = $request->get('order_column') ?? 'id';
+            $orderType   = $request->get('order_type') ?? 'desc';
+
+            $query = Item::with('media', 'category', 'tax', 'offer', 'variations.itemAttribute', 'extras', 'addons')
+                ->withCount('orders')
+                ->when($branchId, function ($q) use ($branchId) {
+                    $q->with(['branchItemStatuses' => function ($sub) use ($branchId) {
+                        $sub->where('branch_id', $branchId);
+                    }]);
+                })
+                ->where(function ($query) use ($requests) {
+                foreach ($requests as $key => $request) {
+                    if (in_array($key, $this->itemFilter)) {
+                        if ($key == "except") {
+                            $explodes = explode('|', $request);
+                            if (count($explodes)) {
+                                foreach ($explodes as $explode) {
+                                    $query->where('id', '!=', $explode);
+                                }
+                            }
+                        } else {
+                            if ($key == "item_category_id") {
+                                $query->where($key, $request);
+                            } else {
+                                $query->where($key, 'like', '%' . $request . '%');
+                            }
+                        }
+                    }
+                }
+            })->orderBy($orderColumn, $orderType);
+
+            return $query->$method($methodValue);
+        } catch (Exception $exception) {
+            Log::info($exception->getMessage());
+            throw new Exception(QueryExceptionLibrary::message($exception), 422);
+        }
+    }
+
+    /**
+     * Save branch-specific status override for an item.
+     *
+     * @throws Exception
+     */
+    public function saveBranchItemStatus(int $branchId, Item $item, int $status): void
+    {
+        try {
+            DB::table('branch_item_statuses')->updateOrInsert(
+                ['branch_id' => $branchId, 'item_id' => $item->id],
+                ['status' => $status, 'updated_at' => now(), 'created_at' => now()]
             );
         } catch (Exception $exception) {
             Log::info($exception->getMessage());
