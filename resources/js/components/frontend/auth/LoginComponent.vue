@@ -127,10 +127,14 @@ export default {
 
                 }).catch((err) => {
                     this.loading.isActive = false;
-                    this.errors = err.response.data.errors;
+                    const data = err?.response?.data;
+                    const fallbackMessage = data?.message || err?.message || this.$t('message.something_wrong');
+                    // Always keep errors as an object so template bindings like `errors.validation` never crash
+                    this.errors = data?.errors ? data.errors : { validation: fallbackMessage };
                 })
             } catch (err) {
                 this.loading.isActive = false;
+                this.errors = { validation: err?.message || this.$t('message.something_wrong') };
             }
         },
         close: function () {

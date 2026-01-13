@@ -52,11 +52,16 @@ export default {
                     this.$router.push({ name: 'auth.verifyEmail' });
                 }).catch((err) => {
                     this.loading.isActive = false;
-                    this.errors = err.response.data.errors;
+                    const data = err?.response?.data;
+                    this.errors = data?.errors ? data.errors : {};
+                    if (!data?.errors) {
+                        alertService.error(data?.message || err?.message || this.$t('message.something_wrong'));
+                    }
                 })
             } catch (err) {
                 this.loading.isActive = false;
-                alertService.error(err);
+                this.errors = {};
+                alertService.error(err?.message || this.$t('message.something_wrong'));
             }
         }
     }

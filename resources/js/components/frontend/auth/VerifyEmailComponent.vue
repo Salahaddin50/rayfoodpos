@@ -68,11 +68,16 @@ export default {
                     alertService.success(res.data.message);
                 }).catch((err) => {
                     this.loading.isActive = false;
-                    this.errors = err.response.data.errors;
+                    const data = err?.response?.data;
+                    this.errors = data?.errors ? data.errors : {};
+                    if (!data?.errors) {
+                        alertService.error(data?.message || err?.message || this.$t('message.something_wrong'));
+                    }
                 })
             } catch (err) {
                 this.loading.isActive = false;
-                alertService.error(err.response.data.message);
+                this.errors = {};
+                alertService.error(err?.response?.data?.message || err?.message || this.$t('message.something_wrong'));
             }
         },
         verifyCode: function () {
@@ -84,11 +89,16 @@ export default {
                     this.$router.push({ name: 'auth.resetPassword' });
                 }).catch((err) => {
                     this.loading.isActive = false;
-                    this.errors = err.response.data.errors;
+                    const data = err?.response?.data;
+                    this.errors = data?.errors ? data.errors : {};
+                    if (!data?.errors) {
+                        alertService.error(data?.message || err?.message || this.$t('message.something_wrong'));
+                    }
                 })
             } catch (err) {
                 this.loading.isActive = false;
-                alertService.error(err.response.data.message);
+                this.errors = {};
+                alertService.error(err?.response?.data?.message || err?.message || this.$t('message.something_wrong'));
             }
         }
     }
