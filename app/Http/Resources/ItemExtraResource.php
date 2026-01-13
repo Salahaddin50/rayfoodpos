@@ -16,14 +16,15 @@ class ItemExtraResource extends JsonResource
      */
     public function toArray($request) : array
     {
+        $price = $this->price ?? 0;
         return [
             'id'             => $this->id,
             'item_id'        => $this->item_id,
             'name'           => $this->name,
-            'price'          => $this->price,
-            'currency_price' => AppLibrary::currencyAmountFormat($this->price),
-            'flat_price'     => AppLibrary::flatAmountFormat($this->price),
-            'convert_price'  => AppLibrary::convertAmountFormat($this->price),
+            'price'          => $price,
+            'currency_price' => AppLibrary::currencyAmountFormat($price),
+            'flat_price'     => AppLibrary::flatAmountFormat($price),
+            'convert_price'  => AppLibrary::convertAmountFormat($price),
             'status'         => $this->status,
             "item"           => optional($this->item)->name,
         ];

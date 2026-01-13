@@ -44,7 +44,7 @@ class ItemController extends AdminController implements HasMiddleware
     {
         try {
             return SimpleItemResource::collection($this->itemService->simpleList($request));
-        } catch (Exception $exception) {
+        } catch (\Throwable $exception) {
             return response(['status' => false, 'message' => $exception->getMessage()], 422);
         }
     }
