@@ -25,6 +25,11 @@ class RolePermissionTableSeeder extends Seeder
             $branchManagerPermissions = [
                 ['name' => 'dashboard'],
                 ['name' => 'dining-tables'],
+                ['name' => 'takeaway-types'],
+                ['name' => 'takeaway_types_create'],
+                ['name' => 'takeaway_types_edit'],
+                ['name' => 'takeaway_types_delete'],
+                ['name' => 'takeaway_types_show'],
                 ['name' => 'pos'],
                 ['name' => 'pos-orders'],
                 ['name' => 'online-orders'],
