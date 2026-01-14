@@ -29,7 +29,11 @@ class TableOrderController extends AdminController
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:table-orders', only: ['index', 'show', 'export', 'changeStatus', 'changePaymentStatus', 'destroy']),
+            // Parent permission controls menu visibility; child permissions control actions (CRUD checkboxes).
+            new Middleware('permission:table-orders', only: ['index', 'show', 'export']),
+            new Middleware('permission:table_orders_show', only: ['index', 'show', 'export']),
+            new Middleware('permission:table_orders_edit', only: ['changeStatus', 'changePaymentStatus', 'tokenCreate']),
+            new Middleware('permission:table_orders_delete', only: ['destroy']),
         ];
     }
 

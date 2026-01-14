@@ -28,7 +28,11 @@ class OnlineOrderController extends AdminController
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:online-orders', only: ['index', 'show', 'export', 'changeStatus', 'changePaymentStatus', 'destroy']),
+            // Parent permission controls menu visibility; child permissions control actions (CRUD checkboxes).
+            new Middleware('permission:online-orders', only: ['index', 'show', 'export']),
+            new Middleware('permission:online_orders_show', only: ['index', 'show', 'export']),
+            new Middleware('permission:online_orders_edit', only: ['changeStatus', 'changePaymentStatus']),
+            new Middleware('permission:online_orders_delete', only: ['destroy']),
         ];
     }
 

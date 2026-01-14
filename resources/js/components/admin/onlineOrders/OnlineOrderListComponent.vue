@@ -95,7 +95,8 @@
                             <th class="db-table-head-th">{{ $t("label.amount") }}</th>
                             <th class="db-table-head-th">{{ $t("label.date") }}</th>
                             <th class="db-table-head-th">{{ $t("label.status") }}</th>
-                            <th class="db-table-head-th hidden-print" v-if="permissionChecker('online-orders')">
+                            <th class="db-table-head-th hidden-print"
+                                v-if="permissionChecker('online_orders_show') || permissionChecker('online_orders_edit') || permissionChecker('online_orders_delete')">
                                 {{ $t("label.action") }}
                             </th>
                         </tr>
@@ -130,13 +131,15 @@
                                     {{ $t("label.advance") }}
                                 </span>
                             </td>
-                            <td class="db-table-body-td hidden-print" v-if="permissionChecker('online-orders')">
+                            <td class="db-table-body-td hidden-print"
+                                v-if="permissionChecker('online_orders_show') || permissionChecker('online_orders_edit') || permissionChecker('online_orders_delete')">
                                 <div class="flex justify-start items-center sm:items-start sm:justify-start gap-1.5">
                                     <SmIconViewComponent :link="'admin.online.order.show'" :id="order.id"
-                                        v-if="permissionChecker('online-orders')" />
+                                        v-if="permissionChecker('online_orders_show')" />
                                     <button
                                         type="button"
                                         @click="togglePaymentStatus(order)"
+                                        v-if="permissionChecker('online_orders_edit')"
                                         :class="[
                                             'db-table-action',
                                             order.payment_status === enums.paymentStatusEnum.PAID
@@ -151,6 +154,7 @@
                                     </button>
                                     <button type="button" 
                                         @click="changeStatusToDelivered(order.id)"
+                                        v-if="permissionChecker('online_orders_edit')"
                                         :disabled="order.status === enums.orderStatusEnum.ACCEPT || order.status === enums.orderStatusEnum.PREPARING"
                                         :class="[
                                             'db-table-action',
@@ -165,7 +169,7 @@
                                         <span class="db-tooltip">{{ $t('label.delivered') }}</span>
                                     </button>
                                     <SmIconDeleteComponent @click="destroy(order.id)"
-                                        v-if="permissionChecker('online-orders')" />
+                                        v-if="permissionChecker('online_orders_delete')" />
                                 </div>
                             </td>
                         </tr>
