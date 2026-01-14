@@ -109,48 +109,6 @@ class PermissionTableSeeder extends Seeder
                 ]
             ],
             [
-                'title'      => 'Takeaway Types',
-                'name'       => 'takeaway-types',
-                'guard_name' => 'sanctum',
-                'url'        => 'takeaway-types',
-                'created_at' => now(),
-                'updated_at' => now(),
-                'children'   => [
-                    [
-                        'title'      => 'Takeaway Types Create',
-                        'name'       => 'takeaway_types_create',
-                        'guard_name' => 'sanctum',
-                        'url'        => 'takeaway-types/create',
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ],
-                    [
-                        'title'      => 'Takeaway Types Edit',
-                        'name'       => 'takeaway_types_edit',
-                        'guard_name' => 'sanctum',
-                        'url'        => 'takeaway-types/edit',
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ],
-                    [
-                        'title'      => 'Takeaway Types Delete',
-                        'name'       => 'takeaway_types_delete',
-                        'guard_name' => 'sanctum',
-                        'url'        => 'takeaway-types/delete',
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ],
-                    [
-                        'title'      => 'Takeaway Types Show',
-                        'name'       => 'takeaway_types_show',
-                        'guard_name' => 'sanctum',
-                        'url'        => 'takeaway-types/show',
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ],
-                ]
-            ],
-            [
                 'title'      => 'POS',
                 'name'       => 'pos',
                 'guard_name' => 'sanctum',
