@@ -207,6 +207,9 @@ export default {
         },
         table: function () {
             return this.$store.getters['tableCart/table'];
+        },
+        whatsappNumber: function () {
+            return this.$store.getters['tableCart/whatsappNumber'];
         }
     },
     methods: {
@@ -239,6 +242,7 @@ export default {
 
                 this.checkoutProps.form.dining_table_id = table.id;
                 this.checkoutProps.form.branch_id = table.branch_id;
+                this.checkoutProps.form.whatsapp_number = this.whatsappNumber;
             this.checkoutProps.form.subtotal = this.subtotal;
             this.checkoutProps.form.total = parseFloat(this.subtotal).toFixed(this.setting.site_digit_after_decimal_point);
             this.checkoutProps.form.items = [];

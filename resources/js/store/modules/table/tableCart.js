@@ -8,6 +8,7 @@ export const tableCart = {
         subtotal: 0,
         table: {},
         paymentMethod: null,
+        whatsappNumber: '',
     },
     getters: {
         lists: function (state) {
@@ -21,6 +22,9 @@ export const tableCart = {
         },
         paymentMethod: function (state) {
             return state.paymentMethod;
+        },
+        whatsappNumber: function (state) {
+            return state.whatsappNumber;
         }
     },
     actions: {
@@ -43,6 +47,9 @@ export const tableCart = {
         },
         resetPaymentMethod: function (context) {
             context.commit('resetPaymentMethod');
+        },
+        setWhatsapp: function (context, payload) {
+            context.commit('setWhatsapp', payload);
         },
     },
     mutations: {
@@ -164,6 +171,9 @@ export const tableCart = {
         },
         resetPaymentMethod: function(state) {
             state.paymentMethod = null;
+        },
+        setWhatsapp: function(state, payload) {
+            state.whatsappNumber = payload;
         },
     },
 };

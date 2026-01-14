@@ -75,6 +75,7 @@ use App\Http\Controllers\Frontend\PageController as FrontendPageController;
 use App\Http\Controllers\Frontend\BranchController as FrontendBranchController;
 use App\Http\Controllers\Admin\TableOrderController as AdminTableOrderController;
 use App\Http\Controllers\Admin\OnlineOrderController;
+use App\Http\Controllers\Frontend\OnlineOrderController as FrontendOnlineOrderController;
 use App\Http\Controllers\Frontend\LanguageController as FrontendLanguageController;
 use App\Http\Controllers\Table\DiningTableController as TableDiningTableController;
 use App\Http\Controllers\Table\ItemCategoryController as TableItemCategoryController;
@@ -635,6 +636,6 @@ Route::prefix('table')->name('table.')->middleware(['installed', 'apiKey', 'loca
 
     Route::prefix('online-order')->name('online-order.')->group(function () {
         Route::get('/show/{frontendOrder}', [TableOrderController::class, 'show']);
-        Route::post('/', [TableOrderController::class, 'store']);
+        Route::post('/', [FrontendOnlineOrderController::class, 'store']);
     });
 });
