@@ -20,18 +20,6 @@
                 />
             </div>
 
-            <!-- WhatsApp Number Input -->
-            <div class="mb-6 rounded-2xl shadow-xs bg-white p-4" v-if="selectedBranch">
-                <label class="text-sm capitalize mb-2 block text-heading font-medium">{{ $t('label.whatsapp') }}</label>
-                <input 
-                    v-model="whatsappNumber" 
-                    type="text" 
-                    class="w-full h-12 rounded-lg border px-4 border-[#D9DBE9]"
-                    :placeholder="$t('label.whatsapp')"
-                />
-                <small class="text-xs text-gray-500 mt-1 block">{{ $t('message.whatsapp_order_notification') }}</small>
-            </div>
-
             <div v-if="selectedBranch">
                 <div class="swiper mb-7 menu-swiper" v-if="categories.length > 1">
                     <Swiper :speed="1000" slidesPerView="auto" :spaceBetween="16" class="menu-slides" dir="ltr">
@@ -162,7 +150,6 @@ export default {
                 isActive: false,
             },
             selectedBranch: null,
-            whatsappNumber: '',
             category: {
                 id: 0,
                 name: this.$t('label.all') + ' ' + this.$t('label.items')
@@ -238,9 +225,6 @@ export default {
         // Load categories
         this.$store.dispatch("tableItemCategory/lists", this.categoryProps.search).then().catch();
 
-        // Store whatsapp in tableCart for checkout
-        this.$store.dispatch('tableCart/setWhatsapp', '').then().catch();
-
         // Check if returning from order placement
         if (Object.keys(this.$route.query).length > 0 && this.$route.query.id) {
             this.loading.isActive = true;
@@ -252,11 +236,6 @@ export default {
             }).catch(() => {
                 this.loading.isActive = false;
             });
-        }
-    },
-    watch: {
-        whatsappNumber(newVal) {
-            this.$store.dispatch('tableCart/setWhatsapp', newVal).then().catch();
         }
     },
     methods: {
