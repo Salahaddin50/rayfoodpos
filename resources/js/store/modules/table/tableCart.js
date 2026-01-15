@@ -8,6 +8,7 @@ export const tableCart = {
         subtotal: 0,
         table: {},
         paymentMethod: null,
+        onlineBranchId: null,
     },
     getters: {
         lists: function (state) {
@@ -21,6 +22,9 @@ export const tableCart = {
         },
         paymentMethod: function (state) {
             return state.paymentMethod;
+        },
+        onlineBranchId: function (state) {
+            return state.onlineBranchId;
         }
     },
     actions: {
@@ -43,6 +47,9 @@ export const tableCart = {
         },
         resetPaymentMethod: function (context) {
             context.commit('resetPaymentMethod');
+        },
+        initOnlineBranch: function (context, payload) {
+            context.commit('onlineBranchInit', payload);
         },
     },
     mutations: {
@@ -164,6 +171,9 @@ export const tableCart = {
         },
         resetPaymentMethod: function(state) {
             state.paymentMethod = null;
+        },
+        onlineBranchInit: function(state, payload) {
+            state.onlineBranchId = payload;
         },
     },
 };

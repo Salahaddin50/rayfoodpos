@@ -4,7 +4,7 @@
     <header class="shadow-xs bg-white ff-header" ref="ffHeader">
         <div class="container flex flex-col lg:flex-row items-center justify-between">
             <div class="w-full flex items-center justify-between gap-3 xl:gap-8 lg:justify-start lg:w-fit">
-                <router-link :to="{ name: 'table.menu.table', params: { slug: this.$route.params.slug } }"
+                <router-link :to="homeRoute"
                     class="flex-shrink-0">
                     <img class="w-28 sm:w-40" :src="setting.theme_logo" alt="logo">
                 </router-link>
@@ -146,6 +146,22 @@ export default {
         },
         table: function () {
             return this.$store.getters['tableCart/table'];
+        },
+        isOnlineOrder: function () {
+            return this.$route.name && this.$route.name.startsWith('online.');
+        },
+        homeRoute: function () {
+            if (this.isOnlineOrder) {
+                if (this.$route.params.branchId) {
+                    return { name: 'online.menu', params: { branchId: this.$route.params.branchId } };
+                }
+                return { name: 'online.branch.selection' };
+            }
+            if (this.$route.params.slug) {
+                return { name: 'table.menu.table', params: { slug: this.$route.params.slug } };
+            }
+            // Fallback to prevent errors
+            return { path: '/' };
         }
     },
     mounted() {
@@ -154,7 +170,10 @@ export default {
             const resetRoutes = [
                 'table.tableOrder.details',
                 'table.page',
-                'table.checkout'
+                'table.checkout',
+                'online.order.details',
+                'online.page',
+                'online.checkout'
             ];
             if (this.$refs.ffHeader) {
                 if (!resetRoutes.includes(this.$route.name)) {
@@ -186,9 +205,12 @@ export default {
                 });
             }).catch();
 
-            this.$store.dispatch('tableDiningTable/show', this.$route.params.slug).then(res => {
-                this.$store.dispatch('tableCart/initTable', res.data.data);
-            }).catch((err) => { });
+            // Only fetch table data for table orders, not online orders
+            if (!this.isOnlineOrder && this.$route.params.slug) {
+                this.$store.dispatch('tableDiningTable/show', this.$route.params.slug).then(res => {
+                    this.$store.dispatch('tableCart/initTable', res.data.data);
+                }).catch((err) => { });
+            }
 
             this.loading.isActive = false;
         }).catch((err) => {
@@ -209,7 +231,19 @@ export default {
         },
         search: function () {
             if (typeof this.searchItem !== "undefined" && this.searchItem !== "") {
-                this.$router.push({ name: "table.search", query: { s: this.searchItem } });
+                if (this.isOnlineOrder) {
+                    this.$router.push({ 
+                        name: "online.search", 
+                        params: { branchId: this.$route.params.branchId },
+                        query: { s: this.searchItem } 
+                    });
+                } else {
+                    this.$router.push({ 
+                        name: "table.search", 
+                        params: { slug: this.$route.params.slug },
+                        query: { s: this.searchItem } 
+                    });
+                }
                 this.searchItem = "";
             }
         },

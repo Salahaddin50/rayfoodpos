@@ -333,7 +333,13 @@
         "subtotal": "Subtotal",
         "back_to_home": "Back to Home",
         "back_to_orders": "Back to Orders",
+        "back_to_branches": "Back to Branches",
+        "change_branch": "Change Branch",
         "select_branch": "Select Branch",
+        "online_order": "Online Order",
+        "whatsapp_number": "WhatsApp Number",
+        "enter_whatsapp_number": "Enter WhatsApp Number",
+        "contact_information": "Contact Information",
         "cart_summary": "Cart Summary",
         "customer_information": "Customer Information",
         "order_details": "Order Details",
@@ -691,6 +697,7 @@
         "place_order": "Place Order",
         "apply": "Apply",
         "go_to_order": "Go to Details",
+        "order_now": "Order Now",
         "resend_code": "resend code",
         "continue": "Continue",
         "submit": "Submit",
@@ -777,6 +784,11 @@
         "no_items_found": "No items matched your search! Try different keywords.",
         "no_data_available": "No data available.",
         "payment_method": "The payment method is required.",
-        "special_instructions_limit": "Special instructions limit is 190 characters."
+        "special_instructions_limit": "Special instructions limit is 190 characters.",
+        "select_branch_to_order": "Select a branch to start ordering",
+        "no_branches_available": "No branches available at the moment",
+        "order_confirm_online": "Your online order has been confirmed. We will contact you via WhatsApp.",
+        "whatsapp_number_required": "WhatsApp number is required",
+        "something_went_wrong": "Something went wrong. Please try again."
     }
 }

@@ -88,7 +88,7 @@
                     </h4>
                 </div>
                 <router-link @click.prevent="closeSidebar"
-                    :to="{ name: 'table.checkout', params: { slug: this.$route.params.slug } }"
+                    :to="checkoutRoute"
                     class="rounded-3xl text-center capitalize text-[15px] py-3 px-3 w-full text-white bg-primary">
                     {{ $t('button.proceed_checkout') }}
                 </router-link>
@@ -113,6 +113,18 @@ export default {
         subtotal: function () {
             return this.$store.getters['tableCart/subtotal'];
         },
+        isOnlineOrder: function () {
+            return this.$route.name && this.$route.name.startsWith('online.');
+        },
+        checkoutRoute: function () {
+            if (this.isOnlineOrder && this.$route.params.branchId) {
+                return { name: 'online.checkout', params: { branchId: this.$route.params.branchId } };
+            } else if (!this.isOnlineOrder && this.$route.params.slug) {
+                return { name: 'table.checkout', params: { slug: this.$route.params.slug } };
+            }
+            // Fallback to prevent errors
+            return { path: '/' };
+        }
     },
     methods: {
         onlyNumber: function (e) {

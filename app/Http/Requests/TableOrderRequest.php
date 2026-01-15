@@ -29,7 +29,8 @@ class TableOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'dining_table_id'  => ['required', 'numeric'],
+            // dining_table_id is required for table orders, nullable for online orders (which have whatsapp_number)
+            'dining_table_id'  => request('whatsapp_number') ? ['nullable', 'numeric'] : ['required', 'numeric'],
             'customer_id'      => ['required', 'numeric'],
             'branch_id'        => ['required', 'numeric'],
             'subtotal'         => ['required', 'numeric'],
@@ -41,6 +42,7 @@ class TableOrderRequest extends FormRequest
             'address_id'       => ['nullable'],
             'delivery_time'    => ['nullable'],
             'source'           => ['required', 'numeric'],
+            'whatsapp_number'  => ['nullable', 'string', 'max:20'],
             'items'            => ['required', 'json', new ValidJsonOrder]
         ];
     }

@@ -7,7 +7,7 @@
                 <p class="text-sm text-white">{{ setting.site_copyright }}</p>
                 <nav v-if="pages.length > 0" class="flex items-center gap-6">
                     <router-link v-for="page in pages" class="text-sm capitalize text-white"
-                        :to="{ name: 'table.page', params: { slug: this.$route.params.slug, pageSlug: page.slug } }">
+                        :to="getPageRoute(page.slug)">
                         {{ page.title }}
                     </router-link>
                 </nav>
@@ -38,6 +38,29 @@ export default {
         },
         pages: function () {
             return this.$store.getters['frontendPage/lists'];
+        },
+        isOnlineOrder: function () {
+            return this.$route.name && this.$route.name.startsWith('online.');
+        }
+    },
+    methods: {
+        getPageRoute: function (pageSlug) {
+            if (this.isOnlineOrder) {
+                return { 
+                    name: 'online.page', 
+                    params: { 
+                        branchId: this.$route.params.branchId, 
+                        pageSlug: pageSlug 
+                    } 
+                };
+            }
+            return { 
+                name: 'table.page', 
+                params: { 
+                    slug: this.$route.params.slug, 
+                    pageSlug: pageSlug 
+                } 
+            };
         }
     },
     mounted() {

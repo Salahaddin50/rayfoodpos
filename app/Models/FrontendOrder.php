@@ -31,6 +31,7 @@ class FrontendOrder extends Model
         'payment_status',
         'status',
         'dining_table_id',
+        'whatsapp_number',
         'source'
     ];
 
@@ -53,6 +54,7 @@ class FrontendOrder extends Model
         'payment_status'   => 'integer',
         'status'           => 'integer',
         'dining_table_id'  => 'integer',
+        'whatsapp_number'  => 'string',
         'source'           => 'string'
     ];
 
