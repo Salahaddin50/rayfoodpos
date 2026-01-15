@@ -60,6 +60,7 @@ export default {
             const fallbackIcons = {
                 dining_tables: "lab lab-reserve-line",
                 takeaway_types: "lab lab-bag-2",
+                online_orders: "lab lab-total-orders",
             };
 
             const sortByPriority = (a, b) => {
@@ -79,14 +80,98 @@ export default {
                 return ai - bi;
             };
 
+            const normalizeLanguage = (m) => {
+                // Some environments send a menu item with language = null which renders as "menu.null".
+                // We normalize known URLs to a stable translation key.
+                const url = m?.url ? String(m.url) : "";
+                const lang = m?.language;
+                if (lang !== null && lang !== undefined && String(lang).trim() !== "") return lang;
+
+                if (url === "online-orders") return "online_orders";
+                if (url === "table-orders") return "table_orders";
+                if (url === "pos-orders") return "pos_orders";
+                if (url === "pos") return "pos";
+
+                return lang;
+            };
+
+            const reorderPosChildren = (children) => {
+                if (!Array.isArray(children) || children.length === 0) return children;
+
+                const list = [...children];
+                const findIdx = (predicate) => list.findIndex(predicate);
+
+                const tableIdx = findIdx((c) => c?.url === "table-orders" || c?.language === "table_orders");
+                const onlineIdx = findIdx((c) => c?.url === "online-orders" || c?.language === "online_orders");
+
+                // Move Online Orders just below Table Orders (only when both exist)
+                if (tableIdx !== -1 && onlineIdx !== -1 && onlineIdx !== tableIdx + 1) {
+                    const [online] = list.splice(onlineIdx, 1);
+                    const insertAt = tableIdx + 1;
+                    list.splice(insertAt, 0, online);
+                }
+
+                return list;
+            };
+
+            const isValidIcon = (icon) => {
+                const s = icon === null || icon === undefined ? "" : String(icon).trim();
+                if (!s) return false;
+                // Some menu records have icon="lab" or "lab " which renders nothing.
+                if (s === "lab" || s === "fa" || s === "fa-solid" || s === "fa-regular") return false;
+                // Consider it valid only if it references a concrete icon class.
+                return s.includes("lab-") || s.includes("fa-");
+            };
+
+            const normalizeMenu = (m) => {
+                const language = normalizeLanguage(m);
+                const icon = isValidIcon(m?.icon)
+                    ? m.icon
+                    : (fallbackIcons[language] ?? m?.icon);
+
+                let children = m?.children;
+                if (Array.isArray(children)) {
+                    children = children
+                        .map((c) => normalizeMenu(c))
+                        .sort(sortByPriority);
+                    children = reorderPosChildren(children);
+                }
+
+                return { ...m, language, icon, children };
+            };
+
             // Return a sorted copy so menu order always matches DB priority
-            return [...menus]
+            const normalized = [...menus]
                 .sort(sortByPriority)
-                .map((m) => ({
-                    ...m,
-                    icon: (m?.icon && String(m.icon).trim()) ? m.icon : (fallbackIcons[m?.language] ?? m?.icon),
-                    children: Array.isArray(m.children) ? [...m.children].sort(sortByPriority) : m.children,
-                }));
+                .map((m) => normalizeMenu(m));
+
+            // If Online Orders is incorrectly sent as a top-level menu item (instead of under Pos & Orders),
+            // relocate it under the "pos_and_orders" group and place it just below Table Orders.
+            const posGroupIndex = normalized.findIndex((m) => m?.language === "pos_and_orders");
+            if (posGroupIndex !== -1) {
+                const posGroup = normalized[posGroupIndex];
+                const posChildren = Array.isArray(posGroup?.children) ? [...posGroup.children] : [];
+
+                const hasOnlineInChildren = posChildren.some(
+                    (c) => c?.url === "online-orders" || c?.language === "online_orders"
+                );
+
+                const onlineTopIndex = normalized.findIndex(
+                    (m, idx) =>
+                        idx !== posGroupIndex &&
+                        (m?.url === "online-orders" || m?.language === "online_orders")
+                );
+
+                if (!hasOnlineInChildren && onlineTopIndex !== -1) {
+                    const [onlineTop] = normalized.splice(onlineTopIndex, 1);
+                    posChildren.push(onlineTop);
+                }
+
+                posGroup.children = reorderPosChildren(posChildren);
+                normalized[posGroupIndex] = normalizeMenu(posGroup);
+            }
+
+            return normalized;
         },
         sidebar() {
             return this.$store.getters['globalState/lists'].topSidebar;

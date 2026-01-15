@@ -42,9 +42,11 @@ export default {
             return this.$store.getters.authDefaultPermission;
         },
         showRefreshButton: function () {
-            // Show refresh button only on POS Orders and Table Orders sections
+            // Show refresh button only on POS Orders, Table Orders, and Online Orders sections
             return this.$route.matched?.some((r) =>
-                r?.meta?.breadcrumb === 'pos_orders' || r?.meta?.breadcrumb === 'table_orders'
+                r?.meta?.breadcrumb === 'pos_orders' ||
+                r?.meta?.breadcrumb === 'table_orders' ||
+                r?.meta?.breadcrumb === 'online_orders'
             );
         }
     },
@@ -73,6 +75,7 @@ export default {
             // Emit a global event that the relevant list pages listen to.
             const isPos = this.$route.matched?.some((r) => r?.meta?.breadcrumb === 'pos_orders');
             const isTable = this.$route.matched?.some((r) => r?.meta?.breadcrumb === 'table_orders');
+            const isOnline = this.$route.matched?.some((r) => r?.meta?.breadcrumb === 'online_orders');
 
             if (isPos) {
                 window.dispatchEvent(new CustomEvent('rayfood:refresh-pos-orders'));
@@ -81,6 +84,11 @@ export default {
 
             if (isTable) {
                 window.dispatchEvent(new CustomEvent('rayfood:refresh-table-orders'));
+                return;
+            }
+
+            if (isOnline) {
+                window.dispatchEvent(new CustomEvent('rayfood:refresh-online-orders'));
                 return;
             }
         }
