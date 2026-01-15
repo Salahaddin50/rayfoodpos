@@ -534,6 +534,8 @@
         "whatsapp_number": "WhatsApp nömrəsi",
         "enter_phone_number": "Telefon nömrəsini daxil edin",
         "enter_whatsapp_number": "WhatsApp nömrəsini daxil edin",
+        "call": "Zəng et",
+        "whatsapp": "WhatsApp",
         "cash_card": "Nağd/Kart",
         "digital_payment": "Rəqəmsal Ödəniş",
         "table_name": "Masa Adı",
@@ -785,6 +787,7 @@
         "please_select_branch_first": "Zəhmət olmasa əvvəlcə səbətə məhsul əlavə etmək üçün filial seçin",
         "no_branches_available": "Hal-hazırda filiallar mövcud deyil",
         "order_confirm_online": "Onlayn sifarişiniz təsdiqləndi. Biz sizinlə WhatsApp vasitəsilə əlaqə saxlayacağıq.",
-        "phone_number_format_hint": "Ölkə kodu olmadan telefon nömrəsini daxil edin"
+        "phone_number_format_hint": "Ölkə kodu olmadan telefon nömrəsini daxil edin",
+        "whatsapp_order_message": "Salam! Mən {branchName} filialında #{orderNumber} nömrəli sifariş verdim. Zəhmət olmasa sifarişimi təsdiqləyin. Təşəkkür edirəm!"
     }
 }

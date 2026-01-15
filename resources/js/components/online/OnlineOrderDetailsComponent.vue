@@ -49,11 +49,19 @@
                                         class="lab lab-location text-xs leading-none mt-1.5 flex-shrink-0 lab-font-size-14"></i>
                                     <span class="text-sm leading-6 text-heading">{{ orderBranch.address }}</span>
                                 </div>
-                                <div class="flex gap-4"
+                                <div class="flex gap-2"
                                     v-if="parseInt(order.status) !== parseInt(enums.orderStatusEnum.REJECTED) && parseInt(order.status) !== parseInt(enums.orderStatusEnum.CANCELED)">
                                     <a :href="'tel:' + orderBranch.phone"
-                                        class="w-8 h-8 rounded-full flex items-center justify-center bg-primary-light"><i
-                                            class="lab lab-call-calling font-fill-primary lab-font-size-16"></i></a>
+                                        class="w-8 h-8 rounded-full flex items-center justify-center bg-primary-light"
+                                        :title="$t('label.call')">
+                                        <i class="lab lab-call-calling font-fill-primary lab-font-size-16"></i>
+                                    </a>
+                                    <a :href="whatsappLink"
+                                        target="_blank"
+                                        class="w-8 h-8 rounded-full flex items-center justify-center bg-green-100"
+                                        :title="$t('label.whatsapp')">
+                                        <i class="lab lab-whatsapp text-green-600 lab-font-size-16"></i>
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -236,6 +244,26 @@ export default {
                 [paymentTypeEnum.E_WALLET]: this.$t("label.e_wallet"),
                 [paymentTypeEnum.PAYPAL]: this.$t("label.paypal"),
             };
+        },
+        whatsappLink() {
+            if (!this.orderBranch.phone || !this.order.order_serial_no) {
+                return '#';
+            }
+            
+            // Remove any non-digit characters from phone number
+            const phoneNumber = this.orderBranch.phone.replace(/[^\d]/g, '');
+            
+            // Create message with order details
+            const message = this.$t('message.whatsapp_order_message', {
+                orderNumber: this.order.order_serial_no,
+                branchName: this.orderBranch.name
+            });
+            
+            // Encode message for URL
+            const encodedMessage = encodeURIComponent(message);
+            
+            // Return WhatsApp link
+            return `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
         }
     },
     mounted() {

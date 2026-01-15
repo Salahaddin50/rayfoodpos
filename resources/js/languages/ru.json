@@ -534,6 +534,8 @@
         "whatsapp_number": "Номер WhatsApp",
         "enter_phone_number": "Введите номер телефона",
         "enter_whatsapp_number": "Введите номер WhatsApp",
+        "call": "Позвонить",
+        "whatsapp": "WhatsApp",
         "cash_card": "Наличные/Карта",
         "digital_payment": "Цифровая оплата",
         "table_name": "Название стола",
@@ -785,6 +787,7 @@
         "please_select_branch_first": "Пожалуйста, сначала выберите филиал, чтобы добавить товары в корзину",
         "no_branches_available": "В данный момент филиалы недоступны",
         "order_confirm_online": "Ваш онлайн-заказ подтвержден. Мы свяжемся с вами через WhatsApp.",
-        "phone_number_format_hint": "Введите номер телефона без кода страны"
+        "phone_number_format_hint": "Введите номер телефона без кода страны",
+        "whatsapp_order_message": "Здравствуйте! Я разместил заказ #{orderNumber} в {branchName}. Пожалуйста, подтвердите мой заказ. Спасибо!"
     }
 }
