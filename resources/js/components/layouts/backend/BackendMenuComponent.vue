@@ -133,6 +133,12 @@ export default {
                 if (Array.isArray(children)) {
                     children = children
                         .map((c) => normalizeMenu(c))
+                        .filter((c) => {
+                            // Hide Online Orders from menu
+                            const cUrl = String(c?.url ?? '').toLowerCase();
+                            const cLang = String(c?.language ?? '').toLowerCase();
+                            return cUrl !== 'online-orders' && cLang !== 'online_orders';
+                        })
                         .sort(sortByPriority);
                     children = reorderPosChildren(children);
                 }
@@ -142,6 +148,12 @@ export default {
 
             // Return a sorted copy so menu order always matches DB priority
             const normalized = [...menus]
+                .filter((m) => {
+                    // Hide Online Orders if it appears as a top-level menu
+                    const mUrl = String(m?.url ?? '').toLowerCase();
+                    const mLang = String(m?.language ?? '').toLowerCase();
+                    return mUrl !== 'online-orders' && mLang !== 'online_orders';
+                })
                 .sort(sortByPriority)
                 .map((m) => normalizeMenu(m));
 

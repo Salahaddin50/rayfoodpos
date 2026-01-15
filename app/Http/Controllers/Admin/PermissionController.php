@@ -37,7 +37,7 @@ class PermissionController extends AdminController
     public function index(Role $role)
     {
         try {
-            $permissions     = Permission::get();
+            $permissions     = Permission::orderBy('id')->get();
             $rolePermissions = Permission::join(
                 "role_has_permissions",
                 "role_has_permissions.permission_id",
@@ -45,7 +45,24 @@ class PermissionController extends AdminController
                 "permissions.id"
             )->where("role_has_permissions.role_id", $role->id)->get()->pluck('name', 'id');
             $permissions     = AppLibrary::permissionWithAccess($permissions, $rolePermissions);
-            $permissions     = AppLibrary::numericToAssociativeArrayBuilder($permissions->toArray());
+            
+            // Convert to array BEFORE building hierarchy
+            $permissionsArray = [];
+            foreach ($permissions as $p) {
+                $permissionsArray[] = [
+                    'id' => $p->id,
+                    'title' => $p->title,
+                    'name' => $p->name,
+                    'guard_name' => $p->guard_name,
+                    'url' => $p->url,
+                    'parent' => $p->parent,
+                    'created_at' => $p->created_at,
+                    'updated_at' => $p->updated_at,
+                    'access' => $p->access ?? false,
+                ];
+            }
+            
+            $permissions     = AppLibrary::numericToAssociativeArrayBuilder($permissionsArray);
 
             // Keep a stable, user-friendly order in the Role & Permissions UI.
             // This also ensures newly added modules (e.g. Takeaway Types) appear near related sections.
@@ -58,6 +75,20 @@ class PermissionController extends AdminController
             $indexed = [];
             foreach ($permissions as $idx => $p) {
                 $p['_idx'] = $idx;
+                
+                // Ensure children are in consistent order: Create, Edit, Delete, Show
+                if (!empty($p['children']) && is_array($p['children'])) {
+                    usort($p['children'], function($a, $b) {
+                        $order = ['create' => 1, 'edit' => 2, 'delete' => 3, 'show' => 4];
+                        $aType = 5; $bType = 5;
+                        foreach ($order as $suffix => $priority) {
+                            if (str_ends_with($a['name'] ?? '', '_' . $suffix)) $aType = $priority;
+                            if (str_ends_with($b['name'] ?? '', '_' . $suffix)) $bType = $priority;
+                        }
+                        return $aType <=> $bType;
+                    });
+                }
+                
                 $indexed[] = $p;
             }
             usort($indexed, function ($a, $b) use ($priority) {

@@ -104,30 +104,49 @@ class AppLibrary
 
     public static function numericToAssociativeArrayBuilder($array): array
     {
-        $i = 0;
-        $parentId = null;
-        $parentIncrementId = null;
-        $buildArray = [];
-        if (count($array)) {
-            foreach ($array as $arr) {
-                if (!$arr['parent']) {
-                    $parentId = $arr['id'];
-                    $parentIncrementId = $i;
-                    $buildArray[$i] = $arr;
-                    $i++;
-                }
+        // Build parent/children hierarchy without relying on DB row ordering.
+        // The previous implementation only attached children if they appeared
+        // immediately after the parent in the array, which breaks Role & Permissions UI.
+        $parents = [];
+        $childrenByParent = [];
 
-                if ($arr['parent'] == $parentId) {
-                    $buildArray[$parentIncrementId]['children'][] = $arr;
+        if (count($array)) {
+            foreach ($array as $idx => $arr) {
+                $arr['_idx'] = $idx; // keep stable order (as provided)
+
+                // Check parent value - it might be null, 0, or "0" (string)
+                $parentValue = $arr['parent'] ?? null;
+                if ($parentValue === null || $parentValue === 0 || $parentValue === '0' || $parentValue === '') {
+                    $parents[] = $arr;
+                } else {
+                    $childrenByParent[$parentValue][] = $arr;
                 }
             }
         }
-        if ($buildArray) {
-            foreach ($buildArray as $key => $build) {
-                if ($build['url'] == "#" && !isset($build['children'])) {
-                    unset($buildArray[$key]);
-                }
+
+        usort($parents, fn ($a, $b) => ($a['_idx'] ?? 0) <=> ($b['_idx'] ?? 0));
+
+        $buildArray = [];
+        foreach ($parents as $p) {
+            $id = $p['id'] ?? null;
+            $children = $id && isset($childrenByParent[$id]) ? $childrenByParent[$id] : [];
+            usort($children, fn ($a, $b) => ($a['_idx'] ?? 0) <=> ($b['_idx'] ?? 0));
+
+            unset($p['_idx']);
+            foreach ($children as &$c) {
+                unset($c['_idx']);
             }
+
+            if ($children) {
+                $p['children'] = $children;
+            }
+
+            // Drop empty groups (same behavior as before)
+            if (($p['url'] ?? null) === "#" && empty($p['children'])) {
+                continue;
+            }
+
+            $buildArray[] = $p;
         }
 
         return $buildArray;
