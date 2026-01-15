@@ -28,8 +28,10 @@ class PosOrderController extends AdminController
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:pos-orders', only: ['index', 'destroy', 'export', 'changeStatus', 'changePaymentStatus']),
-            new Middleware('permission:pos-orders|pos', only: ['show']),
+            new Middleware('permission:pos-orders', only: ['index', 'export']),
+            new Middleware('permission:pos_orders_show', only: ['show']),
+            new Middleware('permission:pos_orders_delete', only: ['destroy']),
+            new Middleware('permission:pos_orders_edit', only: ['changeStatus', 'changePaymentStatus']),
         ];
     }
 

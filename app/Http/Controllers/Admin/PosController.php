@@ -27,7 +27,7 @@ class PosController extends AdminController
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:pos', only: ['store']),
+            new Middleware('permission:pos_create', only: ['store', 'storeCustomer']),
         ];
     }
 

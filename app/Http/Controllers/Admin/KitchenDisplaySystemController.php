@@ -24,7 +24,8 @@ class KitchenDisplaySystemController extends AdminController
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:kitchen-display-system', only: ['index', 'changeStatus', 'orderItems']),
+            new Middleware('permission:kitchen-display-system', only: ['index', 'orderItems']),
+            new Middleware('permission:kitchen_display_system_edit', only: ['changeStatus']),
         ];
     }
 
