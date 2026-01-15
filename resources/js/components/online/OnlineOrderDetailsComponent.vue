@@ -60,7 +60,7 @@
                                         target="_blank"
                                         class="w-8 h-8 rounded-full flex items-center justify-center bg-green-100"
                                         :title="$t('label.whatsapp')">
-                                        <i class="lab lab-whatsapp text-green-600 lab-font-size-16"></i>
+                                        <i class="fa-brands fa-whatsapp text-green-600 text-base"></i>
                                     </a>
                                 </div>
                             </div>
@@ -192,6 +192,7 @@ import paymentStatusEnum from "../../enums/modules/paymentStatusEnum";
 import paymentTypeEnum from "../../enums/modules/paymentTypeEnum";
 import activityEnum from "../../enums/modules/activityEnum";
 import router from "../../router";
+import appService from "../../services/appService";
 
 export default {
     name: "OnlineOrderDetailsComponent",
@@ -246,18 +247,38 @@ export default {
             };
         },
         whatsappLink() {
-            if (!this.orderBranch.phone || !this.order.order_serial_no) {
+            if (!this.order.whatsapp_number || !this.order.order_serial_no) {
                 return '#';
             }
             
-            // Remove any non-digit characters from phone number
-            const phoneNumber = this.orderBranch.phone.replace(/[^\d]/g, '');
+            // Format phone number: remove leading 0 and add +994
+            let phoneNumber = this.order.whatsapp_number.replace(/[^\d]/g, '');
+            if (phoneNumber.startsWith('0')) {
+                phoneNumber = '994' + phoneNumber.substring(1);
+            } else if (!phoneNumber.startsWith('994')) {
+                phoneNumber = '994' + phoneNumber;
+            }
             
-            // Create message with order details
+            // Build order items breakdown
+            let itemsBreakdown = '';
+            if (this.orderItems && this.orderItems.length > 0) {
+                itemsBreakdown = '\n\n';
+                this.orderItems.forEach(item => {
+                    itemsBreakdown += `${item.item_name} x${item.quantity} - ${item.total_currency_price}\n`;
+                });
+                itemsBreakdown += `\n${this.$t('label.total')}: ${this.currencyFormat(
+                    this.order.total,
+                    this.setting.site_digit_after_decimal_point,
+                    this.setting.site_default_currency_symbol,
+                    this.setting.site_currency_position
+                )}`;
+            }
+            
+            // Create message with order details and breakdown
             const message = this.$t('message.whatsapp_order_message', {
                 orderNumber: this.order.order_serial_no,
                 branchName: this.orderBranch.name
-            });
+            }) + itemsBreakdown;
             
             // Encode message for URL
             const encodedMessage = encodeURIComponent(message);
@@ -280,6 +301,9 @@ export default {
         }
     },
     methods: {
+        currencyFormat: function (amount, decimal, currency, position) {
+            return appService.currencyFormat(amount, decimal, currency, position);
+        },
         refreshStatus() {
             if (!this.$route.params.id) return;
             this.loading.isActive = true;
