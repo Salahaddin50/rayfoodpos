@@ -384,11 +384,13 @@ export default {
       this.$store
         .dispatch("kitchenDisplaySystemOrder/lists", this.props.search)
         .then((res) => {
-          this.dineinOrders = res.data.data.filter(
-            (item) => item.order_type === orderTypeEnum.DINING_TABLE
-          );
+          // "Table orders" are best identified by having a dining_table_id.
+          // Relying only on order_type can hide table orders if order_type mapping changes.
+          this.dineinOrders = res.data.data.filter((item) => !!item.dining_table_id);
+
+          // Keep takeaway orders separated from table orders.
           this.takeawayOrders = res.data.data.filter(
-            (item) => item.order_type === orderTypeEnum.TAKEAWAY
+            (item) => !item.dining_table_id && item.order_type === orderTypeEnum.TAKEAWAY
           );
 
           this.loading.isActive = false;

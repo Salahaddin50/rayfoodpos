@@ -8,5 +8,4 @@ interface OrderType
     const TAKEAWAY = 10;
     const POS = 15;
     const DINING_TABLE = 20;
-    const ONLINE = 25;
 }

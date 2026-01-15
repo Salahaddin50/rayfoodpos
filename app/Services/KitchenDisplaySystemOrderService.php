@@ -41,7 +41,18 @@ class KitchenDisplaySystemOrderService
             $orderColumn = $request->get('order_column') ?? 'id';
             $orderType   = $request->get('order_by') ?? 'desc';
 
-            return Order::with('orderItems')->whereIn('status', [OrderStatus::ACCEPT, OrderStatus::PREPARING, OrderStatus::PREPARED])->where(function ($query) {
+            return Order::with('orderItems')
+                // KDS primarily works on accepted/preparing/prepared orders.
+                // QR/table orders can be created as PENDING, so include PENDING only for dine-in orders
+                // to avoid flooding KDS with unrelated pending orders.
+                ->where(function ($q) {
+                    $q->whereIn('status', [OrderStatus::ACCEPT, OrderStatus::PREPARING, OrderStatus::PREPARED])
+                        ->orWhere(function ($sub) {
+                            $sub->where('order_type', \App\Enums\OrderType::DINING_TABLE)
+                                ->where('status', OrderStatus::PENDING);
+                        });
+                })
+                ->where(function ($query) {
                 $query->where(function ($subQuery) {
                     $subQuery->whereDate('order_datetime', Carbon::today())->where('is_advance_order', Ask::NO);
                 })->orWhere(function ($subQuery) {

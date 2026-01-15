@@ -64,7 +64,6 @@ import { tableCart } from "./modules/table/tableCart";
 import { tableDiningTable } from "./modules/table/tableDiningTable";
 import { tableDiningOrder } from "./modules/table/tableDiningOrder";
 import { tableOrder } from './modules/tableOrder';
-import { onlineOrder } from './modules/onlineOrder';
 import { notificationAlert } from './modules/notificationAlert';
 import { notification } from './modules/notification';
 import { kitchenDisplaySystemOrder } from './modules/kitchenDisplaySystemOrder';
@@ -145,7 +144,6 @@ export default new createStore({
         tableDiningTable,
         tableDiningOrder,
         tableOrder,
-        onlineOrder,
         notificationAlert,
         notification,
         kitchenDisplaySystemOrder,

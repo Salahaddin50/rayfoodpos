@@ -2,7 +2,7 @@
     <LoadingComponent :props="loading" />
     <section class="pt-8 pb-16 min-h-[800px]">
         <div class="container max-w-[965px]">
-            <router-link :to="isOnlineOrder ? { name: 'online' } : { name: 'table.menu.table', params: { slug: this.$route.params.slug } }"
+            <router-link :to="{ name: 'table.menu.table', params: { slug: this.$route.params.slug } }"
                 class="text-xs font-medium inline-flex mb-3 items-center gap-2 text-primary">
                 <i class="lab lab-undo lab-font-size-16"></i>
                 <span>{{ $t('label.back_to_home') }}</span>
@@ -10,7 +10,7 @@
 
             <div class="row">
                 <div class="col-12 md:col-7">
-                    <div class="mb-6 rounded-2xl shadow-xs bg-white" v-if="!isOnlineOrder">
+                    <div class="mb-6 rounded-2xl shadow-xs bg-white">
                         <h3 class="capitalize font-medium p-4 border-b border-gray-100">{{ $t('label.table') }}</h3>
                         <p class="capitalize p-4 text-heading">{{ $t('label.inside') }} - {{ table.name }}</p>
                     </div>
@@ -39,20 +39,6 @@
                                     }}</label>
                             </li>
                         </ul>
-                    </div>
-
-                    <!-- WhatsApp Number for Online Orders -->
-                    <div class="mb-6 rounded-2xl shadow-xs bg-white" v-if="isOnlineOrder">
-                        <h3 class="capitalize font-medium p-4 border-b border-gray-100">{{ $t('label.whatsapp') }}</h3>
-                        <div class="p-4">
-                            <input 
-                                v-model="whatsappNumber" 
-                                type="text" 
-                                class="w-full h-12 rounded-lg border px-4 border-[#D9DBE9]"
-                                :placeholder="$t('label.whatsapp')"
-                            />
-                            <small class="text-xs text-gray-500 mt-1 block">{{ $t('message.whatsapp_order_notification') }}</small>
-                        </div>
                     </div>
 
                     <button type="button"
@@ -185,7 +171,6 @@ export default {
             },
             placeOrderShow: false,
             paymentMethod: null,
-            whatsappNumber: '',
             checkoutProps: {
                 form: {
                     dining_table_id: null,
@@ -207,11 +192,7 @@ export default {
     },
     mounted() {
         if (this.$store.getters['tableCart/lists'].length === 0) {
-            if (this.isOnlineOrder) {
-                this.$router.push({ name: 'online' });
-            } else {
-                this.$router.push({ name: 'table.menu.table', params: { slug: this.$route.params.slug } });
-            }
+            this.$router.push({ name: 'table.menu.table', params: { slug: this.$route.params.slug } });
         }
     },
     computed: {
@@ -226,9 +207,6 @@ export default {
         },
         table: function () {
             return this.$store.getters['tableCart/table'];
-        },
-        isOnlineOrder: function () {
-            return this.$route.name && this.$route.name.includes('online');
         }
     },
     methods: {
@@ -253,27 +231,14 @@ export default {
             };
 
             ensureTable().then((table) => {
-                // For online orders, table validation is different
-                if (this.isOnlineOrder) {
-                    if (!table || !table.branch_id) {
-                        this.loading.isActive = false;
-                        alertService.error(this.$t('message.please_select_branch'));
-                        return this.$router.push({ name: 'online' });
-                    }
-                    // Online orders: set order type to ONLINE and dining_table_id to null
-                    this.checkoutProps.form.order_type = 25; // OrderTypeEnum.ONLINE
-                    this.checkoutProps.form.dining_table_id = null;
-                } else {
-                    if (!table || !table.id || !table.branch_id) {
-                        this.loading.isActive = false;
-                        alertService.error(this.$t('message.something_went_wrong'));
-                        return this.$router.push({ name: 'table.menu.table', params: { slug: this.$route.params.slug } });
-                    }
-                    this.checkoutProps.form.dining_table_id = table.id;
+                if (!table || !table.id || !table.branch_id) {
+                    this.loading.isActive = false;
+                    alertService.error(this.$t('message.something_went_wrong'));
+                    return this.$router.push({ name: 'table.menu.table', params: { slug: this.$route.params.slug } });
                 }
 
+                this.checkoutProps.form.dining_table_id = table.id;
                 this.checkoutProps.form.branch_id = table.branch_id;
-                this.checkoutProps.form.whatsapp_number = this.whatsappNumber;
             this.checkoutProps.form.subtotal = this.subtotal;
             this.checkoutProps.form.total = parseFloat(this.subtotal).toFixed(this.setting.site_digit_after_decimal_point);
             this.checkoutProps.form.items = [];
@@ -343,13 +308,7 @@ export default {
                 this.$store.dispatch('tableCart/resetCart').then(res => {
                     this.loading.isActive = false;
                     this.$store.dispatch('tableCart/paymentMethod', this.paymentMethod).then().catch();
-                    
-                    // Redirect based on order type
-                    if (this.isOnlineOrder) {
-                        router.push({ name: "online", query: { id: orderResponse.data.data.id } });
-                    } else {
-                        router.push({ name: "table.menu.table", params: { slug: this.table.slug }, query: { id: orderResponse.data.data.id } });
-                    }
+                    router.push({ name: "table.menu.table", params: { slug: this.table.slug }, query: { id: orderResponse.data.data.id } });
                 }).catch();
             }).catch((err) => {
                 this.loading.isActive = false;
@@ -369,14 +328,10 @@ export default {
         carts: {
             handler(newVal) {
                 if (!newVal || newVal.length === 0) {
-                    if (this.isOnlineOrder) {
-                        this.$router.push({ name: 'online' });
-                    } else {
-                        this.$router.push({
-                            name: 'table.menu.table',
-                            params: { slug: this.$route.params.slug }
-                        });
-                    }
+                    this.$router.push({
+                        name: 'table.menu.table',
+                        params: { slug: this.$route.params.slug }
+                    });
                 }
             },
             deep: true,

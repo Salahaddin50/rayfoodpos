@@ -34,7 +34,6 @@ class Order extends Model
         'dining_table_id',
         'takeaway_type_id',
         'source',
-        'whatsapp_number',
         'pos_payment_method',
         'pos_payment_note',
         'pos_note',

@@ -21,8 +21,6 @@ import transactionRoutes from "./modules/transactionRoutes";
 import creditBalanceReportRoutes from "./modules/creditBalanceReportRoutes";
 import tableOrderRoutes from "./modules/tableOrderRoutes";
 import adminTableOrderRoutes from "./modules/adminTableOrderRoutes";
-import onlineRoutes from "./modules/onlineRoutes";
-import adminOnlineOrderRoutes from "./modules/adminOnlineOrderRoutes";
 import diningTableRoutes from "./modules/diningTableRoutes";
 import takeawayTypeRoutes from "./modules/takeawayTypeRoutes";
 import kitchenDisplaySystemRoutes from "./modules/kitchenDisplaySystemRoutes";
@@ -80,8 +78,6 @@ export const routes = baseRoutes.concat(
     creditBalanceReportRoutes,
     tableOrderRoutes,
     adminTableOrderRoutes,
-    onlineRoutes,
-    adminOnlineOrderRoutes,
     diningTableRoutes,
     takeawayTypeRoutes,
     kitchenDisplaySystemRoutes,

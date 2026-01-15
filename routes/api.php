@@ -74,8 +74,6 @@ use App\Http\Controllers\Frontend\ItemController as FrontendItemController;
 use App\Http\Controllers\Frontend\PageController as FrontendPageController;
 use App\Http\Controllers\Frontend\BranchController as FrontendBranchController;
 use App\Http\Controllers\Admin\TableOrderController as AdminTableOrderController;
-use App\Http\Controllers\Admin\OnlineOrderController;
-use App\Http\Controllers\Frontend\OnlineOrderController as FrontendOnlineOrderController;
 use App\Http\Controllers\Frontend\LanguageController as FrontendLanguageController;
 use App\Http\Controllers\Table\DiningTableController as TableDiningTableController;
 use App\Http\Controllers\Table\ItemCategoryController as TableItemCategoryController;
@@ -429,14 +427,6 @@ Route::prefix('admin')->name('admin.')->middleware(['installed', 'apiKey', 'auth
         Route::post('/token-create/{order}', [AdminTableOrderController::class, 'tokenCreate']);
     });
 
-    Route::prefix('online-order')->name('onlineOrder.')->group(function () {
-        Route::get('/', [OnlineOrderController::class, 'index']);
-        Route::get('/show/{order}', [OnlineOrderController::class, 'show']);
-        Route::delete('/{order}', [OnlineOrderController::class, 'destroy']);
-        Route::get('/export', [OnlineOrderController::class, 'export']);
-        Route::post('/change-status/{order}', [OnlineOrderController::class, 'changeStatus']);
-        Route::post('/change-payment-status/{order}', [OnlineOrderController::class, 'changePaymentStatus']);
-    });
 
     Route::prefix('administrator')->name('administrator.')->group(function () {
         Route::get('/', [AdministratorController::class, 'index']);
@@ -632,10 +622,5 @@ Route::prefix('table')->name('table.')->middleware(['installed', 'apiKey', 'loca
     Route::prefix('dining-order')->name('dining-order.')->group(function () {
         Route::get('/show/{frontendOrder}', [TableOrderController::class, 'show']);
         Route::post('/', [TableOrderController::class, 'store']);
-    });
-
-    Route::prefix('online-order')->name('online-order.')->group(function () {
-        Route::get('/show/{frontendOrder}', [TableOrderController::class, 'show']);
-        Route::post('/', [FrontendOnlineOrderController::class, 'store']);
     });
 });

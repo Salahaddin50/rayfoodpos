@@ -29,7 +29,7 @@ class TableOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'dining_table_id'  => ['nullable', 'numeric'],
+            'dining_table_id'  => ['required', 'numeric'],
             'customer_id'      => ['required', 'numeric'],
             'branch_id'        => ['required', 'numeric'],
             'subtotal'         => ['required', 'numeric'],
@@ -41,7 +41,6 @@ class TableOrderRequest extends FormRequest
             'address_id'       => ['nullable'],
             'delivery_time'    => ['nullable'],
             'source'           => ['required', 'numeric'],
-            'whatsapp_number'  => ['nullable', 'string', 'max:20'],
             'items'            => ['required', 'json', new ValidJsonOrder]
         ];
     }

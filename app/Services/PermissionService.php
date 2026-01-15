@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Requests\PermissionRequest;
 use App\Libraries\QueryExceptionLibrary;
 use Spatie\Permission\Models\Permission;
-use Spatie\Permission\PermissionRegistrar;
 
 class PermissionService
 {
@@ -40,12 +39,7 @@ class PermissionService
     public function update(PermissionRequest $request, Role $role) : Role
     {
         try {
-            $updated = $role->syncPermissions(Permission::whereIn('id', $request->get('permissions'))->get());
-
-            // Ensure Spatie permission cache is cleared so changes apply immediately.
-            app(PermissionRegistrar::class)->forgetCachedPermissions();
-
-            return $updated;
+            return $role->syncPermissions(Permission::whereIn('id', $request->get('permissions'))->get());
         } catch (Exception $exception) {
             Log::info($exception->getMessage());
             throw new Exception(QueryExceptionLibrary::message($exception), 422);
