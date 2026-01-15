@@ -361,7 +361,7 @@ export default {
                     this.loading.isActive = false;
                     this.$store.dispatch('tableCart/paymentMethod', this.paymentMethod).then().catch();
                     router.push({ 
-                        name: "online.menu", 
+                        name: "online.menu.branch", 
                         params: { branchId: this.$route.params.branchId }, 
                         query: { id: orderResponse.data.data.id } 
                     });
