@@ -3,11 +3,24 @@
         <div class="container">
             <LoadingComponent :props="loading" />
 
-            <router-link :to="{ name: 'online.branch.selection' }"
-                class="text-xs font-medium inline-flex mb-3 items-center gap-2 text-primary">
-                <i class="lab lab-undo lab-font-size-16"></i>
-                <span>{{ $t('label.change_branch') }}</span>
-            </router-link>
+            <!-- Branch Selector -->
+            <div class="mb-6 bg-white rounded-2xl shadow-xs p-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="lab lab-location-marker text-primary"></i>
+                    {{ $t('label.select_branch') }}
+                </label>
+                <select v-model="selectedBranchId" @change="onBranchChange"
+                    class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition">
+                    <option :value="null" disabled>{{ $t('message.select_branch_to_order') }}</option>
+                    <option v-for="branch in branches" :key="branch.id" :value="branch.id">
+                        {{ branch.name }} - {{ branch.address }}
+                    </option>
+                </select>
+                <p v-if="!selectedBranchId" class="mt-2 text-xs text-amber-600">
+                    <i class="lab lab-information-circle"></i>
+                    {{ $t('message.please_select_branch_to_add_items') }}
+                </p>
+            </div>
 
             <div class="swiper mb-7 menu-swiper" v-if="categories.length > 1">
                 <Swiper :speed="1000" slidesPerView="auto" :spaceBetween="16" class="menu-slides" dir="ltr">
@@ -148,6 +161,7 @@ export default {
             loading: {
                 isActive: false,
             },
+            selectedBranchId: null,
             category: {
                 id: 0,
                 name: this.$t('label.all') + ' ' + this.$t('label.items')
@@ -156,6 +170,14 @@ export default {
                 search: {
                     paginate: 0,
                     order_column: "sort",
+                    order_type: "asc",
+                    status: statusEnum.ACTIVE
+                },
+            },
+            branchProps: {
+                search: {
+                    paginate: 0,
+                    order_column: "id",
                     order_type: "asc",
                     status: statusEnum.ACTIVE
                 },
@@ -193,6 +215,9 @@ export default {
         items: function () {
             return this.$store.getters["frontendItem/lists"];
         },
+        branches: function () {
+            return this.$store.getters["frontendBranch/lists"];
+        },
         setting: function () {
             return this.$store.getters['frontendSetting/lists'];
         },
@@ -205,14 +230,23 @@ export default {
     },
     mounted() {
         this.loading.isActive = true;
-        this.itemProps.search.branch_id = this.$route.params.branchId;
         
-        // Store branch ID in cart
-        this.$store.dispatch('tableCart/initOnlineBranch', this.$route.params.branchId).then().catch();
-        
-        this.itemList();
-        this.$store.dispatch("tableItemCategory/lists", this.categoryProps.search).then(res => {
-            this.loading.isActive = false;
+        // Load branches first
+        this.$store.dispatch("frontendBranch/lists", this.branchProps.search).then(res => {
+            // If branchId is in route params, use it
+            if (this.$route.params.branchId) {
+                this.selectedBranchId = parseInt(this.$route.params.branchId);
+                this.itemProps.search.branch_id = this.selectedBranchId;
+                this.$store.dispatch('tableCart/initOnlineBranch', this.selectedBranchId).then().catch();
+            }
+            
+            // Load items (will show all items even if no branch selected)
+            this.itemList();
+            this.$store.dispatch("tableItemCategory/lists", this.categoryProps.search).then(res => {
+                this.loading.isActive = false;
+            }).catch((err) => {
+                this.loading.isActive = false;
+            });
         }).catch((err) => {
             this.loading.isActive = false;
         });
@@ -230,6 +264,19 @@ export default {
         }
     },
     methods: {
+        onBranchChange: function () {
+            if (this.selectedBranchId) {
+                this.itemProps.search.branch_id = this.selectedBranchId;
+                this.$store.dispatch('tableCart/initOnlineBranch', this.selectedBranchId).then().catch();
+                this.itemList();
+                
+                // Update URL without page reload
+                this.$router.replace({ 
+                    name: 'online.menu.branch', 
+                    params: { branchId: this.selectedBranchId } 
+                });
+            }
+        },
         closeModal: function () {
             const modalTarget = this.$refs.confirmOrder;
             modalTarget?.classList?.remove("active");
@@ -261,7 +308,13 @@ export default {
         },
         itemList: function () {
             this.loading.isActive = true;
-            this.itemProps.search.branch_id = this.$route.params.branchId;
+            
+            // Use selected branch or route param
+            if (this.selectedBranchId) {
+                this.itemProps.search.branch_id = this.selectedBranchId;
+            } else if (this.$route.params.branchId) {
+                this.itemProps.search.branch_id = this.$route.params.branchId;
+            }
             
             this.$store.dispatch("frontendItem/lists", this.itemProps.search).then(() => {
                 this.loading.isActive = false;

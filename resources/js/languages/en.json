@@ -787,6 +787,7 @@
         "payment_method": "The payment method is required.",
         "special_instructions_limit": "Special instructions limit is 190 characters.",
         "select_branch_to_order": "Select a branch to start ordering",
+        "please_select_branch_to_add_items": "Please select a branch to add items to cart",
         "no_branches_available": "No branches available at the moment",
         "order_confirm_online": "Your online order has been confirmed. We will contact you via WhatsApp.",
         "whatsapp_number_required": "WhatsApp number is required",

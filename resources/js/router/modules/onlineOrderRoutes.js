@@ -8,17 +8,17 @@ import OnlineOrderDetailsComponent from "../../components/online/OnlineOrderDeta
 export default [
     {
         path: "/online",
-        component: OnlineBranchSelectionComponent,
-        name: "online.branch.selection",
+        component: OnlineMenuComponent,
+        name: "online.menu",
         meta: {
             isTable: true,
             auth: false,
         },
     },
     {
-        path: "/online/menu/:branchId",
+        path: "/online/menu/:branchId?",
         component: OnlineMenuComponent,
-        name: "online.menu",
+        name: "online.menu.branch",
         meta: {
             isTable: true,
             auth: false,
