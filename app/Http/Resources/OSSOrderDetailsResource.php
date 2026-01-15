@@ -24,6 +24,7 @@ class OSSOrderDetailsResource extends JsonResource
             'dining_table_id'                     => $this->dining_table_id,
             'dining_table'                        => $this->diningTable,
             'table_name'                          => $this->diningTable?->name,
+            'whatsapp_number'                     => $this->whatsapp_number,
             'takeaway_type_id'                    => $this->takeaway_type_id,
             'takeaway_type'                       => $this->takeawayType,
             'takeaway_type_name'                  => $this->takeawayType?->name,

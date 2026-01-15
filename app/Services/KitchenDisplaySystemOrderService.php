@@ -41,7 +41,7 @@ class KitchenDisplaySystemOrderService
             $orderColumn = $request->get('order_column') ?? 'id';
             $orderType   = $request->get('order_by') ?? 'desc';
 
-            return Order::with('orderItems')
+            return Order::with('orderItems', 'diningTable', 'takeawayType')
                 ->where(function ($q) {
                     // KDS traditionally shows kitchen-flow orders (accepted -> preparing -> prepared).
                     // QR/table orders can be created as PENDING; include those only for dining table orders

@@ -90,6 +90,10 @@ export default {
   },
   methods: {
     ossDetails: function (item) {
+      // Check if it's an online order (has whatsapp_number)
+      if (item.whatsapp_number) {
+        return this.$t('label.online_order');
+      }
       if (item.order_type === orderTypeEnum.TAKEAWAY) {
         return item.takeaway_type_name ? `Takeaway/${item.takeaway_type_name}` : "";
       }
