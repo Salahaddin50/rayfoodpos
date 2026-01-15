@@ -222,7 +222,8 @@
                   <p class="text-sm font-normal leading-6 font-client capitalize text-[#6E7191]">
                     Type:
                     <span class="text-heading font-medium">
-                      <span v-if="takeawayOrder.takeaway_type">{{ takeawayOrder.takeaway_type.name }}</span>
+                      <span v-if="takeawayOrder.whatsapp_number">{{ $t("label.online_order") }}</span>
+                      <span v-else-if="takeawayOrder.takeaway_type">{{ takeawayOrder.takeaway_type.name }}</span>
                       <span v-else>{{ $t("label.takeaway") }}</span>
                     </span>
                   </p>
@@ -231,6 +232,9 @@
                       <template v-if="takeawayOrder.token">{{ takeawayOrder.token }}</template>
                       <template v-else>{{ $t("label.online") }}</template>
                     </span>
+                  </p>
+                  <p v-if="takeawayOrder.whatsapp_number" class="text-sm font-normal leading-6 font-client text-[#6E7191]">
+                    {{ $t("label.whatsapp_number") }}: <span class="text-heading font-medium">{{ takeawayOrder.whatsapp_number }}</span>
                   </p>
                   <p v-if="takeawayOrder.pos_note" class="text-sm font-normal leading-6 font-client text-[#6E7191]">
                     Note: <span class="text-heading font-medium">{{ takeawayOrder.pos_note }}</span>
@@ -386,11 +390,11 @@ export default {
         .then((res) => {
           // "Table orders" are best identified by having a dining_table_id.
           // Relying only on order_type can hide table orders if order_type mapping changes.
-          this.dineinOrders = res.data.data.filter((item) => !!item.dining_table_id);
+          this.dineinOrders = res.data.data.filter((item) => !!item.dining_table_id && !item.whatsapp_number);
 
-          // Keep takeaway orders separated from table orders.
+          // Keep takeaway orders and online orders (with whatsapp_number) separated from table orders.
           this.takeawayOrders = res.data.data.filter(
-            (item) => !item.dining_table_id && item.order_type === orderTypeEnum.TAKEAWAY
+            (item) => !item.dining_table_id && (item.order_type === orderTypeEnum.TAKEAWAY || item.whatsapp_number)
           );
 
           this.loading.isActive = false;

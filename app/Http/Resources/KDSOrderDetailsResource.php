@@ -34,6 +34,7 @@ class KDSOrderDetailsResource extends JsonResource
             'table_name'                          => $this->diningTable?->name,
             'dining_table_id'                     => $this->dining_table_id,
             'dining_table'                        => $this->diningTable,
+            'whatsapp_number'                     => $this->whatsapp_number,
             'takeaway_type_id'                    => $this->takeaway_type_id,
             'takeaway_type'                       => $this->takeawayType,
             'pos_note'                            => $this->pos_note,
