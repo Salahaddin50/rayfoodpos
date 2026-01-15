@@ -35,6 +35,7 @@ class SimpleOrderResource extends JsonResource
             'status_name'                  => trans('orderStatus.' . $this->status),
             'customer_name'                => $this->user?->name,
             'table_name'                   => $this->diningTable?->name,
+            'whatsapp_number'              => $this->whatsapp_number,
             'takeaway_type'                => $this->takeawayType,
             'takeaway_type_name'           => $this->takeawayType?->name,
             'pos_note'                     => $this->pos_note,

@@ -207,9 +207,9 @@ export default {
 
             // Only fetch table data for table orders, not online orders
             if (!this.isOnlineOrder && this.$route.params.slug) {
-                this.$store.dispatch('tableDiningTable/show', this.$route.params.slug).then(res => {
-                    this.$store.dispatch('tableCart/initTable', res.data.data);
-                }).catch((err) => { });
+            this.$store.dispatch('tableDiningTable/show', this.$route.params.slug).then(res => {
+                this.$store.dispatch('tableCart/initTable', res.data.data);
+            }).catch((err) => { });
             }
 
             this.loading.isActive = false;

@@ -90,7 +90,7 @@
                         <tr class="db-table-head-tr">
                             <th class="db-table-head-th">{{ $t("label.order_id") }}</th>
                             <th class="db-table-head-th">{{ $t("label.order_type") }}</th>
-                            <th class="db-table-head-th">{{ $t("label.table") }} / {{ $t("label.token") }}</th>
+                            <th class="db-table-head-th">{{ $t("label.place") }} / {{ $t("label.token") }}</th>
                             <th class="db-table-head-th">{{ $t("label.customer") }}</th>
                             <th class="db-table-head-th">{{ $t("label.amount") }}</th>
                             <th class="db-table-head-th">{{ $t("label.date") }}</th>
@@ -106,12 +106,16 @@
                                 {{ order.order_serial_no }}
                             </td>
                             <td class="db-table-body-td">
-                                <span :class="statusClass(order.order_type)">
+                                <span v-if="order.whatsapp_number" class="db-table-badge text-blue-600 bg-blue-100">
+                                    {{ $t('label.online_order') }}
+                                </span>
+                                <span v-else :class="statusClass(order.order_type)">
                                     {{ enums.orderTypeEnumArray[order.order_type] }}
                                 </span>
                             </td>
                             <td class="db-table-body-td">
-                                <span v-if="order.table_name">{{ order.table_name }}</span>
+                                <span v-if="order.whatsapp_number">{{ order.whatsapp_number }}</span>
+                                <span v-else-if="order.table_name">{{ order.table_name }}</span>
                                 <span v-else>-</span>
                                 <span v-if="order.token"> / #{{ order.token }}</span>
                             </td>
