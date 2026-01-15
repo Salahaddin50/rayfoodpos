@@ -388,24 +388,6 @@ export default {
       this.$store
         .dispatch("kitchenDisplaySystemOrder/lists", this.props.search)
         .then((res) => {
-          console.log('KDS Orders received:', res.data.data);
-          console.log('Number of orders:', res.data.data.length);
-          
-          // Log each order's key fields
-          res.data.data.forEach((order, index) => {
-            console.log(`Order ${index}:`, {
-              id: order.id,
-              serial: order.order_serial_no,
-              type: order.order_type,
-              status: order.status,
-              dining_table_id: order.dining_table_id,
-              whatsapp_number: order.whatsapp_number,
-              takeaway_type: order.takeaway_type
-            });
-          });
-          
-          console.log('Orders with whatsapp:', res.data.data.filter(item => !!item.whatsapp_number));
-          
           // "Table orders" have a dining_table_id AND no whatsapp_number.
           this.dineinOrders = res.data.data.filter((item) => !!item.dining_table_id && !item.whatsapp_number);
 
@@ -415,9 +397,6 @@ export default {
           this.takeawayOrders = res.data.data.filter(
             (item) => !item.dining_table_id && (item.order_type === orderTypeEnum.TAKEAWAY || !!item.whatsapp_number)
           );
-
-          console.log('Dine-in orders:', this.dineinOrders);
-          console.log('Takeaway orders:', this.takeawayOrders);
 
           this.loading.isActive = false;
         })

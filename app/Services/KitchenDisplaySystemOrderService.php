@@ -42,16 +42,8 @@ class KitchenDisplaySystemOrderService
             $orderType   = $request->get('order_by') ?? 'desc';
 
             return Order::with('orderItems', 'diningTable', 'takeawayType')
-                ->where(function ($q) {
-                    // KDS traditionally shows kitchen-flow orders (accepted -> preparing -> prepared).
-                    // QR/table orders can be created as PENDING; include those only for dining table orders
-                    // so they don't disappear from KDS after online-order changes.
-                    $q->whereIn('status', [OrderStatus::ACCEPT, OrderStatus::PREPARING, OrderStatus::PREPARED])
-                        ->orWhere(function ($sub) {
-                            $sub->where('order_type', \App\Enums\OrderType::DINING_TABLE)
-                                ->where('status', OrderStatus::PENDING);
-                        });
-                })
+                // KDS shows only accepted, preparing, and prepared orders (no pending orders to avoid chef confusion)
+                ->whereIn('status', [OrderStatus::ACCEPT, OrderStatus::PREPARING, OrderStatus::PREPARED])
                 ->where(function ($query) {
                 $query->where(function ($subQuery) {
                     $subQuery->whereDate('order_datetime', Carbon::today())->where('is_advance_order', Ask::NO);
