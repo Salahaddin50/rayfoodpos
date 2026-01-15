@@ -1,9 +1,10 @@
 <template>
     <aside @click="closeBackdrop($event)" id="cart"
-        class="w-screen h-full fixed top-[58px] lg:top-[74px] left-0 z-60 opacity-0 invisible bg-black/60 transition">
-        <div class="max-w-sm w-full h-screen absolute top-0 right-0 translate-x-full bg-white transition">
+        class="w-screen fixed top-[58px] lg:top-[74px] bottom-0 left-0 z-60 opacity-0 invisible bg-black/60 transition">
+        <div class="max-w-sm w-full h-full absolute top-0 right-0 translate-x-full bg-white transition flex flex-col">
 
-            <div :class="carts.length === 0 ? 'flex items-center justify-center flex-col text-center' : 'h-[calc(100vh-240px)] lg:h-[calc(100vh-260px)] thin-scrolling overflow-y-auto'"
+            <div
+                :class="carts.length === 0 ? 'flex items-center justify-center flex-col text-center' : 'flex-1 thin-scrolling overflow-y-auto'"
                 class="p-4 relative">
                 <h3 :class="carts.length === 0 ? 'mb-16' : 'mb-5'" class="text-xl font-semibold capitalize text-center">
                     {{ $t('label.my_cart') }}
@@ -78,7 +79,7 @@
                 </div>
             </div>
 
-            <div v-if="carts.length > 0" class="p-4">
+            <div v-if="carts.length > 0" class="p-4 border-t border-gray-2 bg-white">
                 <div class="flex items-center justify-between gap-2 rounded-xl p-3 mb-3 border border-gray-1">
                     <h3 class="capitalize text-sm font-medium">{{ $t('label.subtotal') }}</h3>
                     <h4 class="text-sm font-medium text-[#1AB759]">
