@@ -615,6 +615,12 @@ export default {
             this.totalPriceSetup();
         },
         addToCart: function () {
+            // Check if this is an online order and branch is not selected
+            if (this.$route.name && this.$route.name.startsWith('online.') && !this.$route.params.branchId) {
+                alertService.error(this.$t('message.please_select_branch_first'));
+                return;
+            }
+
             this.itemArrays = [
                 {
                     name: this.temp.name,

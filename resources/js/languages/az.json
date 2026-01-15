@@ -780,6 +780,7 @@
         "special_instructions_limit": "Xüsusi təlimatlar limiti 190 simvoldur.",
         "select_branch_to_order": "Sifariş vermək üçün filial seçin",
         "please_select_branch_to_add_items": "Zəhmət olmasa səbətə məhsul əlavə etmək üçün filial seçin",
+        "please_select_branch_first": "Zəhmət olmasa əvvəlcə səbətə məhsul əlavə etmək üçün filial seçin",
         "no_branches_available": "Hal-hazırda filiallar mövcud deyil",
         "order_confirm_online": "Onlayn sifarişiniz təsdiqləndi. Biz sizinlə WhatsApp vasitəsilə əlaqə saxlayacağıq."
     }
