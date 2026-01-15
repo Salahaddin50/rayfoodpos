@@ -532,6 +532,8 @@
         "dining_table": "Обеденный стол",
         "online_order": "Онлайн заказ",
         "whatsapp_number": "Номер WhatsApp",
+        "enter_phone_number": "Введите номер телефона",
+        "enter_whatsapp_number": "Введите номер WhatsApp",
         "cash_card": "Наличные/Карта",
         "digital_payment": "Цифровая оплата",
         "table_name": "Название стола",
@@ -782,6 +784,7 @@
         "please_select_branch_to_add_items": "Пожалуйста, выберите филиал, чтобы добавить товары в корзину",
         "please_select_branch_first": "Пожалуйста, сначала выберите филиал, чтобы добавить товары в корзину",
         "no_branches_available": "В данный момент филиалы недоступны",
-        "order_confirm_online": "Ваш онлайн-заказ подтвержден. Мы свяжемся с вами через WhatsApp."
+        "order_confirm_online": "Ваш онлайн-заказ подтвержден. Мы свяжемся с вами через WhatsApp.",
+        "phone_number_format_hint": "Введите номер телефона без кода страны"
     }
 }

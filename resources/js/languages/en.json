@@ -338,6 +338,8 @@
         "select_branch": "Select Branch",
         "online_order": "Online Order",
         "whatsapp_number": "WhatsApp Number",
+        "enter_phone_number": "Enter phone number",
+        "enter_whatsapp_number": "Enter WhatsApp number",
         "enter_whatsapp_number": "Enter WhatsApp Number",
         "contact_information": "Contact Information",
         "cart_summary": "Cart Summary",
@@ -791,6 +793,7 @@
         "please_select_branch_first": "Please select a branch first to add items to your cart",
         "no_branches_available": "No branches available at the moment",
         "order_confirm_online": "Your online order has been confirmed. We will contact you via WhatsApp.",
+        "phone_number_format_hint": "Enter your phone number without country code",
         "whatsapp_number_required": "WhatsApp number is required",
         "something_went_wrong": "Something went wrong. Please try again."
     }

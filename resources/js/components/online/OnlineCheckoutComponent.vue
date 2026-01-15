@@ -44,15 +44,29 @@
                         <h3 class="capitalize font-medium p-4 border-b border-gray-100">{{ $t('label.contact_information') }}</h3>
                         <div class="p-4">
                             <label for="whatsapp" class="db-field-label required">{{ $t('label.whatsapp_number') }}</label>
-                            <input 
-                                type="text" 
-                                id="whatsapp" 
-                                v-model="checkoutProps.form.whatsapp_number"
-                                :placeholder="$t('label.enter_whatsapp_number')"
-                                class="db-field-control"
-                                :class="errors.whatsapp_number ? 'invalid' : ''"
-                            >
+                            <div class="flex gap-2">
+                                <select 
+                                    v-model="countryCode" 
+                                    class="db-field-control w-32 flex-shrink-0"
+                                    :class="errors.whatsapp_number ? 'invalid' : ''"
+                                >
+                                    <option v-for="country in countryCodes" :key="country.code" :value="country.dial_code">
+                                        {{ country.flag }} {{ country.dial_code }}
+                                    </option>
+                                </select>
+                                <input 
+                                    type="tel" 
+                                    id="whatsapp" 
+                                    v-model="phoneNumber"
+                                    @input="updateWhatsAppNumber"
+                                    :placeholder="$t('label.enter_phone_number')"
+                                    class="db-field-control flex-1"
+                                    :class="errors.whatsapp_number ? 'invalid' : ''"
+                                    maxlength="15"
+                                >
+                            </div>
                             <small v-if="errors.whatsapp_number" class="db-field-alert">{{ errors.whatsapp_number[0] }}</small>
+                            <small v-else class="text-xs text-gray-500 mt-1 block">{{ $t('message.phone_number_format_hint') }}</small>
                         </div>
                     </div>
 
@@ -187,6 +201,25 @@ export default {
             placeOrderShow: false,
             paymentMethod: null,
             errors: {},
+            countryCode: '+994', // Default to Azerbaijan
+            phoneNumber: '',
+            countryCodes: [
+                { code: 'AZ', dial_code: '+994', flag: '🇦🇿', name: 'Azerbaijan' },
+                { code: 'TR', dial_code: '+90', flag: '🇹🇷', name: 'Turkey' },
+                { code: 'RU', dial_code: '+7', flag: '🇷🇺', name: 'Russia' },
+                { code: 'US', dial_code: '+1', flag: '🇺🇸', name: 'United States' },
+                { code: 'GB', dial_code: '+44', flag: '🇬🇧', name: 'United Kingdom' },
+                { code: 'DE', dial_code: '+49', flag: '🇩🇪', name: 'Germany' },
+                { code: 'FR', dial_code: '+33', flag: '🇫🇷', name: 'France' },
+                { code: 'IT', dial_code: '+39', flag: '🇮🇹', name: 'Italy' },
+                { code: 'ES', dial_code: '+34', flag: '🇪🇸', name: 'Spain' },
+                { code: 'SA', dial_code: '+966', flag: '🇸🇦', name: 'Saudi Arabia' },
+                { code: 'AE', dial_code: '+971', flag: '🇦🇪', name: 'UAE' },
+                { code: 'IN', dial_code: '+91', flag: '🇮🇳', name: 'India' },
+                { code: 'PK', dial_code: '+92', flag: '🇵🇰', name: 'Pakistan' },
+                { code: 'CN', dial_code: '+86', flag: '🇨🇳', name: 'China' },
+                { code: 'JP', dial_code: '+81', flag: '🇯🇵', name: 'Japan' },
+            ],
             checkoutProps: {
                 form: {
                     dining_table_id: null,
@@ -226,6 +259,12 @@ export default {
     methods: {
         currencyFormat: function (amount, decimal, currency, position) {
             return appService.currencyFormat(amount, decimal, currency, position);
+        },
+        updateWhatsAppNumber: function () {
+            // Remove any non-digit characters except leading +
+            this.phoneNumber = this.phoneNumber.replace(/[^\d]/g, '');
+            // Combine country code with phone number
+            this.checkoutProps.form.whatsapp_number = this.countryCode + this.phoneNumber;
         },
         orderSubmit: function () {
             this.errors = {};
