@@ -362,7 +362,7 @@ export default {
         this.autoRefreshInterval = setInterval(() => {
           this.items();
           this.list(this.props.search.status);
-        }, 30000);
+        }, 60000); // 60 seconds
       }
     },
     openFilterSlide(event) {

@@ -340,7 +340,8 @@ export default {
                     to_date: "",
                 },
             },
-            ENV: ENV
+            ENV: ENV,
+            autoRefreshInterval: null
         };
     },
     mounted() {
@@ -353,9 +354,13 @@ export default {
 
         // Listen for breadcrumb refresh button (Table Orders)
         window.addEventListener('rayfood:refresh-table-orders', this.onExternalRefresh);
+        
+        // Start auto-refresh every 60 seconds
+        this.startAutoRefresh();
     },
     beforeUnmount() {
         window.removeEventListener('rayfood:refresh-table-orders', this.onExternalRefresh);
+        this.stopAutoRefresh();
     },
     computed: {
         orders: function () {
@@ -375,6 +380,17 @@ export default {
         },
     },
     methods: {
+        startAutoRefresh() {
+            this.autoRefreshInterval = setInterval(() => {
+                this.list(this.paginationPage || 1);
+            }, 60000); // 60 seconds
+        },
+        stopAutoRefresh() {
+            if (this.autoRefreshInterval) {
+                clearInterval(this.autoRefreshInterval);
+                this.autoRefreshInterval = null;
+            }
+        },
         onExternalRefresh() {
             this.list(this.paginationPage || 1);
         },

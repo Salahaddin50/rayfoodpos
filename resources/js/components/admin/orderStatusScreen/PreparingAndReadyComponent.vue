@@ -106,7 +106,7 @@ export default {
       if (this.$route.path.includes('order-status-screen')) {
         this.autoRefreshInterval = setInterval(() => {
           this.list();
-        }, 30000);
+        }, 60000); // 60 seconds
       }
     },
     stopAutoRefresh() {
