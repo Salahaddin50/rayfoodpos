@@ -58,6 +58,8 @@
                                     </a>
                                     <a :href="whatsappLink"
                                         target="_blank"
+                                        rel="noopener noreferrer"
+                                        @click="openWhatsApp"
                                         class="w-8 h-8 rounded-full flex items-center justify-center bg-green-100"
                                         :title="$t('label.whatsapp')">
                                         <i class="fa-brands fa-whatsapp text-green-600 text-base"></i>
@@ -251,11 +253,19 @@ export default {
                 return '#';
             }
             
-            // Format phone number: remove leading 0 and add +994
-            let phoneNumber = this.order.whatsapp_number.replace(/[^\d]/g, '');
+            // Format phone number: remove leading 0 and add 994
+            let phoneNumber = this.order.whatsapp_number.replace(/[^\d+]/g, '');
+            
+            // Remove + sign for processing
+            phoneNumber = phoneNumber.replace(/\+/g, '');
+            
+            // If starts with 0, replace with 994
             if (phoneNumber.startsWith('0')) {
                 phoneNumber = '994' + phoneNumber.substring(1);
-            } else if (!phoneNumber.startsWith('994')) {
+            } 
+            // If starts with 994, keep as is
+            else if (!phoneNumber.startsWith('994')) {
+                // Otherwise add 994
                 phoneNumber = '994' + phoneNumber;
             }
             
@@ -280,11 +290,8 @@ export default {
                 branchName: this.orderBranch.name
             }) + itemsBreakdown;
             
-            // Encode message for URL
-            const encodedMessage = encodeURIComponent(message);
-            
-            // Return WhatsApp link
-            return `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+            // Use wa.me for better mobile compatibility
+            return `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
         }
     },
     mounted() {
@@ -303,6 +310,11 @@ export default {
     methods: {
         currencyFormat: function (amount, decimal, currency, position) {
             return appService.currencyFormat(amount, decimal, currency, position);
+        },
+        openWhatsApp(event) {
+            // Let the default link behavior work, but log for debugging
+            console.log('WhatsApp link:', this.whatsappLink);
+            console.log('Phone number:', this.order.whatsapp_number);
         },
         refreshStatus() {
             if (!this.$route.params.id) return;
