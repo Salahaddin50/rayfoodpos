@@ -43,11 +43,20 @@
                                         class="lab lab-location text-xs leading-none mt-1.5 flex-shrink-0 lab-font-size-14"></i>
                                     <span class="text-sm leading-6 text-heading">{{ orderBranch.address }}</span>
                                 </div>
-                                <div class="flex gap-4"
+                                <div class="flex gap-2"
                                     v-if="parseInt(order.status) !== parseInt(enums.orderStatusEnum.REJECTED) && parseInt(order.status) !== parseInt(enums.orderStatusEnum.CANCELED)">
                                     <a :href="'tel:' + orderBranch.phone"
-                                        class="w-8 h-8 rounded-full flex items-center justify-center bg-primary-light"><i
-                                            class="lab lab-call-calling font-fill-primary lab-font-size-16"></i></a>
+                                        class="w-8 h-8 rounded-full flex items-center justify-center bg-primary-light"
+                                        :title="$t('label.call')">
+                                        <i class="lab lab-call-calling font-fill-primary lab-font-size-16"></i>
+                                    </a>
+                                    <button
+                                        type="button"
+                                        @click="openWhatsApp"
+                                        class="w-8 h-8 rounded-full flex items-center justify-center bg-green-100"
+                                        :title="$t('label.whatsapp')">
+                                        <i class="fa-brands fa-whatsapp text-green-600 text-base"></i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -178,6 +187,7 @@ import paymentStatusEnum from "../../../enums/modules/paymentStatusEnum";
 import paymentTypeEnum from "../../../enums/modules/paymentTypeEnum";
 import activityEnum from "../../../enums/modules/activityEnum";
 import router from "../../../router";
+import appService from "../../../services/appService";
 
 export default {
     name: "OrderDetailsComponent",
@@ -233,6 +243,62 @@ export default {
                 [paymentTypeEnum.E_WALLET]: this.$t("label.e_wallet"),
                 [paymentTypeEnum.PAYPAL]: this.$t("label.paypal"),
             };
+        },
+        whatsappLink() {
+            // Use branch phone number to send message TO the restaurant
+            if (!this.orderBranch.phone || !this.order.order_serial_no) {
+                return '#';
+            }
+            
+            // Format phone number: remove leading 0 and add 994
+            let phoneNumber = this.orderBranch.phone.replace(/[^\d+]/g, '');
+            
+            // Remove + sign for processing
+            phoneNumber = phoneNumber.replace(/\+/g, '');
+            
+            // If starts with 0, replace with 994
+            if (phoneNumber.startsWith('0')) {
+                phoneNumber = '994' + phoneNumber.substring(1);
+            } 
+            // If starts with 994, keep as is
+            else if (!phoneNumber.startsWith('994')) {
+                // Otherwise add 994
+                phoneNumber = '994' + phoneNumber;
+            }
+            
+            // Build order items breakdown
+            let itemsBreakdown = '';
+            if (this.orderItems && this.orderItems.length > 0) {
+                itemsBreakdown = '\n\n';
+                this.orderItems.forEach(item => {
+                    itemsBreakdown += `${item.item_name} x${item.quantity} - ${item.total_currency_price}\n`;
+                });
+                
+                // Add total if available
+                if (this.order.total && !isNaN(this.order.total)) {
+                    const totalFormatted = this.currencyFormat(
+                        parseFloat(this.order.total),
+                        this.setting.site_digit_after_decimal_point || 2,
+                        this.setting.site_default_currency_symbol || '₼',
+                        this.setting.site_currency_position || 'left'
+                    );
+                    itemsBreakdown += `\n${this.$t('label.total')}: ${totalFormatted}`;
+                }
+            }
+            
+            // Create message with order details and breakdown
+            let message = this.$t('message.whatsapp_order_message', {
+                orderNumber: this.order.order_serial_no,
+                branchName: this.orderBranch.name
+            }) + itemsBreakdown;
+            
+            // Add location if available
+            if (this.order.location_url) {
+                message += `\n\n📍 ${this.$t('label.delivery_location')}: ${this.order.location_url}`;
+            }
+            
+            // Use wa.me for better mobile compatibility
+            return `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
         }
     },
     mounted() {
@@ -249,6 +315,25 @@ export default {
         }
     },
     methods: {
+        currencyFormat: function (amount, decimal, currency, position) {
+            return appService.currencyFormat(amount, decimal, currency, position);
+        },
+        openWhatsApp() {
+            const link = this.whatsappLink;
+            
+            console.log('Opening WhatsApp with link:', link);
+            console.log('Branch phone:', this.orderBranch.phone);
+            console.log('Order number:', this.order.order_serial_no);
+            
+            if (link === '#' || !link) {
+                console.error('WhatsApp link not available');
+                alert('WhatsApp link is not available');
+                return;
+            }
+            
+            // Open WhatsApp in a new window/tab
+            window.open(link, '_blank', 'noopener,noreferrer');
+        },
         refreshStatus() {
             if (!this.$route.params.id) return;
             this.loading.isActive = true;

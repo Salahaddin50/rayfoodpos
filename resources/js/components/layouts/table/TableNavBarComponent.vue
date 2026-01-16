@@ -53,8 +53,8 @@
                     </button>
                 </form>
 
-                <!-- Branch / Table info (restored) -->
-                <div v-if="table && (table.branch_name || table.name)" class="relative dropdown-group w-full sm:w-fit">
+                <!-- Branch / Table info (hidden) -->
+                <!-- <div v-if="table && (table.branch_name || table.name)" class="relative dropdown-group w-full sm:w-fit">
                     <button
                         class="flex items-center justify-center gap-1.5 w-fit rounded-3xl capitalize text-sm font-medium h-8 px-3 border transition text-heading bg-white border-gray-200 dropdown-btn">
                         <i class="fa-solid fa-store text-sm"></i>
@@ -73,7 +73,7 @@
                             <div class="text-xs text-paragraph">{{ table.branch_phone }}</div>
                         </li>
                     </ul>
-                </div>
+                </div> -->
 
                 <div v-if="setting.site_language_switch === enums.activityEnum.ENABLE"
                     class="hidden lg:block relative dropdown-group w-full sm:w-fit">
