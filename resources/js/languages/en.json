@@ -347,6 +347,7 @@
         "delivery_location": "Delivery Location",
         "location": "Location",
         "view_map": "View Map",
+        "optional": "Optional",
         "paste_google_maps_link": "Google Maps link will appear here",
         "add_location": "Add Location",
         "getting_location": "Getting...",
@@ -811,6 +812,7 @@
         "location_permission_denied": "Location permission denied. Please enable location access",
         "location_added": "Location added successfully",
         "location_optional_hint": "Add your location to help with delivery (optional)",
+        "whatsapp_optional_hint": "Share your WhatsApp for order updates (optional)",
         "whatsapp_number_required": "WhatsApp number is required",
         "something_went_wrong": "Something went wrong. Please try again."
     }

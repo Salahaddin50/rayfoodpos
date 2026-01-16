@@ -540,6 +540,7 @@
         "delivery_location": "Çatdırılma yeri",
         "location": "Məkan",
         "view_map": "Xəritə",
+        "optional": "İxtiyari",
         "paste_google_maps_link": "Google Maps linki burada görünəcək",
         "add_location": "Yer əlavə et",
         "getting_location": "Alınır...",
@@ -802,6 +803,7 @@
         "geolocation_not_supported": "Brauzeriniz geolokasiyanı dəstəkləmir",
         "location_permission_denied": "Məkan icazəsi rədd edildi. Zəhmət olmasa məkan girişini aktivləşdirin",
         "location_added": "Məkan uğurla əlavə edildi",
-        "location_optional_hint": "Çatdırılmaya kömək etmək üçün yerləşməni əlavə edin (isteğe bağlı)"
+        "location_optional_hint": "Çatdırılmaya kömək etmək üçün yerləşməni əlavə edin (isteğe bağlı)",
+        "whatsapp_optional_hint": "Sifariş yeniləmələri üçün WhatsApp nömrənizi paylaşın (ixtiyari)"
     }
 }

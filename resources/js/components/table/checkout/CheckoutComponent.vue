@@ -29,16 +29,42 @@
                                 <label for="cash" class="db-field-label text-heading">{{ $t('label.cash_card')
                                     }}</label>
                             </li>
-                            <li class="flex items-center gap-1.5">
+                            <li class="flex items-center gap-1.5 opacity-50 cursor-not-allowed">
                                 <div class="custom-radio">
                                     <input type="radio" id="digital" v-model="paymentMethod" value="digitalPayment"
-                                        class="custom-radio-field">
+                                        class="custom-radio-field" disabled>
                                     <span class="custom-radio-span border-gray-400"></span>
                                 </div>
-                                <label for="digital" class="db-field-label text-heading">{{ $t('label.digital_payment')
-                                    }}</label>
+                                <label for="digital" class="db-field-label text-gray-400">{{ $t('label.digital_payment') }} ({{ $t('label.coming_soon') }})</label>
                             </li>
                         </ul>
+                    </div>
+
+                    <div class="mb-6 rounded-2xl shadow-xs bg-white">
+                        <h3 class="capitalize font-medium p-4 border-b border-gray-100">{{ $t('label.contact_information') }} ({{ $t('label.optional') }})</h3>
+                        <div class="p-4">
+                            <label for="whatsapp" class="db-field-label">{{ $t('label.whatsapp_number') }}</label>
+                            <div class="flex gap-2">
+                                <select 
+                                    v-model="countryCode" 
+                                    class="db-field-control w-32 flex-shrink-0"
+                                >
+                                    <option v-for="country in countryCodes" :key="country.code" :value="country.dial_code">
+                                        {{ country.flag }} {{ country.dial_code }}
+                                    </option>
+                                </select>
+                                <input 
+                                    type="tel" 
+                                    id="whatsapp" 
+                                    v-model="phoneNumber"
+                                    @input="updateWhatsAppNumber"
+                                    :placeholder="$t('label.enter_phone_number')"
+                                    class="db-field-control flex-1"
+                                    maxlength="15"
+                                >
+                            </div>
+                            <small class="text-xs text-gray-500 mt-1 block">{{ $t('message.whatsapp_optional_hint') }}</small>
+                        </div>
                     </div>
 
                     <button type="button"
@@ -170,7 +196,25 @@ export default {
                 isActive: false,
             },
             placeOrderShow: false,
-            paymentMethod: null,
+            paymentMethod: 'cashCard', // Default to cash payment
+            countryCode: '+994', // Default to Azerbaijan
+            phoneNumber: '',
+            countryCodes: [
+                { code: 'AZ', dial_code: '+994', flag: '🇦🇿', name: 'Azerbaijan' },
+                { code: 'TR', dial_code: '+90', flag: '🇹🇷', name: 'Turkey' },
+                { code: 'RU', dial_code: '+7', flag: '🇷🇺', name: 'Russia' },
+                { code: 'US', dial_code: '+1', flag: '🇺🇸', name: 'United States' },
+                { code: 'GB', dial_code: '+44', flag: '🇬🇧', name: 'United Kingdom' },
+                { code: 'DE', dial_code: '+49', flag: '🇩🇪', name: 'Germany' },
+                { code: 'FR', dial_code: '+33', flag: '🇫🇷', name: 'France' },
+                { code: 'IT', dial_code: '+39', flag: '🇮🇹', name: 'Italy' },
+                { code: 'ES', dial_code: '+34', flag: '🇪🇸', name: 'Spain' },
+                { code: 'SA', dial_code: '+966', flag: '🇸🇦', name: 'Saudi Arabia' },
+                { code: 'AE', dial_code: '+971', flag: '🇦🇪', name: 'United Arab Emirates' },
+                { code: 'IN', dial_code: '+91', flag: '🇮🇳', name: 'India' },
+                { code: 'CN', dial_code: '+86', flag: '🇨🇳', name: 'China' },
+                { code: 'JP', dial_code: '+81', flag: '🇯🇵', name: 'Japan' },
+            ],
             checkoutProps: {
                 form: {
                     dining_table_id: null,
@@ -185,6 +229,7 @@ export default {
                     is_advance_order: IsAdvanceOrderEnum.NO,
                     source: sourceEnum.WEB,
                     address_id: null,
+                    whatsapp_number: "",
                     items: []
                 }
             },
@@ -212,6 +257,12 @@ export default {
     methods: {
         currencyFormat: function (amount, decimal, currency, position) {
             return appService.currencyFormat(amount, decimal, currency, position);
+        },
+        updateWhatsAppNumber: function () {
+            // Remove any non-digit characters except leading +
+            this.phoneNumber = this.phoneNumber.replace(/[^\d]/g, '');
+            // Combine country code with phone number
+            this.checkoutProps.form.whatsapp_number = this.countryCode + this.phoneNumber;
         },
         orderSubmit: function () {
             if (!this.paymentMethod) {
