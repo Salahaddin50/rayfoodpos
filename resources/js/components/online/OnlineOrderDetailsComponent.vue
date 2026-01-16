@@ -2,10 +2,10 @@
     <LoadingComponent :props="loading" />
     <section class="pt-8 pb-16">
         <div class="container max-w-3xl">
-            <router-link :to="{ name: 'online.branch.selection' }"
+            <router-link :to="{ name: 'online.menu' }"
                 class="text-xs font-medium inline-flex mb-3 items-center gap-2 text-primary">
                 <i class="lab lab-undo lab-font-size-16"></i>
-                <span>{{ $t('label.back_to_branches') }}</span>
+                <span>{{ $t('label.back_to_menu') }}</span>
             </router-link>
 
             <div class="flex items-start flex-col md:flex-row gap-6">
@@ -309,7 +309,7 @@ export default {
                 this.loading.isActive = false;
             });
         } else {
-            router.push({ name: 'online.branch.selection' });
+            router.push({ name: 'online.menu' });
         }
     },
     methods: {
