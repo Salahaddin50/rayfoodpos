@@ -692,7 +692,7 @@ video {
   justify-content: space-between;
   --tw-bg-opacity: 1;
   background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
-  padding: 1rem;
+  padding: 0;
   transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
   transition-property: all;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);

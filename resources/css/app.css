@@ -88,7 +88,7 @@
               LAYOUT PART START
     ====================================*/
     /* HEADER */
-    .db-header { @apply fixed top-0 left-0 z-30 w-full p-4 flex items-center justify-between lg:gap-36 bg-white transition }
+    .db-header { @apply fixed top-0 left-0 z-30 w-full p-0 flex items-center justify-between lg:gap-36 bg-white transition }
     .db-header-left { @apply flex items-center w-full md:gap-36 }
     .db-header-right { @apply flex-shrink-0 w-fit flex items-center gap-2.5 sm:gap-4 }
     .db-header-logo { @apply flex-auto w-28 flex-shrink-0 }
