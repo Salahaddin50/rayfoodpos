@@ -90,7 +90,7 @@
                         <tr class="db-table-head-tr">
                             <th class="db-table-head-th">{{ $t("label.order_id") }}</th>
                             <th class="db-table-head-th">{{ $t("label.order_type") }}</th>
-                            <th class="db-table-head-th">{{ $t("label.place") }} / {{ $t("label.token") }}</th>
+                            <th class="db-table-head-th" style="display: none;">{{ $t("label.place") }} / {{ $t("label.token") }}</th>
                             <th class="db-table-head-th">{{ $t("label.customer") }}</th>
                             <th class="db-table-head-th">{{ $t("label.amount") }}</th>
                             <th class="db-table-head-th">{{ $t("label.date") }}</th>
@@ -113,7 +113,7 @@
                                     {{ enums.orderTypeEnumArray[order.order_type] }}
                                 </span>
                             </td>
-                            <td class="db-table-body-td">
+                            <td class="db-table-body-td" style="display: none;">
                                 <a v-if="order.whatsapp_number" 
                                    :href="formatWhatsAppLink(order.whatsapp_number)" 
                                    target="_blank"
