@@ -276,12 +276,17 @@ export default {
                 this.orderItems.forEach(item => {
                     itemsBreakdown += `${item.item_name} x${item.quantity} - ${item.total_currency_price}\n`;
                 });
-                itemsBreakdown += `\n${this.$t('label.total')}: ${this.currencyFormat(
-                    this.order.total,
-                    this.setting.site_digit_after_decimal_point,
-                    this.setting.site_default_currency_symbol,
-                    this.setting.site_currency_position
-                )}`;
+                
+                // Add total if available
+                if (this.order.total && !isNaN(this.order.total)) {
+                    const totalFormatted = this.currencyFormat(
+                        parseFloat(this.order.total),
+                        this.setting.site_digit_after_decimal_point || 2,
+                        this.setting.site_default_currency_symbol || '₼',
+                        this.setting.site_currency_position || 'left'
+                    );
+                    itemsBreakdown += `\n${this.$t('label.total')}: ${totalFormatted}`;
+                }
             }
             
             // Create message with order details and breakdown
