@@ -41,6 +41,10 @@ class SiteResource extends JsonResource
             "site_auto_update"               => $this->info['site_auto_update'],
             "site_google_map_key"            => $this->info['site_google_map_key'],
             "site_copyright"                 => $this->info['site_copyright'],
+            "site_our_message"               => $this->info['site_our_message'] ?? '',
+            "site_facebook_link"             => $this->info['site_facebook_link'] ?? '',
+            "site_instagram_link"            => $this->info['site_instagram_link'] ?? '',
+            "site_tiktok_link"               => $this->info['site_tiktok_link'] ?? '',
             "site_online_payment_gateway"    => $this->info['site_online_payment_gateway'],
             "site_default_sms_gateway"       => $this->info['site_default_sms_gateway'],
             "site_food_preparation_time"     => $this->info['site_food_preparation_time']
