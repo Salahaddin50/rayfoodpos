@@ -19,8 +19,20 @@
                             <label for="name" class="db-field-title required">
                                 {{ $t("label.token_no") }}
                             </label>
-                            <input v-model="form.token" v-bind:class="error ? 'invalid' : ''" type="text" id="name"
-                                class="db-field-control" />
+                            <div class="flex gap-2">
+                                <input v-model="form.token" v-on:keypress="onlyNumber($event)" v-bind:class="error ? 'invalid' : ''" type="text" id="name"
+                                    class="db-field-control flex-1" />
+                                <button @click.stop.prevent="generateToken" type="button"
+                                    class="flex items-center justify-center gap-1.5 px-3 h-10 rounded-lg text-white bg-primary">
+                                    <i class="lab lab-add-circle-line"></i>
+                                    <span class="capitalize text-sm font-bold">Number</span>
+                                </button>
+                                <button @click.stop.prevent="resetToken" type="button"
+                                    class="flex items-center justify-center gap-1.5 px-3 h-10 rounded-lg text-white bg-primary">
+                                    <i class="lab lab-refresh-line"></i>
+                                    <span class="capitalize text-sm font-bold">Reset</span>
+                                </button>
+                            </div>
                             <small class="db-field-alert" v-if="error">
                                 {{ error }}
                             </small>
@@ -67,6 +79,11 @@ export default {
             error: "",
         };
     },
+    computed: {
+        order: function () {
+            return this.$store.getters["tableOrder/show"];
+        },
+    },
     methods: {
         tokenModal: function () {
             appService.modalShow("#tokenModal");
@@ -75,6 +92,74 @@ export default {
             appService.modalHide("#tokenModal");
             this.form.token = "";
             this.error = "";
+        },
+        onlyNumber: function (e) {
+            return appService.onlyNumber(e);
+        },
+        generateToken: function (event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
+            if (!this.order || !this.order.branch_id) {
+                alertService.error("Branch information not available");
+                return false;
+            }
+            
+            this.loading.isActive = true;
+            this.$store.dispatch('token/generate', {
+                branch_id: this.order.branch_id
+            }).then((res) => {
+                let token = res.data.data.token;
+                
+                // Add prefix based on order type
+                if (this.order.whatsapp_number) {
+                    // Online order - add 000 prefix
+                    token = "000" + token;
+                } else if (this.order.dining_table_id) {
+                    // Table order - add 00 prefix
+                    token = "00" + token;
+                }
+                
+                this.form.token = token;
+                this.loading.isActive = false;
+                alertService.success("Token generated: " + token);
+            }).catch((err) => {
+                this.loading.isActive = false;
+                alertService.error(err.response?.data?.message || "Token generation failed");
+            });
+            
+            return false;
+        },
+        resetToken: function (event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            
+            if (!this.order || !this.order.branch_id) {
+                alertService.error("Branch information not available");
+                return false;
+            }
+            
+            if (!confirm("Are you sure you want to reset the token counter? Next token will start from 1.")) {
+                return false;
+            }
+            
+            this.loading.isActive = true;
+            this.$store.dispatch('token/reset', {
+                branch_id: this.order.branch_id
+            }).then((res) => {
+                this.form.token = "";
+                this.loading.isActive = false;
+                alertService.success("Token counter reset successfully");
+            }).catch((err) => {
+                this.loading.isActive = false;
+                alertService.error(err.response?.data?.message || "Token reset failed");
+            });
+            
+            return false;
         },
         rejectOrder: function () {
             try {
