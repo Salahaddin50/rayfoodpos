@@ -39,6 +39,7 @@ class OrderResource extends JsonResource
             'status_name'                    => trans('orderStatus.' . $this->status),
             'table_name'                     => $this->diningTable?->name,
             'whatsapp_number'                => $this->whatsapp_number,
+            'location_url'                   => $this->location_url,
             'customer'                       => new OrderUserResource($this->user->load('roles', 'media')),
             'transaction'                    => new TransactionResource($this->transaction?->load('order')),
         ];

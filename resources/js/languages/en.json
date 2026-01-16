@@ -344,6 +344,10 @@
         "enter_whatsapp_number": "Enter WhatsApp Number",
         "call": "Call",
         "whatsapp": "WhatsApp",
+        "delivery_location": "Delivery Location",
+        "paste_google_maps_link": "Google Maps link will appear here",
+        "add_location": "Add Location",
+        "getting_location": "Getting...",
         "contact_information": "Contact Information",
         "cart_summary": "Cart Summary",
         "customer_information": "Customer Information",
@@ -798,6 +802,10 @@
         "order_confirm_online": "Your online order has been confirmed. We will contact you via WhatsApp.",
         "phone_number_format_hint": "Enter your phone number without country code",
         "whatsapp_order_message": "Hello! I placed an order #{orderNumber} at {branchName}. Please confirm my order. Thank you!",
+        "geolocation_not_supported": "Geolocation is not supported by your browser",
+        "location_permission_denied": "Location permission denied. Please enable location access",
+        "location_added": "Location added successfully",
+        "location_optional_hint": "Add your location to help with delivery (optional)",
         "whatsapp_number_required": "WhatsApp number is required",
         "something_went_wrong": "Something went wrong. Please try again."
     }

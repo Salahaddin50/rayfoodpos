@@ -537,6 +537,10 @@
         "enter_whatsapp_number": "WhatsApp nömrəsini daxil edin",
         "call": "Zəng et",
         "whatsapp": "WhatsApp",
+        "delivery_location": "Çatdırılma yeri",
+        "paste_google_maps_link": "Google Maps linki burada görünəcək",
+        "add_location": "Yer əlavə et",
+        "getting_location": "Alınır...",
         "cash_card": "Nağd/Kart",
         "digital_payment": "Rəqəmsal Ödəniş",
         "table_name": "Masa Adı",
@@ -789,6 +793,10 @@
         "no_branches_available": "Hal-hazırda filiallar mövcud deyil",
         "order_confirm_online": "Onlayn sifarişiniz təsdiqləndi. Biz sizinlə WhatsApp vasitəsilə əlaqə saxlayacağıq.",
         "phone_number_format_hint": "Ölkə kodu olmadan telefon nömrəsini daxil edin",
-        "whatsapp_order_message": "Salam! Mən {branchName} filialında #{orderNumber} nömrəli sifariş verdim. Zəhmət olmasa sifarişimi təsdiqləyin. Təşəkkür edirəm!"
+        "whatsapp_order_message": "Salam! Mən {branchName} filialında #{orderNumber} nömrəli sifariş verdim. Zəhmət olmasa sifarişimi təsdiqləyin. Təşəkkür edirəm!",
+        "geolocation_not_supported": "Brauzeriniz geolokasiyanı dəstəkləmir",
+        "location_permission_denied": "Məkan icazəsi rədd edildi. Zəhmət olmasa məkan girişini aktivləşdirin",
+        "location_added": "Məkan uğurla əlavə edildi",
+        "location_optional_hint": "Çatdırılmaya kömək etmək üçün yerləşməni əlavə edin (isteğe bağlı)"
     }
 }

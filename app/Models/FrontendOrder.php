@@ -32,6 +32,7 @@ class FrontendOrder extends Model
         'status',
         'dining_table_id',
         'whatsapp_number',
+        'location_url',
         'source'
     ];
 
@@ -55,6 +56,7 @@ class FrontendOrder extends Model
         'status'           => 'integer',
         'dining_table_id'  => 'integer',
         'whatsapp_number'  => 'string',
+        'location_url'     => 'string',
         'source'           => 'string'
     ];
 

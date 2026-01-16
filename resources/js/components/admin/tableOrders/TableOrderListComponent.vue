@@ -114,7 +114,12 @@
                                 </span>
                             </td>
                             <td class="db-table-body-td">
-                                <span v-if="order.whatsapp_number">{{ order.whatsapp_number }}</span>
+                                <a v-if="order.whatsapp_number" 
+                                   :href="formatWhatsAppLink(order.whatsapp_number)" 
+                                   target="_blank"
+                                   class="text-blue-600 hover:text-blue-800 underline">
+                                    {{ formatWhatsAppNumber(order.whatsapp_number) }}
+                                </a>
                                 <span v-else-if="order.table_name">{{ order.table_name }}</span>
                                 <span v-else>-</span>
                                 <span v-if="order.token"> / #{{ order.token }}</span>
@@ -504,6 +509,36 @@ export default {
                 this.loading.isActive = false;
                 alertService.error(err?.response?.data?.message ?? err);
             }
+        },
+        formatWhatsAppNumber: function (number) {
+            if (!number) return '';
+            
+            // Remove all non-digit characters except +
+            let phoneNumber = number.replace(/[^\d+]/g, '');
+            
+            // Remove + sign for processing
+            phoneNumber = phoneNumber.replace(/\+/g, '');
+            
+            // If starts with 0, replace with 994
+            if (phoneNumber.startsWith('0')) {
+                phoneNumber = '994' + phoneNumber.substring(1);
+            } 
+            // If doesn't start with 994, add it
+            else if (!phoneNumber.startsWith('994')) {
+                phoneNumber = '994' + phoneNumber;
+            }
+            
+            // Return formatted with + sign
+            return '+' + phoneNumber;
+        },
+        formatWhatsAppLink: function (number) {
+            if (!number) return '#';
+            
+            // Get the formatted number without + sign for the URL
+            const formattedNumber = this.formatWhatsAppNumber(number).replace('+', '');
+            
+            // Create WhatsApp link with empty message
+            return `https://wa.me/${formattedNumber}`;
         },
     },
 };

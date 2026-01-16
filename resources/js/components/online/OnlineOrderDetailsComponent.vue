@@ -290,10 +290,15 @@ export default {
             }
             
             // Create message with order details and breakdown
-            const message = this.$t('message.whatsapp_order_message', {
+            let message = this.$t('message.whatsapp_order_message', {
                 orderNumber: this.order.order_serial_no,
                 branchName: this.orderBranch.name
             }) + itemsBreakdown;
+            
+            // Add location if available
+            if (this.order.location_url) {
+                message += `\n\n📍 ${this.$t('label.delivery_location')}: ${this.order.location_url}`;
+            }
             
             // Use wa.me for better mobile compatibility
             return `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;

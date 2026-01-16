@@ -67,6 +67,29 @@
                             </div>
                             <small v-if="errors.whatsapp_number" class="db-field-alert">{{ errors.whatsapp_number[0] }}</small>
                             <small v-else class="text-xs text-gray-500 mt-1 block">{{ $t('message.phone_number_format_hint') }}</small>
+                            
+                            <label for="location" class="db-field-label mt-4">{{ $t('label.delivery_location') }}</label>
+                            <div class="flex gap-2">
+                                <input 
+                                    type="text" 
+                                    id="location" 
+                                    v-model="locationUrl"
+                                    :placeholder="$t('label.paste_google_maps_link')"
+                                    class="db-field-control flex-1"
+                                    readonly
+                                >
+                                <button 
+                                    type="button"
+                                    @click="getLocation"
+                                    :disabled="loadingLocation"
+                                    class="db-btn px-4 py-2 text-white bg-primary whitespace-nowrap"
+                                    :class="loadingLocation ? 'opacity-50 cursor-not-allowed' : ''"
+                                >
+                                    <i class="lab lab-location text-base mr-1"></i>
+                                    {{ loadingLocation ? $t('button.getting_location') : $t('button.add_location') }}
+                                </button>
+                            </div>
+                            <small class="text-xs text-gray-500 mt-1 block">{{ $t('message.location_optional_hint') }}</small>
                         </div>
                     </div>
 
@@ -203,6 +226,8 @@ export default {
             errors: {},
             countryCode: '+994', // Default to Azerbaijan
             phoneNumber: '',
+            locationUrl: '',
+            loadingLocation: false,
             countryCodes: [
                 { code: 'AZ', dial_code: '+994', flag: '🇦🇿', name: 'Azerbaijan' },
                 { code: 'TR', dial_code: '+90', flag: '🇹🇷', name: 'Turkey' },
@@ -235,6 +260,7 @@ export default {
                     source: sourceEnum.WEB,
                     address_id: null,
                     whatsapp_number: "",
+                    location_url: "",
                     items: []
                 }
             },
@@ -266,6 +292,29 @@ export default {
             // Combine country code with phone number
             this.checkoutProps.form.whatsapp_number = this.countryCode + this.phoneNumber;
         },
+        getLocation: function () {
+            if (!navigator.geolocation) {
+                alertService.error(this.$t('message.geolocation_not_supported'));
+                return;
+            }
+
+            this.loadingLocation = true;
+            
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    this.locationUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+                    this.loadingLocation = false;
+                    alertService.success(this.$t('message.location_added'));
+                },
+                (error) => {
+                    this.loadingLocation = false;
+                    console.error('Location error:', error);
+                    alertService.error(this.$t('message.location_permission_denied'));
+                }
+            );
+        },
         orderSubmit: function () {
             this.errors = {};
             
@@ -285,10 +334,14 @@ export default {
             this.checkoutProps.form.total = parseFloat(this.subtotal).toFixed(this.setting.site_digit_after_decimal_point);
             this.checkoutProps.form.items = [];
             
+            // Set location URL if available
+            this.checkoutProps.form.location_url = this.locationUrl || "";
+            
             console.log('Submitting order with data:', {
                 branch_id: this.checkoutProps.form.branch_id,
                 customer_id: this.checkoutProps.form.customer_id,
                 whatsapp_number: this.checkoutProps.form.whatsapp_number,
+                location_url: this.checkoutProps.form.location_url,
                 subtotal: this.checkoutProps.form.subtotal,
                 total: this.checkoutProps.form.total
             });
