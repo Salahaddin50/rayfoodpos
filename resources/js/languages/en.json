@@ -345,6 +345,8 @@
         "call": "Call",
         "whatsapp": "WhatsApp",
         "delivery_location": "Delivery Location",
+        "location": "Location",
+        "view_map": "View Map",
         "paste_google_maps_link": "Google Maps link will appear here",
         "add_location": "Add Location",
         "getting_location": "Getting...",

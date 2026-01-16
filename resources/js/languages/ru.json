@@ -538,6 +538,8 @@
         "call": "Позвонить",
         "whatsapp": "WhatsApp",
         "delivery_location": "Место доставки",
+        "location": "Местоположение",
+        "view_map": "Карта",
         "paste_google_maps_link": "Ссылка Google Maps появится здесь",
         "add_location": "Добавить локацию",
         "getting_location": "Получение...",

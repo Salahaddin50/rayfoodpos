@@ -90,8 +90,9 @@
                         <tr class="db-table-head-tr">
                             <th class="db-table-head-th">{{ $t("label.order_id") }}</th>
                             <th class="db-table-head-th">{{ $t("label.order_type") }}</th>
-                            <th class="db-table-head-th" style="display: none;">{{ $t("label.place") }} / {{ $t("label.token") }}</th>
-                            <th class="db-table-head-th">{{ $t("label.customer") }}</th>
+                            <th class="db-table-head-th">{{ $t("label.place") }} / {{ $t("label.token") }}</th>
+                            <th class="db-table-head-th">{{ $t("label.location") }}</th>
+                            <th class="db-table-head-th" style="display: none;">{{ $t("label.customer") }}</th>
                             <th class="db-table-head-th">{{ $t("label.amount") }}</th>
                             <th class="db-table-head-th">{{ $t("label.date") }}</th>
                             <th class="db-table-head-th">{{ $t("label.status") }}</th>
@@ -113,7 +114,7 @@
                                     {{ enums.orderTypeEnumArray[order.order_type] }}
                                 </span>
                             </td>
-                            <td class="db-table-body-td" style="display: none;">
+                            <td class="db-table-body-td">
                                 <a v-if="order.whatsapp_number" 
                                    :href="formatWhatsAppLink(order.whatsapp_number)" 
                                    target="_blank"
@@ -125,6 +126,16 @@
                                 <span v-if="order.token"> / #{{ order.token }}</span>
                             </td>
                             <td class="db-table-body-td">
+                                <a v-if="order.whatsapp_number && order.location_url" 
+                                   :href="order.location_url" 
+                                   target="_blank"
+                                   class="text-green-600 hover:text-green-800 flex items-center gap-1">
+                                    <i class="lab lab-location lab-font-size-16"></i>
+                                    <span class="underline">{{ $t('label.view_map') }}</span>
+                                </a>
+                                <span v-else class="text-gray-400">-</span>
+                            </td>
+                            <td class="db-table-body-td" style="display: none;">
                                 {{ textShortener(order.customer.name, 20) }}
                             </td>
                             <td class="db-table-body-td">{{ order.total_amount_price }}</td>

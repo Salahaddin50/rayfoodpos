@@ -538,6 +538,8 @@
         "call": "Zəng et",
         "whatsapp": "WhatsApp",
         "delivery_location": "Çatdırılma yeri",
+        "location": "Məkan",
+        "view_map": "Xəritə",
         "paste_google_maps_link": "Google Maps linki burada görünəcək",
         "add_location": "Yer əlavə et",
         "getting_location": "Alınır...",
