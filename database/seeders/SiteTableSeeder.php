@@ -39,6 +39,10 @@ class SiteTableSeeder extends Seeder
             'site_copyright'                 => $envService->getValue(
                 'DEMO'
             ) ? '© FoodScan by iNiLabs 2025, All Rights Reserved' : '',
+            'site_our_message'               => '',
+            'site_facebook_link'             => '',
+            'site_instagram_link'            => '',
+            'site_tiktok_link'               => '',
             'site_language_switch'        => Activity::ENABLE,
             'site_app_debug'              => Activity::DISABLE,
             'site_auto_update'            => Activity::DISABLE,

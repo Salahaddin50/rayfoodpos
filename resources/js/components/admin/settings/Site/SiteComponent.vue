@@ -105,6 +105,50 @@
                         }}</small>
                     </div>
 
+                    <div class="form-col-12">
+                        <label for="site_our_message" class="db-field-title">
+                            {{ $t("label.our_message") }}
+                        </label>
+                        <textarea v-model="form.site_our_message" v-bind:class="errors.site_our_message ? 'invalid' : ''"
+                            id="site_our_message" class="db-field-control" rows="3"></textarea>
+                        <small class="db-field-alert" v-if="errors.site_our_message">{{
+                            errors.site_our_message[0]
+                        }}</small>
+                    </div>
+
+                    <div class="form-col-12 sm:form-col-6">
+                        <label for="site_facebook_link" class="db-field-title">
+                            {{ $t("label.facebook_link") }}
+                        </label>
+                        <input v-model="form.site_facebook_link" v-bind:class="errors.site_facebook_link ? 'invalid' : ''"
+                            type="url" id="site_facebook_link" class="db-field-control" placeholder="https://facebook.com/..." />
+                        <small class="db-field-alert" v-if="errors.site_facebook_link">{{
+                            errors.site_facebook_link[0]
+                        }}</small>
+                    </div>
+
+                    <div class="form-col-12 sm:form-col-6">
+                        <label for="site_instagram_link" class="db-field-title">
+                            {{ $t("label.instagram_link") }}
+                        </label>
+                        <input v-model="form.site_instagram_link" v-bind:class="errors.site_instagram_link ? 'invalid' : ''"
+                            type="url" id="site_instagram_link" class="db-field-control" placeholder="https://instagram.com/..." />
+                        <small class="db-field-alert" v-if="errors.site_instagram_link">{{
+                            errors.site_instagram_link[0]
+                        }}</small>
+                    </div>
+
+                    <div class="form-col-12 sm:form-col-6">
+                        <label for="site_tiktok_link" class="db-field-title">
+                            {{ $t("label.tiktok_link") }}
+                        </label>
+                        <input v-model="form.site_tiktok_link" v-bind:class="errors.site_tiktok_link ? 'invalid' : ''"
+                            type="url" id="site_tiktok_link" class="db-field-control" placeholder="https://tiktok.com/@..." />
+                        <small class="db-field-alert" v-if="errors.site_tiktok_link">{{
+                            errors.site_tiktok_link[0]
+                        }}</small>
+                    </div>
+
                     <div class="form-col-12 sm:form-col-6">
                         <label for="site_google_map_key" class="db-field-title required">
                             {{ $t("label.google_map_key") }}
@@ -382,6 +426,10 @@ export default {
                 site_digit_after_decimal_point: null,
                 site_google_map_key: null,
                 site_copyright: null,
+                site_our_message: null,
+                site_facebook_link: null,
+                site_instagram_link: null,
+                site_tiktok_link: null,
                 site_online_payment_gateway: null,
                 site_default_sms_gateway: null,
                 site_food_preparation_time: null,
@@ -467,6 +515,10 @@ export default {
                     site_digit_after_decimal_point: res.data.data.site_digit_after_decimal_point,
                     site_google_map_key: res.data.data.site_google_map_key,
                     site_copyright: res.data.data.site_copyright,
+                    site_our_message: res.data.data.site_our_message || '',
+                    site_facebook_link: res.data.data.site_facebook_link || '',
+                    site_instagram_link: res.data.data.site_instagram_link || '',
+                    site_tiktok_link: res.data.data.site_tiktok_link || '',
                     site_online_payment_gateway: res.data.data.site_online_payment_gateway,
                     site_default_sms_gateway: res.data.data.site_default_sms_gateway === 0 ? null : res.data.data.site_default_sms_gateway,
                     site_food_preparation_time: res.data.data.site_food_preparation_time,

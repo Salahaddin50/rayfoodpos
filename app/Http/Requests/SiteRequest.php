@@ -39,6 +39,10 @@ class SiteRequest extends FormRequest
             'site_auto_update'               => ['nullable', 'numeric'],
             'site_google_map_key'            => ['required', 'string', 'max:190'],
             'site_copyright'                 => ['required', 'string', 'max:190'],
+            'site_our_message'               => ['nullable', 'string', 'max:500'],
+            'site_facebook_link'             => ['nullable', 'string', 'max:190'],
+            'site_instagram_link'            => ['nullable', 'string', 'max:190'],
+            'site_tiktok_link'               => ['nullable', 'string', 'max:190'],
             'site_online_payment_gateway'    => ['required', 'numeric'],
             'site_default_sms_gateway'       => ['nullable', 'numeric'],
             'site_food_preparation_time'     => ['required', 'numeric']
