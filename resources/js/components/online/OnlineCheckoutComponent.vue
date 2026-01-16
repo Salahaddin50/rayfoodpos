@@ -28,14 +28,13 @@
                                 <label for="cash" class="db-field-label text-heading">{{ $t('label.cash_card')
                                     }}</label>
                             </li>
-                            <li class="flex items-center gap-1.5">
+                            <li class="flex items-center gap-1.5 opacity-50 cursor-not-allowed">
                                 <div class="custom-radio">
                                     <input type="radio" id="digital" v-model="paymentMethod" value="digitalPayment"
-                                        class="custom-radio-field">
+                                        class="custom-radio-field" disabled>
                                     <span class="custom-radio-span border-gray-400"></span>
                                 </div>
-                                <label for="digital" class="db-field-label text-heading">{{ $t('label.digital_payment')
-                                    }}</label>
+                                <label for="digital" class="db-field-label text-gray-400">{{ $t('label.digital_payment') }} ({{ $t('label.coming_soon') }})</label>
                             </li>
                         </ul>
                     </div>
@@ -222,7 +221,7 @@ export default {
                 isActive: false,
             },
             placeOrderShow: false,
-            paymentMethod: null,
+            paymentMethod: 'cashCard', // Default to cash payment
             errors: {},
             countryCode: '+994', // Default to Azerbaijan
             phoneNumber: '',
