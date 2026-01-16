@@ -43,6 +43,7 @@ class TableOrderRequest extends FormRequest
             'delivery_time'    => ['nullable'],
             'source'           => ['required', 'numeric'],
             'whatsapp_number'  => ['nullable', 'string', 'max:20'],
+            'location_url'     => ['nullable', 'string', 'max:255'],
             'items'            => ['required', 'json', new ValidJsonOrder]
         ];
     }
