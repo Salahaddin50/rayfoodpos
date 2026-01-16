@@ -56,14 +56,13 @@
                                         :title="$t('label.call')">
                                         <i class="lab lab-call-calling font-fill-primary lab-font-size-16"></i>
                                     </a>
-                                    <a :href="whatsappLink"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
+                                    <button
+                                        type="button"
                                         @click="openWhatsApp"
                                         class="w-8 h-8 rounded-full flex items-center justify-center bg-green-100"
                                         :title="$t('label.whatsapp')">
                                         <i class="fa-brands fa-whatsapp text-green-600 text-base"></i>
-                                    </a>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -312,20 +311,21 @@ export default {
         currencyFormat: function (amount, decimal, currency, position) {
             return appService.currencyFormat(amount, decimal, currency, position);
         },
-        openWhatsApp(event) {
-            // Prevent default and manually open WhatsApp
-            if (this.whatsappLink === '#') {
-                event.preventDefault();
+        openWhatsApp() {
+            const link = this.whatsappLink;
+            
+            console.log('Opening WhatsApp with link:', link);
+            console.log('Branch phone:', this.orderBranch.phone);
+            console.log('Order number:', this.order.order_serial_no);
+            
+            if (link === '#' || !link) {
                 console.error('WhatsApp link not available');
+                alert('WhatsApp link is not available');
                 return;
             }
             
-            console.log('WhatsApp link:', this.whatsappLink);
-            console.log('Order WhatsApp number:', this.order.whatsapp_number);
-            console.log('Order:', this.order);
-            
-            // Try to open WhatsApp in a new window
-            window.open(this.whatsappLink, '_blank');
+            // Open WhatsApp in a new window/tab
+            window.open(link, '_blank', 'noopener,noreferrer');
         },
         refreshStatus() {
             if (!this.$route.params.id) return;
