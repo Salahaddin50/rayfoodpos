@@ -83,6 +83,13 @@ export default {
         order: function () {
             return this.$store.getters["tableOrder/show"];
         },
+        orderBranch: function () {
+            return this.$store.getters["tableOrder/orderBranch"];
+        },
+        branchId: function () {
+            // Try to get branch_id from order first, then from orderBranch
+            return this.order?.branch_id || this.orderBranch?.id;
+        },
     },
     methods: {
         tokenModal: function () {
@@ -102,14 +109,14 @@ export default {
                 event.stopPropagation();
             }
             
-            if (!this.order || !this.order.branch_id) {
+            if (!this.branchId) {
                 alertService.error("Branch information not available");
                 return false;
             }
             
             this.loading.isActive = true;
             this.$store.dispatch('token/generate', {
-                branch_id: this.order.branch_id
+                branch_id: this.branchId
             }).then((res) => {
                 let token = res.data.data.token;
                 
@@ -138,7 +145,7 @@ export default {
                 event.stopPropagation();
             }
             
-            if (!this.order || !this.order.branch_id) {
+            if (!this.branchId) {
                 alertService.error("Branch information not available");
                 return false;
             }
@@ -149,7 +156,7 @@ export default {
             
             this.loading.isActive = true;
             this.$store.dispatch('token/reset', {
-                branch_id: this.order.branch_id
+                branch_id: this.branchId
             }).then((res) => {
                 this.form.token = "";
                 this.loading.isActive = false;
