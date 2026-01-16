@@ -36,6 +36,7 @@ class SimpleOrderResource extends JsonResource
             'customer_name'                => $this->user?->name,
             'table_name'                   => $this->diningTable?->name,
             'whatsapp_number'              => $this->whatsapp_number,
+            'location_url'                 => $this->location_url,
             'takeaway_type'                => $this->takeawayType,
             'takeaway_type_name'           => $this->takeawayType?->name,
             'pos_note'                     => $this->pos_note,

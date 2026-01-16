@@ -706,6 +706,8 @@
         "confirm_location": "Confirm Location",
         "edit_address": "Edit Address",
         "place_order": "Place Order",
+        "add_location": "Add Location",
+        "getting_location": "Getting...",
         "apply": "Apply",
         "go_to_order": "Go to Details",
         "order_now": "Order Now",

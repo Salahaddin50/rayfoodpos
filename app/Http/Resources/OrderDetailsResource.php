@@ -48,6 +48,8 @@ class OrderDetailsResource extends JsonResource
             'table_name'                          => $this->diningTable?->name,
             'dining_table_id'                     => $this->dining_table_id,
             'dining_table'                        => $this->diningTable,
+            'whatsapp_number'                     => $this->whatsapp_number,
+            'location_url'                        => $this->location_url,
             'takeaway_type_id'                    => $this->takeaway_type_id,
             'takeaway_type'                       => $this->takeawayType,
             'pos_payment_method'                  => $this->pos_payment_method,

@@ -513,14 +513,16 @@ export default {
         formatWhatsAppNumber: function (number) {
             if (!number) return '';
             
-            // Remove all non-digit characters except +
-            let phoneNumber = number.replace(/[^\d+]/g, '');
+            // Remove all non-digit characters
+            let phoneNumber = number.replace(/\D/g, '');
             
-            // Remove + sign for processing
-            phoneNumber = phoneNumber.replace(/\+/g, '');
-            
+            // Handle case where number already has 994 followed by 0
+            // e.g., 9940503531437 should become 994503531437
+            if (phoneNumber.startsWith('9940')) {
+                phoneNumber = '994' + phoneNumber.substring(4);
+            }
             // If starts with 0, replace with 994
-            if (phoneNumber.startsWith('0')) {
+            else if (phoneNumber.startsWith('0')) {
                 phoneNumber = '994' + phoneNumber.substring(1);
             } 
             // If doesn't start with 994, add it
