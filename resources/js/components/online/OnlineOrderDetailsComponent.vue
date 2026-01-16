@@ -249,12 +249,13 @@ export default {
             };
         },
         whatsappLink() {
-            if (!this.order.whatsapp_number || !this.order.order_serial_no) {
+            // Use branch phone number to send message TO the restaurant
+            if (!this.orderBranch.phone || !this.order.order_serial_no) {
                 return '#';
             }
             
             // Format phone number: remove leading 0 and add 994
-            let phoneNumber = this.order.whatsapp_number.replace(/[^\d+]/g, '');
+            let phoneNumber = this.orderBranch.phone.replace(/[^\d+]/g, '');
             
             // Remove + sign for processing
             phoneNumber = phoneNumber.replace(/\+/g, '');
@@ -312,9 +313,19 @@ export default {
             return appService.currencyFormat(amount, decimal, currency, position);
         },
         openWhatsApp(event) {
-            // Let the default link behavior work, but log for debugging
+            // Prevent default and manually open WhatsApp
+            if (this.whatsappLink === '#') {
+                event.preventDefault();
+                console.error('WhatsApp link not available');
+                return;
+            }
+            
             console.log('WhatsApp link:', this.whatsappLink);
-            console.log('Phone number:', this.order.whatsapp_number);
+            console.log('Order WhatsApp number:', this.order.whatsapp_number);
+            console.log('Order:', this.order);
+            
+            // Try to open WhatsApp in a new window
+            window.open(this.whatsappLink, '_blank');
         },
         refreshStatus() {
             if (!this.$route.params.id) return;
