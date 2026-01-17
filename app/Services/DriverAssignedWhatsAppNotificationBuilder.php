@@ -19,8 +19,16 @@ class DriverAssignedWhatsAppNotificationBuilder
     public function send(): void
     {
         try {
-            // Refresh order from database and load driver relationship
-            $order = $this->order->fresh()->load('driver');
+            // Refresh order from database
+            $order = $this->order->fresh();
+            
+            // Load driver without global scopes to avoid BranchScope filtering
+            if ($order->driver_id) {
+                $driver = \App\Models\Driver::withoutGlobalScopes()->find($order->driver_id);
+                if ($driver) {
+                    $order->setRelation('driver', $driver);
+                }
+            }
             
             // Check if order has a driver with WhatsApp number
             if (blank($order->driver) || blank($order->driver->whatsapp)) {
@@ -49,27 +57,48 @@ class DriverAssignedWhatsAppNotificationBuilder
     public function getWhatsAppLink(): ?string
     {
         try {
-            // Refresh order from database and load driver relationship
-            $order = $this->order->fresh()->load('driver');
+            // Refresh order from database
+            $order = $this->order->fresh();
+            
+            // Load driver without global scopes to avoid BranchScope filtering
+            if ($order->driver_id) {
+                $driver = \App\Models\Driver::withoutGlobalScopes()->find($order->driver_id);
+                if (!$driver) {
+                    Log::warning("DriverAssignedWhatsAppNotificationBuilder getWhatsAppLink: Driver ID {$order->driver_id} not found for order {$order->id}");
+                    return null;
+                }
+                $order->setRelation('driver', $driver);
+            }
             
             // Check if order has a driver
             if (blank($order->driver)) {
-                Log::warning("DriverAssignedWhatsAppNotificationBuilder: Order {$order->id} has no driver");
+                Log::warning("DriverAssignedWhatsAppNotificationBuilder getWhatsAppLink: Order {$order->id} has no driver. driver_id = {$order->driver_id}");
                 return null;
             }
             
             // Check if driver has WhatsApp number
-            if (blank($order->driver->whatsapp)) {
-                Log::warning("DriverAssignedWhatsAppNotificationBuilder: Driver ID {$order->driver->id} has no WhatsApp number");
+            $driverWhatsapp = $order->driver->whatsapp;
+            
+            // Debug logging
+            Log::info("DriverAssignedWhatsAppNotificationBuilder getWhatsAppLink: Driver ID {$order->driver->id}, WhatsApp value: " . var_export($driverWhatsapp, true) . ", Type: " . gettype($driverWhatsapp) . ", Is blank: " . (blank($driverWhatsapp) ? 'yes' : 'no'));
+            
+            if (blank($driverWhatsapp)) {
+                Log::warning("DriverAssignedWhatsAppNotificationBuilder getWhatsAppLink: Driver ID {$order->driver->id} (name: {$order->driver->name}) has no WhatsApp number or it is empty. WhatsApp value: " . var_export($driverWhatsapp, true));
                 return null;
             }
 
             // Parse driver's WhatsApp number (normalized as +994XXXXXXXXX)
             $whatsapp = $order->driver->whatsapp;
+            
+            // Convert to string if needed
+            if (!is_string($whatsapp)) {
+                $whatsapp = (string) $whatsapp;
+            }
+            
             $parsed = $this->parseWhatsAppNumber($whatsapp);
             
             if (blank($parsed['code']) || blank($parsed['phone'])) {
-                Log::warning("DriverAssignedWhatsAppNotificationBuilder: Failed to parse WhatsApp number for driver ID {$order->driver->id}: {$whatsapp}");
+                Log::warning("DriverAssignedWhatsAppNotificationBuilder getWhatsAppLink: Failed to parse WhatsApp number for driver ID {$order->driver->id}. Raw value: " . var_export($order->driver->whatsapp, true) . ", Parsed: " . json_encode($parsed));
                 return null;
             }
 
@@ -90,6 +119,17 @@ class DriverAssignedWhatsAppNotificationBuilder
     private function parseWhatsAppNumber(string $whatsapp): array
     {
         // Normalized format: +994XXXXXXXXX
+        // Handle null or non-string values
+        if ($whatsapp === null || (!is_string($whatsapp) && !is_numeric($whatsapp))) {
+            Log::warning("DriverAssignedWhatsAppNotificationBuilder parseWhatsAppNumber: Invalid input type: " . gettype($whatsapp) . ", value: " . var_export($whatsapp, true));
+            return ['code' => '', 'phone' => ''];
+        }
+        
+        // Convert to string if numeric
+        if (is_numeric($whatsapp)) {
+            $whatsapp = (string) $whatsapp;
+        }
+        
         $normalized = trim($whatsapp);
         if ($normalized === '') {
             return ['code' => '', 'phone' => ''];
