@@ -79,7 +79,9 @@
         "k_d_s": "K.D.S",
         "o_s_s": "O.S.S",
         "chefs": "Aşbazlar",
-        "waiters": "Ofisiantlar"
+        "waiters": "Ofisiantlar",
+        "online_users": "Onlayn istifadəçilər",
+        "drivers": "Sürücülər"
     },
     "label": {
         "previous": "Əvvəlki",
@@ -103,6 +105,8 @@
         "not_available": "Mövcud deyil",
         "branch_specific_status": "Yalnız bu filial üçün",
         "branch": "Filial",
+        "transport_type": "Nəqliyyat növü",
+        "last_order": "Son sifariş",
         "role": "Rol",
         "members": "Üzvlər",
         "permissions": "İcazələr",
