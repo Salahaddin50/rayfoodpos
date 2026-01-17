@@ -56,9 +56,11 @@ class DriverAssignedWhatsAppNotificationBuilder
 
     public function getWhatsAppLink(): ?string
     {
+        Log::warning("DriverAssignedWhatsAppNotificationBuilder getWhatsAppLink: METHOD CALLED for order ID " . $this->order->id . ", driver_id: " . $this->order->driver_id);
         try {
             // Refresh order from database
             $order = $this->order->fresh();
+            Log::warning("DriverAssignedWhatsAppNotificationBuilder getWhatsAppLink: After fresh() - order ID {$order->id}, driver_id: {$order->driver_id}");
             
             // Load driver without global scopes to avoid BranchScope filtering
             if ($order->driver_id) {
@@ -79,8 +81,8 @@ class DriverAssignedWhatsAppNotificationBuilder
             // Check if driver has WhatsApp number
             $driverWhatsapp = $order->driver->whatsapp;
             
-            // Debug logging
-            Log::info("DriverAssignedWhatsAppNotificationBuilder getWhatsAppLink: Driver ID {$order->driver->id}, WhatsApp value: " . var_export($driverWhatsapp, true) . ", Type: " . gettype($driverWhatsapp) . ", Is blank: " . (blank($driverWhatsapp) ? 'yes' : 'no'));
+            // Debug logging - use warning level so it's more visible
+            Log::warning("DriverAssignedWhatsAppNotificationBuilder getWhatsAppLink: Driver ID {$order->driver->id}, WhatsApp value: " . var_export($driverWhatsapp, true) . ", Type: " . gettype($driverWhatsapp) . ", Is blank: " . (blank($driverWhatsapp) ? 'yes' : 'no'));
             
             if (blank($driverWhatsapp)) {
                 Log::warning("DriverAssignedWhatsAppNotificationBuilder getWhatsAppLink: Driver ID {$order->driver->id} (name: {$order->driver->name}) has no WhatsApp number or it is empty. WhatsApp value: " . var_export($driverWhatsapp, true));
