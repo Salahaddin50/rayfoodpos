@@ -204,24 +204,24 @@ export default {
 
             // Load language list once (used by the language dropdown).
             if (!this.languages || this.languages.length === 0) {
-                this.$store.dispatch('frontendLanguage/lists', this.languageProps).then().catch();
+            this.$store.dispatch('frontendLanguage/lists', this.languageProps).then().catch();
             }
 
             // Load current language once (used by i18n + direction).
             const languageLoaded = this.language && typeof this.language === 'object' && Object.keys(this.language).length > 0;
             if (!languageLoaded && this.defaultLanguage) {
-                this.$store.dispatch('frontendLanguage/show', this.defaultLanguage).then(res => {
-                    this.$i18n.locale = res.data.data.code;
-                    this.$store.dispatch("globalState/init", {
-                        language_code: res.data.data.code
-                    });
-                }).catch();
+            this.$store.dispatch('frontendLanguage/show', this.defaultLanguage).then(res => {
+                this.$i18n.locale = res.data.data.code;
+                this.$store.dispatch("globalState/init", {
+                    language_code: res.data.data.code
+                });
+            }).catch();
             }
 
             // Only fetch table data for table orders, not online orders
             if (!this.isOnlineOrder && this.$route.params.slug) {
-                this.$store.dispatch('tableDiningTable/show', this.$route.params.slug).then(res => {
-                    this.$store.dispatch('tableCart/initTable', res.data.data);
+            this.$store.dispatch('tableDiningTable/show', this.$route.params.slug).then(res => {
+                this.$store.dispatch('tableCart/initTable', res.data.data);
                 }).catch(() => { });
             }
 

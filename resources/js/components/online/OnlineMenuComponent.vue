@@ -275,7 +275,7 @@ export default {
         // Lazy load: show header immediately, then load branches + categories,
         // and only load items AFTER a branch is selected.
         this.loading.isActive = true;
-
+        
         Promise.all([
             this.$store.dispatch("frontendBranch/lists", this.branchProps.search),
             this.$store.dispatch("tableItemCategory/lists", this.categoryProps.search),
@@ -371,7 +371,7 @@ export default {
                 offset: this.itemsOffset,
                 vuex: false,
             };
-
+            
             this.$store.dispatch("frontendItem/lists", payload).then((res) => {
                 const newItems = res?.data?.data || [];
                 this.itemsLocal = [...this.itemsLocal, ...newItems];
