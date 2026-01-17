@@ -417,6 +417,7 @@ Route::prefix('admin')->name('admin.')->middleware(['installed', 'apiKey', 'auth
         Route::get('/export', [PosOrderController::class, 'export']);
         Route::post('/change-status/{order}', [PosOrderController::class, 'changeStatus']);
         Route::post('/change-payment-status/{order}', [PosOrderController::class, 'changePaymentStatus']);
+        Route::post('/assign-driver/{order}', [PosOrderController::class, 'assignDriver']);
     });
 
     Route::prefix('table-order')->name('tableOrder.')->group(function () {
@@ -427,6 +428,7 @@ Route::prefix('admin')->name('admin.')->middleware(['installed', 'apiKey', 'auth
         Route::post('/change-status/{order}', [AdminTableOrderController::class, 'changeStatus']);
         Route::post('/change-payment-status/{order}', [AdminTableOrderController::class, 'changePaymentStatus']);
         Route::post('/token-create/{order}', [AdminTableOrderController::class, 'tokenCreate']);
+        Route::post('/assign-driver/{order}', [AdminTableOrderController::class, 'assignDriver']);
     });
 
 

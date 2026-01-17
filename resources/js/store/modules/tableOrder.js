@@ -131,6 +131,15 @@ export const tableOrder = {
                 });
             });
         },
+        assignDriver: function (context, payload) {
+            return new Promise((resolve, reject) => {
+                axios.post(`admin/table-order/assign-driver/${payload.id}`, { driver_id: payload.driver_id }).then((res) => {
+                    resolve(res);
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
+        },
         reset: function (context) {
             context.commit('reset');
         },

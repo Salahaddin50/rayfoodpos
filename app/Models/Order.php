@@ -17,6 +17,7 @@ class Order extends Model
         'token',
         'user_id',
         'branch_id',
+        'driver_id',
         'subtotal',
         'discount',
         'delivery_charge',
@@ -31,6 +32,7 @@ class Order extends Model
         'payment_method',
         'payment_status',
         'status',
+        'delivery_boy_id',
         'dining_table_id',
         'whatsapp_number',
         'location_url',
@@ -48,6 +50,7 @@ class Order extends Model
         'token'               => 'string',
         'user_id'             => 'integer',
         'branch_id'           => 'integer',
+        'driver_id'           => 'integer',
         'subtotal'            => 'decimal:6',
         'discount'            => 'decimal:6',
         'delivery_charge'     => 'decimal:6',
@@ -61,6 +64,7 @@ class Order extends Model
         'payment_method'      => 'integer',
         'payment_status'      => 'integer',
         'status'              => 'integer',
+        'delivery_boy_id'     => 'integer',
         'dining_table_id'     => 'integer',
         'whatsapp_number'     => 'string',
         'location_url'        => 'string',
@@ -156,5 +160,10 @@ class Order extends Model
     public function takeawayType(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(TakeawayType::class);
+    }
+
+    public function driver(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Driver::class);
     }
 }

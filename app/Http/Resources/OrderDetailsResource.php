@@ -20,6 +20,8 @@ class OrderDetailsResource extends JsonResource
             'id'                                  => $this->id,
             'order_serial_no'                     => $this->order_serial_no,
             'token'                               => $this->token,
+            'driver_id'                           => $this->driver_id,
+            'driver_name'                         => $this->driver?->name,
             "subtotal_currency_price"             => AppLibrary::currencyAmountFormat($this->subtotal),
             "subtotal_without_tax_currency_price" => AppLibrary::currencyAmountFormat($this->subtotal - $this->total_tax),
             "discount_currency_price"             => AppLibrary::currencyAmountFormat($this->discount),

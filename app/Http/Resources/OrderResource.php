@@ -22,6 +22,8 @@ class OrderResource extends JsonResource
             'token'                          => $this->token,
             'user_id'                        => $this->user_id,
             'branch_id'                      => $this->branch_id,
+            'driver_id'                      => $this->driver_id,
+            'driver_name'                    => $this->driver?->name,
             'branch_name'                    => optional($this->branch)->name,
             'order_items'                    => optional($this->orderItems)->count(),
             "total_currency_price"           => AppLibrary::currencyAmountFormat($this->total),

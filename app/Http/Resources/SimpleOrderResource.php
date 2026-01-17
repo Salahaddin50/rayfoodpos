@@ -20,6 +20,8 @@ class SimpleOrderResource extends JsonResource
             'id'                           => $this->id,
             'order_serial_no'              => $this->order_serial_no,
             'token'                        => $this->token,
+            'driver_id'                    => $this->driver_id,
+            'driver_name'                  => $this->driver?->name,
             'order_datetime'               => AppLibrary::datetime($this->order_datetime),
             "total_currency_price"         => AppLibrary::currencyAmountFormat($this->total),
             "total_amount_price"           => AppLibrary::flatAmountFormat($this->total),

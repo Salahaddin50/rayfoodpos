@@ -96,6 +96,7 @@
                             <th class="db-table-head-th">{{ $t("label.amount") }}</th>
                             <th class="db-table-head-th">{{ $t("label.date") }}</th>
                             <th class="db-table-head-th">{{ $t("label.status") }}</th>
+                            <th class="db-table-head-th">Driver</th>
                             <th class="db-table-head-th hidden-print" v-if="permissionChecker('table_orders_show') || permissionChecker('table_orders_edit') || permissionChecker('table_orders_delete')">
                                 {{ $t("label.action") }}
                             </th>
@@ -151,6 +152,26 @@
                                     {{ $t("label.advance") }}
                                 </span>
                             </td>
+                            <td class="db-table-body-td">
+                                <template v-if="isDriverApplicable(order)">
+                                    <vue-select
+                                        class="db-field-control f-b-custom-select"
+                                        :options="drivers"
+                                        label-by="name"
+                                        value-by="id"
+                                        :closeOnSelect="true"
+                                        :searchable="true"
+                                        :clearOnClose="true"
+                                        placeholder="--"
+                                        :modelValue="order.driver_id"
+                                        @update:modelValue="assignDriver(order, $event)"
+                                        :disabled="order.status !== enums.orderStatusEnum.DELIVERED"
+                                    />
+                                </template>
+                                <template v-else>
+                                    <span class="text-gray-400">-</span>
+                                </template>
+                            </td>
                             <td class="db-table-body-td hidden-print" v-if="permissionChecker('table_orders_show') || permissionChecker('table_orders_edit') || permissionChecker('table_orders_delete')">
                                 <div class="flex justify-start items-center sm:items-start sm:justify-start gap-1.5">
                                     <SmIconViewComponent :link="'admin.table.order.show'" :id="order.id"
@@ -195,7 +216,7 @@
                     </tbody>
                     <tbody class="db-table-body" v-else>
                         <tr class="db-table-body-tr">
-                            <td class="db-table-body-td text-center" colspan="8">
+                            <td class="db-table-body-td text-center" :colspan="permissionChecker('table_orders_show') || permissionChecker('table_orders_edit') || permissionChecker('table_orders_delete') ? 10 : 9">
                                 <div class="p-4">
                                     <div class="max-w-[300px] mx-auto mt-2">
                                         <img class="w-full h-full" :src="ENV.API_URL + '/images/default/not-found.png'"
@@ -351,6 +372,12 @@ export default {
             order_type: "asc",
             status: statusEnum.ACTIVE,
         });
+        this.$store.dispatch("driver/lists", {
+            paginate: 0,
+            order_column: "id",
+            order_type: "asc",
+            status: statusEnum.ACTIVE,
+        }).then().catch();
 
         // Listen for breadcrumb refresh button (Table Orders)
         window.addEventListener('rayfood:refresh-table-orders', this.onExternalRefresh);
@@ -377,6 +404,9 @@ export default {
         },
         direction: function () {
             return this.$store.getters['frontendLanguage/show'].display_mode === displayModeEnum.RTL ? 'rtl' : 'ltr';
+        },
+        drivers: function () {
+            return this.$store.getters['driver/lists'];
         },
     },
     methods: {
@@ -536,6 +566,28 @@ export default {
                 this.loading.isActive = false;
                 alertService.error(err?.response?.data?.message ?? err);
             }
+        },
+        isDriverApplicable(order) {
+            // Only Takeaway and Delivery ("Online") orders have a driver.
+            return order && (order.order_type === this.enums.orderTypeEnum.TAKEAWAY || order.order_type === this.enums.orderTypeEnum.DELIVERY);
+        },
+        assignDriver(order, driverId) {
+            if (!order) return;
+            if (!this.isDriverApplicable(order)) return;
+            if (order.status !== this.enums.orderStatusEnum.DELIVERED) return;
+
+            this.loading.isActive = true;
+            this.$store.dispatch('tableOrder/assignDriver', { id: order.id, driver_id: driverId }).then((res) => {
+                const data = res?.data?.data;
+                order.driver_id = data?.driver_id ?? null;
+                order.driver_name = data?.driver_name ?? null;
+                this.loading.isActive = false;
+                alertService.successFlip(null, 'Driver');
+            }).catch((err) => {
+                this.loading.isActive = false;
+                alertService.error(err?.response?.data?.message ?? err);
+                this.list(this.paginationPage || 1);
+            });
         },
         formatWhatsAppNumber: function (number) {
             if (!number) return '';
