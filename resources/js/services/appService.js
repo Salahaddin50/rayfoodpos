@@ -31,18 +31,31 @@ export default {
         });
     },
 
-    modalShow: function (id = '.modal') {
-        let modalButton = document?.querySelectorAll("[data-modal]");
-        modalButton?.forEach((modalBtn) => {
-            const modalTarget = document?.querySelector(id);
-            modalTarget?.classList?.add("active");
+    modalShow: function (target = '.modal') {
+        // Supports both CSS selector strings and HTMLElement refs.
+        if (target && typeof target === "object" && typeof target.classList?.add === "function") {
+            target.classList.add("active");
             document.body.style.overflowY = "hidden";
-        });
+            return;
+        }
+
+        const selector = target || ".modal";
+        const modalTarget = document?.querySelector(selector);
+        modalTarget?.classList?.add("active");
+        document.body.style.overflowY = "hidden";
     },
 
-    modalHide: function (id = ".modal") {
-        let modalDivs = document?.querySelectorAll(id);
+    modalHide: function (target = ".modal") {
         document.body.style.overflowY = "auto";
+
+        // Supports both CSS selector strings and HTMLElement refs.
+        if (target && typeof target === "object" && typeof target.classList?.remove === "function") {
+            target.classList.remove("active");
+            return;
+        }
+
+        const selector = target || ".modal";
+        const modalDivs = document?.querySelectorAll(selector);
         modalDivs?.forEach((modalDiv) => modalDiv?.classList?.remove("active"));
     },
 

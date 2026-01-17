@@ -4,11 +4,27 @@
     <div class="col-12">
         <div class="db-card">
             <div class="db-card-header border-none">
-                <h3 class="db-card-title">{{ $t("menu.online_users") }}</h3>
+                <h3 class="db-card-title flex items-center gap-2">
+                    <i class="lab lab-customers lab-font-size-20"></i>
+                    <span>{{ $t("menu.online_users") }}</span>
+                </h3>
                 <div class="db-card-filter">
                     <div class="flex items-center gap-3">
                         <div class="text-xs text-gray-500" v-if="branch && branch.name">
                             {{ $t("label.branch") }}: <b class="font-medium">{{ branch.name }}</b>
+                        </div>
+                        <div class="dropdown-group">
+                            <ExportComponent />
+                            <div class="dropdown-list db-card-filter-dropdown-list transition-all duration-300 scale-y-0 origin-top">
+                                <ExcelComponent :method="xls" />
+                            </div>
+                        </div>
+                        <div class="dropdown-group">
+                            <ImportComponent />
+                            <div class="dropdown-list db-card-filter-dropdown-list transition-all duration-300 scale-y-0 origin-top">
+                                <SampleFileComponent @click="downloadSample" />
+                                <UploadFileComponent :dataModal="'onlineUserUpload'" @click="uploadModal('#onlineUserUpload')" />
+                            </div>
                         </div>
                         <button class="db-btn py-2 text-white bg-primary" @click.prevent="list()">
                             <i class="lab lab-refresh-line lab-font-size-16"></i>
@@ -28,7 +44,7 @@
                         </tr>
                     </thead>
                     <tbody class="db-table-body" v-if="rows.length > 0">
-                        <tr class="db-table-body-tr" v-for="row in rows" :key="row.id">
+                        <tr class="db-table-body-tr" v-for="row in uniqueRows" :key="row.id">
                             <td class="db-table-body-td">
                                 <span dir="ltr">{{ row.whatsapp }}</span>
                             </td>
@@ -53,14 +69,32 @@
             </div>
         </div>
     </div>
+
+    <OnlineUserUploadComponent v-on:list="list" />
 </template>
 
 <script>
 import LoadingComponent from "../components/LoadingComponent.vue";
+import ExportComponent from "../components/buttons/export/ExportComponent.vue";
+import ExcelComponent from "../components/buttons/export/ExcelComponent.vue";
+import ImportComponent from "../components/buttons/import/ImportComponent.vue";
+import SampleFileComponent from "../components/buttons/import/SampleFileComponent.vue";
+import UploadFileComponent from "../components/buttons/import/UploadFileComponent.vue";
+import OnlineUserUploadComponent from "./OnlineUserUploadComponent.vue";
+import appService from "../../../services/appService";
+import alertService from "../../../services/alertService";
 
 export default {
     name: "OnlineUserListComponent",
-    components: { LoadingComponent },
+    components: {
+        LoadingComponent,
+        ExportComponent,
+        ExcelComponent,
+        ImportComponent,
+        SampleFileComponent,
+        UploadFileComponent,
+        OnlineUserUploadComponent,
+    },
     data() {
         return {
             loading: { isActive: false },
@@ -73,7 +107,17 @@ export default {
         },
         onlineUsers() {
             return this.$store.getters["onlineUser/lists"];
-        }
+        },
+        uniqueRows() {
+            const map = new Map();
+            const normalize = (v) => String(v ?? "").trim().replace(/\s+/g, "");
+            (this.rows || []).forEach((r) => {
+                const key = normalize(r?.whatsapp);
+                if (!key) return;
+                if (!map.has(key)) map.set(key, r);
+            });
+            return Array.from(map.values());
+        },
     },
     mounted() {
         this.list();
@@ -89,6 +133,40 @@ export default {
                 .catch(() => {
                     this.loading.isActive = false;
                 });
+        },
+        uploadModal(id) {
+            appService.modalShow(id);
+        },
+        xls() {
+            this.loading.isActive = true;
+            this.$store.dispatch("onlineUser/export", { paginate: 0 }).then((res) => {
+                this.loading.isActive = false;
+                const blob = new Blob([res.data], {
+                    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = this.$t("menu.online_users");
+                link.click();
+                URL.revokeObjectURL(link.href);
+            }).catch((err) => {
+                this.loading.isActive = false;
+                alertService.error(err?.response?.data?.message || "Export failed");
+            });
+        },
+        downloadSample() {
+            this.loading.isActive = true;
+            this.$store.dispatch("onlineUser/downloadSample").then((res) => {
+                this.loading.isActive = false;
+                const url = window.URL.createObjectURL(new Blob([res.data]));
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = "Online Users Import Sample.xlsx";
+                link.click();
+                URL.revokeObjectURL(link.href);
+            }).catch(() => {
+                this.loading.isActive = false;
+            });
         },
     },
 };

@@ -57,6 +57,31 @@ export const driver = {
                     .catch((err) => reject(err));
             });
         },
+        export: function (context, payload) {
+            return new Promise((resolve, reject) => {
+                let url = 'admin/drivers/export';
+                if (payload) {
+                    url = url + appService.requestHandler(payload);
+                }
+                axios.get(url, { responseType: 'blob' }).then((res) => {
+                    resolve(res);
+                }).catch((err) => reject(err));
+            });
+        },
+        downloadSample: function () {
+            return new Promise((resolve, reject) => {
+                axios.get('admin/drivers/download-sample', { responseType: 'blob' }).then((res) => {
+                    resolve(res);
+                }).catch((err) => reject(err));
+            });
+        },
+        import: function (context, payload) {
+            return new Promise((resolve, reject) => {
+                axios.post('admin/drivers/import/file', payload.form).then((res) => {
+                    resolve(res);
+                }).catch((err) => reject(err));
+            });
+        },
     },
     mutations: {
         lists: function (state, payload) {

@@ -61,6 +61,8 @@ export default {
                 dining_tables: "lab lab-reserve-line",
                 takeaway_types: "lab lab-bag-2",
                 online_orders: "lab lab-total-orders",
+                drivers: "lab lab-delivery-boy",
+                online_users: "lab lab-customers",
             };
 
             const sortByPriority = (a, b) => {

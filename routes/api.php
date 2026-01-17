@@ -504,6 +504,9 @@ Route::prefix('admin')->name('admin.')->middleware(['installed', 'apiKey', 'auth
 
     Route::prefix('online-users')->name('online-users.')->group(function () {
         Route::get('/', [OnlineUserController::class, 'index']);
+        Route::get('/export', [OnlineUserController::class, 'export']);
+        Route::get('/download-sample', [OnlineUserController::class, 'downloadSample']);
+        Route::post('/import/file', [OnlineUserController::class, 'import']);
     });
 
     Route::prefix('drivers')->name('drivers.')->group(function () {
@@ -511,6 +514,9 @@ Route::prefix('admin')->name('admin.')->middleware(['installed', 'apiKey', 'auth
         Route::post('/', [DriverController::class, 'store']);
         Route::match(['post', 'put', 'patch'], '/{driver}', [DriverController::class, 'update']);
         Route::delete('/{driver}', [DriverController::class, 'destroy']);
+        Route::get('/export', [DriverController::class, 'export']);
+        Route::get('/download-sample', [DriverController::class, 'downloadSample']);
+        Route::post('/import/file', [DriverController::class, 'import']);
     });
 
     Route::prefix('pos-category')->name('pos-category.')->group(function () {

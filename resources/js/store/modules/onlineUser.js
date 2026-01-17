@@ -29,6 +29,31 @@ export const onlineUser = {
                     .catch((err) => reject(err));
             });
         },
+        export: function (context, payload) {
+            return new Promise((resolve, reject) => {
+                let url = 'admin/online-users/export';
+                if (payload) {
+                    url = url + appService.requestHandler(payload);
+                }
+                axios.get(url, { responseType: 'blob' }).then((res) => {
+                    resolve(res);
+                }).catch((err) => reject(err));
+            });
+        },
+        downloadSample: function () {
+            return new Promise((resolve, reject) => {
+                axios.get('admin/online-users/download-sample', { responseType: 'blob' }).then((res) => {
+                    resolve(res);
+                }).catch((err) => reject(err));
+            });
+        },
+        import: function (context, payload) {
+            return new Promise((resolve, reject) => {
+                axios.post('admin/online-users/import/file', payload.form).then((res) => {
+                    resolve(res);
+                }).catch((err) => reject(err));
+            });
+        },
     },
     mutations: {
         lists: function (state, payload) {

@@ -4,11 +4,27 @@
     <div class="col-12">
         <div class="db-card">
             <div class="db-card-header border-none">
-                <h3 class="db-card-title">{{ $t("menu.drivers") }}</h3>
+                <h3 class="db-card-title flex items-center gap-2">
+                    <i class="lab lab-delivery-boy lab-font-size-20"></i>
+                    <span>{{ $t("menu.drivers") }}</span>
+                </h3>
                 <div class="db-card-filter">
                     <div class="flex items-center gap-3">
                         <div class="text-xs text-gray-500" v-if="branch && branch.name">
                             {{ $t("label.branch") }}: <b class="font-medium">{{ branch.name }}</b>
+                        </div>
+                        <div class="dropdown-group">
+                            <ExportComponent />
+                            <div class="dropdown-list db-card-filter-dropdown-list transition-all duration-300 scale-y-0 origin-top">
+                                <ExcelComponent :method="xls" />
+                            </div>
+                        </div>
+                        <div class="dropdown-group">
+                            <ImportComponent />
+                            <div class="dropdown-list db-card-filter-dropdown-list transition-all duration-300 scale-y-0 origin-top">
+                                <SampleFileComponent @click="downloadSample" />
+                                <UploadFileComponent :dataModal="'driverUpload'" @click="uploadModal('#driverUpload')" />
+                            </div>
                         </div>
                         <button class="db-btn py-2 text-white bg-primary" @click.prevent="openCreate">
                             <i class="lab lab-add-circle-line lab-font-size-16"></i>
@@ -87,16 +103,32 @@
             </div>
         </div>
     </div>
+
+    <DriverUploadComponent v-on:list="list" />
 </template>
 
 <script>
 import LoadingComponent from "../components/LoadingComponent.vue";
+import ExportComponent from "../components/buttons/export/ExportComponent.vue";
+import ExcelComponent from "../components/buttons/export/ExcelComponent.vue";
+import ImportComponent from "../components/buttons/import/ImportComponent.vue";
+import SampleFileComponent from "../components/buttons/import/SampleFileComponent.vue";
+import UploadFileComponent from "../components/buttons/import/UploadFileComponent.vue";
+import DriverUploadComponent from "./DriverUploadComponent.vue";
 import appService from "../../../services/appService";
 import alertService from "../../../services/alertService";
 
 export default {
     name: "DriverListComponent",
-    components: { LoadingComponent },
+    components: {
+        LoadingComponent,
+        ExportComponent,
+        ExcelComponent,
+        ImportComponent,
+        SampleFileComponent,
+        UploadFileComponent,
+        DriverUploadComponent,
+    },
     data() {
         return {
             loading: { isActive: false },
@@ -137,6 +169,46 @@ export default {
         },
         closeCreate() {
             appService.modalHide(this.$refs.createModal);
+        },
+        uploadModal(id) {
+            appService.modalShow(id);
+        },
+        xls() {
+            this.loading.isActive = true;
+            this.$store
+                .dispatch("driver/export", { paginate: 0 })
+                .then((res) => {
+                    this.loading.isActive = false;
+                    const blob = new Blob([res.data], {
+                        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    });
+                    const link = document.createElement("a");
+                    link.href = URL.createObjectURL(blob);
+                    link.download = this.$t("menu.drivers");
+                    link.click();
+                    URL.revokeObjectURL(link.href);
+                })
+                .catch((err) => {
+                    this.loading.isActive = false;
+                    alertService.error(err?.response?.data?.message || "Export failed");
+                });
+        },
+        downloadSample() {
+            this.loading.isActive = true;
+            this.$store
+                .dispatch("driver/downloadSample")
+                .then((res) => {
+                    this.loading.isActive = false;
+                    const url = window.URL.createObjectURL(new Blob([res.data]));
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = "Driver Import Sample.xlsx";
+                    link.click();
+                    URL.revokeObjectURL(link.href);
+                })
+                .catch(() => {
+                    this.loading.isActive = false;
+                });
         },
         save() {
             this.loading.isActive = true;
