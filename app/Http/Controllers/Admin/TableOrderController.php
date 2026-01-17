@@ -137,12 +137,28 @@ class TableOrderController extends AdminController
             $order->save();
             $order->load('driver');
 
+            // Send WhatsApp notification to driver if assigned
+            $whatsappLink = null;
+            if ($driverId) {
+                try {
+                    $notificationBuilder = new \App\Services\DriverAssignedWhatsAppNotificationBuilder($order);
+                    // Send automatic WhatsApp/SMS via gateway
+                    $notificationBuilder->send();
+                    // Also generate WhatsApp link for opening WhatsApp app/web
+                    $whatsappLink = $notificationBuilder->getWhatsAppLink();
+                } catch (\Throwable $e) {
+                    // Log error but don't fail driver assignment if WhatsApp fails
+                    \Illuminate\Support\Facades\Log::warning("Driver WhatsApp notification failed for order {$order->id}: " . $e->getMessage());
+                }
+            }
+
             return response()->json([
                 'status' => true,
                 'data' => [
                     'id' => $order->id,
                     'driver_id' => $order->driver_id,
                     'driver_name' => $order->driver?->name,
+                    'whatsapp_link' => $whatsappLink,
                 ],
             ]);
         } catch (Exception $exception) {

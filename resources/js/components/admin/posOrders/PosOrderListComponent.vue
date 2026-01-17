@@ -548,7 +548,11 @@ export default {
                 order.driver_id = data?.driver_id ?? null;
                 order.driver_name = data?.driver_name ?? null;
                 this.loading.isActive = false;
-                alertService.successFlip(null, 'Driver');
+                if (driverId) {
+                    alertService.success(this.$t('message.driver_added') || 'Driver Added Successfully.');
+                } else {
+                    alertService.successFlip(null, this.$t('label.driver') || 'Driver');
+                }
             }).catch((err) => {
                 this.loading.isActive = false;
                 alertService.error(err?.response?.data?.message ?? err);

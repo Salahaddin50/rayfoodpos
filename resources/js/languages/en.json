@@ -137,6 +137,7 @@
         "delivery": "Delivery",
         "takeaway": "Takeaway",
         "order_type": "Order Type",
+        "driver": "Driver",
         "date": "Date",
         "unit_price": "Unit Price",
         "total_income": "Total Income",
@@ -825,6 +826,7 @@
         "location_optional_hint": "Add your location to help with delivery (optional)",
         "whatsapp_optional_hint": "Share your WhatsApp for order updates (optional)",
         "whatsapp_number_required": "WhatsApp number is required",
-        "something_went_wrong": "Something went wrong. Please try again."
+        "something_went_wrong": "Something went wrong. Please try again.",
+        "driver_added": "Driver Added Successfully."
     }
 }
