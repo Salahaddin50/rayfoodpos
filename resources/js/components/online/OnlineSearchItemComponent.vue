@@ -64,6 +64,7 @@ export default {
             props: {
                 search: {
                     paginate: 0,
+                    lite: 1,
                     order_column: 'id',
                     order_type: 'asc',
                     name: "",

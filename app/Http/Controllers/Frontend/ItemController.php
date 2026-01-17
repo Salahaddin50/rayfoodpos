@@ -9,6 +9,7 @@ use App\Services\ItemService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PaginateRequest;
 use App\Http\Resources\NormalItemResource;
+use App\Http\Resources\SimpleItemResource;
 
 class ItemController extends Controller
 {
@@ -24,6 +25,12 @@ class ItemController extends Controller
         PaginateRequest $request
     ): \Illuminate\Http\Response | \Illuminate\Http\Resources\Json\AnonymousResourceCollection | \Illuminate\Contracts\Foundation\Application | \Illuminate\Contracts\Routing\ResponseFactory {
         try {
+            if ((int) $request->get('lite', 0) === 1) {
+                // Lite list is used by menu grids (online/table) to keep payload small.
+                // Full item data is fetched via `frontend/item/details/:id` when needed.
+                return SimpleItemResource::collection($this->itemService->list($request));
+            }
+
             return NormalItemResource::collection($this->itemService->list($request));
         } catch (Exception $exception) {
             return response(['status' => false, 'message' => $exception->getMessage()], 422);

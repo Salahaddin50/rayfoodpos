@@ -48,7 +48,8 @@ class ItemService
             $orderColumn = $request->get('order_column') ?? 'id';
             $orderType   = $request->get('order_type') ?? 'desc';
 
-            $query = Item::with('media', 'category', 'tax')
+            // Include `offer` to avoid N+1 queries and to keep `item.offer` available for list UIs.
+            $query = Item::with('media', 'category', 'tax', 'offer')
                 ->when($branchId, function ($q) use ($branchId) {
                     $q->with(['branchItemStatuses' => function ($sub) use ($branchId) {
                         $sub->where('branch_id', $branchId);
@@ -114,6 +115,7 @@ class ItemService
         try {
             $requests    = $request->all();
             $branchId    = $request->get('branch_id');
+            $lite        = (int) $request->get('lite', 0) === 1;
             $statusFilter = $requests['status'] ?? null;
             unset($requests['branch_id'], $requests['status']);
             $method      = $request->get('paginate', 0) == 1 ? 'paginate' : 'get';
@@ -121,8 +123,16 @@ class ItemService
             $orderColumn = $request->get('order_column') ?? 'id';
             $orderType   = $request->get('order_type') ?? 'desc';
 
-            $query = Item::with('media', 'category', 'tax', 'offer', 'variations.itemAttribute', 'extras', 'addons')
-                ->withCount('orders')
+            // "lite" mode is used by POS menu grids and similar pages:
+            // keep the list payload small and avoid loading heavy relations.
+            $with = $lite
+                ? ['media', 'category', 'tax', 'offer']
+                : ['media', 'category', 'tax', 'offer', 'variations.itemAttribute', 'extras', 'addons'];
+
+            $query = Item::with($with)
+                ->when(!$lite, function ($q) {
+                    $q->withCount('orders');
+                })
                 ->when($branchId, function ($q) use ($branchId) {
                     $q->with(['branchItemStatuses' => function ($sub) use ($branchId) {
                         $sub->where('branch_id', $branchId);
