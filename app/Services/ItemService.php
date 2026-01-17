@@ -45,6 +45,8 @@ class ItemService
             unset($requests['branch_id'], $requests['status']);
             $method      = $request->get('paginate', 0) == 1 ? 'paginate' : 'get';
             $methodValue = $request->get('paginate', 0) == 1 ? $request->get('per_page', 10) : '*';
+            $offset      = (int) $request->get('offset', 0);
+            $limit       = $request->has('limit') ? (int) $request->get('limit') : null;
             $orderColumn = $request->get('order_column') ?? 'id';
             $orderType   = $request->get('order_type') ?? 'desc';
 
@@ -101,6 +103,17 @@ class ItemService
                     ->orderBy('items.id', 'asc');
             } else {
                 $query->orderBy($orderColumn, $orderType);
+            }
+
+            // Lightweight chunking for menu pages: keep `paginate=0` response shape (array only),
+            // but allow loading items in smaller chunks via `limit` + `offset`.
+            if ($method === 'get' && ($offset > 0 || ($limit !== null && $limit > 0))) {
+                if ($offset > 0) {
+                    $query->skip($offset);
+                }
+                if ($limit !== null && $limit > 0) {
+                    $query->take($limit);
+                }
             }
 
             return $query->$method($methodValue);

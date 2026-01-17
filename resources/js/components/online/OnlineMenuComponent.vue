@@ -28,14 +28,14 @@
                         :class="category.id === itemProps.search.item_category_id || (category.id === 0 && itemProps.search.item_category_id === '') ? 'pos-group' : ''">
                         <router-link v-if="index === 0" to="" @click.prevent="allCategory(category)"
                             class="w-32 flex flex-col items-center text-center gap-4 p-3 rounded-2xl border-b-2 border-transparent transition hover:bg-primary-light bg-[#F7F7FC] overflow-hidden">
-                            <img class="h-10 drop-shadow-category" :src="category.thumb" alt="category">
+                            <img class="h-10 drop-shadow-category" :src="category.thumb" alt="category" loading="lazy">
                             <h3
                                 class="w-full text-xs leading-[16px] whitespace-nowrap overflow-hidden text-ellipsis font-medium font-rubik">
                                 {{ category.name }}</h3>
                         </router-link>
                         <router-link v-else to="" @click.prevent="setCategory(category.id, category.slug)"
                             class="w-32 flex flex-col items-center text-center gap-4 p-3 rounded-2xl border-b-2 border-transparent transition hover:bg-primary-light bg-[#F7F7FC] overflow-hidden">
-                            <img class="h-10 drop-shadow-category" :src="category.thumb" alt="category">
+                            <img class="h-10 drop-shadow-category" :src="category.thumb" alt="category" loading="lazy">
                             <h3
                                 class="w-full text-xs leading-[16px] whitespace-nowrap overflow-hidden text-ellipsis font-medium font-rubik">
                                 {{ category.name }}</h3>
@@ -80,13 +80,31 @@
                         :class="itemProps.property.design === enums.itemDesignEnum.GRID ? 'text-primary' : 'text-[#A0A3BD]'"></button>
                 </div>
             </div>
-            <ItemComponent v-if="items.length > 0" :items="items" :type="itemProps.property.type"
+            <div v-if="!selectedBranchId" class="mt-12 text-center text-sm text-gray-600">
+                {{ $t('message.select_branch_to_order') }}
+            </div>
+
+            <ItemComponent v-else-if="sortedItems.length > 0" :items="sortedItems" :type="itemProps.property.type"
                 :design="itemProps.property.design" />
-            <div class="mt-12" v-else>
+
+            <div v-else-if="selectedBranchId && !itemsLoading" class="mt-12">
                 <div class="max-w-[250px] mx-auto">
                     <img class="w-full mb-8" :src="setting.image_order_not_found" alt="image_order_not_found">
                 </div>
                 <span class="w-full mb-4 text-center text-black">{{ $t('message.no_data_available') }}</span>
+            </div>
+
+            <div v-if="selectedBranchId" class="mt-6 flex justify-center">
+                <button
+                    v-if="hasMoreItems && !itemsLoading"
+                    type="button"
+                    @click.prevent="loadMoreItems"
+                    class="rounded-3xl px-6 py-2.5 text-sm font-medium text-white bg-primary hover:bg-primary-dark transition">
+                    {{ $te('button.load_more') ? $t('button.load_more') : 'Load more' }}
+                </button>
+                <div v-else-if="itemsLoading" class="text-sm text-gray-500">
+                    {{ $te('message.loading') ? $t('message.loading') : 'Loading...' }}
+                </div>
             </div>
         </div>
     </section>
@@ -162,6 +180,11 @@ export default {
                 isActive: false,
             },
             selectedBranchId: null,
+            itemsLoading: false,
+            itemsLimit: 30,
+            itemsOffset: 0,
+            hasMoreItems: false,
+            itemsLocal: [],
             category: {
                 id: 0,
                 name: this.$t('label.all') + ' ' + this.$t('label.items')
@@ -186,7 +209,7 @@ export default {
                 search: {
                     paginate: 0,
                     lite: 1,
-                    order_column: "category_sort",
+                    order_column: "id",
                     order_type: "asc",
                     item_category_id: "",
                     branch_id: null
@@ -213,9 +236,6 @@ export default {
         categories: function () {
             return this.$store.getters["tableItemCategory/lists"];
         },
-        items: function () {
-            return this.$store.getters["frontendItem/lists"];
-        },
         branches: function () {
             return this.$store.getters["frontendBranch/lists"];
         },
@@ -227,28 +247,48 @@ export default {
         },
         paymentMethod: function () {
             return this.$store.getters['tableCart/paymentMethod'];
-        }
+        },
+        sortedItems: function () {
+            const items = this.itemsLocal || [];
+            const categories = this.categories || [];
+
+            // Build category sort map (fallback to array order if sort not present).
+            const categorySortMap = new Map();
+            categories.forEach((c, idx) => {
+                const sortVal = (c && typeof c.sort !== 'undefined') ? Number(c.sort) : idx + 1;
+                categorySortMap.set(Number(c.id), isNaN(sortVal) ? (idx + 1) : sortVal);
+            });
+
+            // Keep stable list without mutating original.
+            return [...items].sort((a, b) => {
+                const aCat = Number(a.item_category_id || 0);
+                const bCat = Number(b.item_category_id || 0);
+                const aSort = categorySortMap.has(aCat) ? categorySortMap.get(aCat) : 999999;
+                const bSort = categorySortMap.has(bCat) ? categorySortMap.get(bCat) : 999999;
+                if (aSort !== bSort) return aSort - bSort;
+                if (aCat !== bCat) return aCat - bCat;
+                return Number(a.id) - Number(b.id);
+            });
+        },
     },
     mounted() {
+        // Lazy load: show header immediately, then load branches + categories,
+        // and only load items AFTER a branch is selected.
         this.loading.isActive = true;
-        
-        // Load branches first
-        this.$store.dispatch("frontendBranch/lists", this.branchProps.search).then(res => {
-            // If branchId is in route params, use it
+
+        Promise.all([
+            this.$store.dispatch("frontendBranch/lists", this.branchProps.search),
+            this.$store.dispatch("tableItemCategory/lists", this.categoryProps.search),
+        ]).then(() => {
+            this.loading.isActive = false;
+
             if (this.$route.params.branchId) {
                 this.selectedBranchId = parseInt(this.$route.params.branchId);
                 this.itemProps.search.branch_id = this.selectedBranchId;
                 this.$store.dispatch('tableCart/initOnlineBranch', this.selectedBranchId).then().catch();
+                this.itemList(true);
             }
-            
-            // Load items (will show all items even if no branch selected)
-            this.itemList();
-            this.$store.dispatch("tableItemCategory/lists", this.categoryProps.search).then(res => {
-                this.loading.isActive = false;
-            }).catch((err) => {
-                this.loading.isActive = false;
-            });
-        }).catch((err) => {
+        }).catch(() => {
             this.loading.isActive = false;
         });
 
@@ -269,7 +309,7 @@ export default {
             if (this.selectedBranchId) {
                 this.itemProps.search.branch_id = this.selectedBranchId;
                 this.$store.dispatch('tableCart/initOnlineBranch', this.selectedBranchId).then().catch();
-                this.itemList();
+                this.itemList(true);
                 
                 // Update URL without page reload
                 this.$router.replace({ 
@@ -290,11 +330,11 @@ export default {
                 id: 0,
                 name: category.name
             }
-            this.itemList();
+            this.itemList(true);
         },
         setCategory: function (id, slug = null) {
             this.itemProps.search.item_category_id = id;
-            this.itemList();
+            this.itemList(true);
             if (slug !== null) {
                 this.loading.isActive = true;
                 this.$store.dispatch("tableItemCategory/show", {
@@ -307,21 +347,45 @@ export default {
                 });
             }
         },
-        itemList: function () {
-            this.loading.isActive = true;
-            
-            // Use selected branch or route param
-            if (this.selectedBranchId) {
-                this.itemProps.search.branch_id = this.selectedBranchId;
-            } else if (this.$route.params.branchId) {
-                this.itemProps.search.branch_id = this.$route.params.branchId;
+        itemList: function (reset = false) {
+            if (!this.selectedBranchId) {
+                this.itemsLocal = [];
+                this.hasMoreItems = false;
+                return;
             }
-            
-            this.$store.dispatch("frontendItem/lists", this.itemProps.search).then(() => {
-                this.loading.isActive = false;
+
+            if (reset) {
+                this.itemsOffset = 0;
+                this.itemsLocal = [];
+                this.hasMoreItems = false;
+            }
+
+            this.itemsLoading = true;
+
+            const payload = {
+                ...this.itemProps.search,
+                branch_id: this.selectedBranchId,
+                order_column: 'id', // fetch fast, then sort client-side by category sort
+                order_type: 'asc',
+                limit: this.itemsLimit,
+                offset: this.itemsOffset,
+                vuex: false,
+            };
+
+            this.$store.dispatch("frontendItem/lists", payload).then((res) => {
+                const newItems = res?.data?.data || [];
+                this.itemsLocal = [...this.itemsLocal, ...newItems];
+                this.itemsOffset += newItems.length;
+                this.hasMoreItems = newItems.length === this.itemsLimit;
+                this.itemsLoading = false;
             }).catch(() => {
-                this.loading.isActive = false;
+                this.itemsLoading = false;
             });
+        },
+        loadMoreItems: function () {
+            if (!this.itemsLoading && this.hasMoreItems) {
+                this.itemList(false);
+            }
         },
         itemTypeSet: function (e) {
             this.itemProps.property.type = e;

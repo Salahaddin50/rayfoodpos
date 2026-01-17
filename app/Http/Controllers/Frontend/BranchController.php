@@ -8,6 +8,7 @@ use App\Services\BranchService;
 use App\Http\Requests\PaginateRequest;
 use App\Http\Resources\BranchResource;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Cache;
 
 class BranchController extends Controller
 {
@@ -21,7 +22,31 @@ class BranchController extends Controller
     public function index(PaginateRequest $request) : \Illuminate\Http\Response | \Illuminate\Http\Resources\Json\AnonymousResourceCollection | \Illuminate\Contracts\Foundation\Application | \Illuminate\Contracts\Routing\ResponseFactory
     {
         try {
-            return BranchResource::collection($this->branchService->list($request));
+            $start = microtime(true);
+
+            // Cache non-paginated branch lists briefly (used by online branch selector/menu).
+            if ((int) $request->get('paginate', 0) === 0) {
+                $cacheKey = 'frontend:branch:' . md5($request->fullUrl());
+                $cacheHit = Cache::has($cacheKey);
+
+                $payload = Cache::remember($cacheKey, 300, function () use ($request) {
+                    return BranchResource::collection($this->branchService->list($request))
+                        ->response()
+                        ->getData(true);
+                });
+
+                $durMs = (microtime(true) - $start) * 1000;
+                return response()
+                    ->json($payload)
+                    ->header('Cache-Control', 'public, max-age=300')
+                    ->header('Server-Timing', 'app;dur=' . round($durMs, 2) . ', cache;desc=' . ($cacheHit ? 'hit' : 'miss'));
+            }
+
+            $res = BranchResource::collection($this->branchService->list($request));
+            $durMs = (microtime(true) - $start) * 1000;
+            return $res->additional([])->response()->withHeaders([
+                'Server-Timing' => 'app;dur=' . round($durMs, 2)
+            ]);
         } catch (Exception $exception) {
             return response(['status' => false, 'message' => $exception->getMessage()], 422);
         }

@@ -153,9 +153,9 @@ export default {
         homeRoute: function () {
             if (this.isOnlineOrder) {
                 if (this.$route.params.branchId) {
-                    return { name: 'online.menu', params: { branchId: this.$route.params.branchId } };
+                    return { name: 'online.menu.branch', params: { branchId: this.$route.params.branchId } };
                 }
-                return { name: 'online.branch.selection' };
+                return { name: 'online.menu' };
             }
             if (this.$route.params.slug) {
                 return { name: 'table.menu.table', params: { slug: this.$route.params.slug } };
@@ -189,31 +189,44 @@ export default {
         });
 
         this.loading.isActive = true;
-        this.$store.dispatch('frontendSetting/lists').then(res => {
-            this.defaultLanguage = res.data.data.site_default_language;
+        const settingLoaded = this.setting && typeof this.setting === 'object' && Object.keys(this.setting).length > 0;
+        const settingPromise = settingLoaded
+            ? Promise.resolve({ data: { data: this.setting } })
+            : this.$store.dispatch('frontendSetting/lists');
+
+        settingPromise.then(res => {
             const globalState = this.$store.getters['globalState/lists'];
 
-            if (globalState.language_id > 0) {
+            this.defaultLanguage = res?.data?.data?.site_default_language;
+            if (globalState?.language_id > 0) {
                 this.defaultLanguage = globalState.language_id;
             }
 
-            this.$store.dispatch('frontendLanguage/lists', this.languageProps).then().catch();
-            this.$store.dispatch('frontendLanguage/show', this.defaultLanguage).then(res => {
-                this.$i18n.locale = res.data.data.code;
-                this.$store.dispatch("globalState/init", {
-                    language_code: res.data.data.code
-                });
-            }).catch();
+            // Load language list once (used by the language dropdown).
+            if (!this.languages || this.languages.length === 0) {
+                this.$store.dispatch('frontendLanguage/lists', this.languageProps).then().catch();
+            }
+
+            // Load current language once (used by i18n + direction).
+            const languageLoaded = this.language && typeof this.language === 'object' && Object.keys(this.language).length > 0;
+            if (!languageLoaded && this.defaultLanguage) {
+                this.$store.dispatch('frontendLanguage/show', this.defaultLanguage).then(res => {
+                    this.$i18n.locale = res.data.data.code;
+                    this.$store.dispatch("globalState/init", {
+                        language_code: res.data.data.code
+                    });
+                }).catch();
+            }
 
             // Only fetch table data for table orders, not online orders
             if (!this.isOnlineOrder && this.$route.params.slug) {
-            this.$store.dispatch('tableDiningTable/show', this.$route.params.slug).then(res => {
-                this.$store.dispatch('tableCart/initTable', res.data.data);
-            }).catch((err) => { });
+                this.$store.dispatch('tableDiningTable/show', this.$route.params.slug).then(res => {
+                    this.$store.dispatch('tableCart/initTable', res.data.data);
+                }).catch(() => { });
             }
 
             this.loading.isActive = false;
-        }).catch((err) => {
+        }).catch(() => {
             this.loading.isActive = false;
         });
     },

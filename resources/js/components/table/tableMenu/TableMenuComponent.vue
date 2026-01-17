@@ -9,14 +9,14 @@
                         :class="category.id === itemProps.search.item_category_id || (category.id === 0 && itemProps.search.item_category_id === '') ? 'pos-group' : ''">
                         <router-link v-if="index === 0" to="" @click.prevent="allCategory(category)"
                             class="w-32 flex flex-col items-center text-center gap-4 p-3 rounded-2xl border-b-2 border-transparent transition hover:bg-primary-light bg-[#F7F7FC] overflow-hidden">
-                            <img class="h-10 drop-shadow-category" :src="category.thumb" alt="category">
+                            <img class="h-10 drop-shadow-category" :src="category.thumb" alt="category" loading="lazy">
                             <h3
                                 class="w-full text-xs leading-[16px] whitespace-nowrap overflow-hidden text-ellipsis font-medium font-rubik">
                                 {{ category.name }}</h3>
                         </router-link>
                         <router-link v-else to="" @click.prevent="setCategory(category.id, category.slug)"
                             class="w-32 flex flex-col items-center text-center gap-4 p-3 rounded-2xl border-b-2 border-transparent transition hover:bg-primary-light bg-[#F7F7FC] overflow-hidden">
-                            <img class="h-10 drop-shadow-category" :src="category.thumb" alt="category">
+                            <img class="h-10 drop-shadow-category" :src="category.thumb" alt="category" loading="lazy">
                             <h3
                                 class="w-full text-xs leading-[16px] whitespace-nowrap overflow-hidden text-ellipsis font-medium font-rubik">
                                 {{ category.name }}</h3>
@@ -61,13 +61,26 @@
                         :class="itemProps.property.design === enums.itemDesignEnum.GRID ? 'text-primary' : 'text-[#A0A3BD]'"></button>
                 </div>
             </div>
-            <ItemComponent v-if="items.length > 0" :items="items" :type="itemProps.property.type"
+            <ItemComponent v-if="sortedItems.length > 0" :items="sortedItems" :type="itemProps.property.type"
                 :design="itemProps.property.design" />
-            <div class="mt-12" v-else>
+            <div class="mt-12" v-else-if="!itemsLoading">
                 <div class="max-w-[250px] mx-auto">
                     <img class="w-full mb-8" :src="setting.image_order_not_found" alt="image_order_not_found">
                 </div>
                 <span class="w-full mb-4 text-center text-black">{{ $t('message.no_data_available') }}</span>
+            </div>
+
+            <div class="mt-6 flex justify-center">
+                <button
+                    v-if="hasMoreItems && !itemsLoading"
+                    type="button"
+                    @click.prevent="loadMoreItems"
+                    class="rounded-3xl px-6 py-2.5 text-sm font-medium text-white bg-primary hover:bg-primary-dark transition">
+                    {{ $te('button.load_more') ? $t('button.load_more') : 'Load more' }}
+                </button>
+                <div v-else-if="itemsLoading" class="text-sm text-gray-500">
+                    {{ $te('message.loading') ? $t('message.loading') : 'Loading...' }}
+                </div>
             </div>
         </div>
     </section>
@@ -148,6 +161,11 @@ export default {
             loading: {
                 isActive: false,
             },
+            itemsLoading: false,
+            itemsLimit: 30,
+            itemsOffset: 0,
+            hasMoreItems: false,
+            itemsLocal: [],
             category: {
                 id: 0,
                 name: this.$t('label.all') + ' ' + this.$t('label.items')
@@ -218,7 +236,7 @@ export default {
                 search: {
                     paginate: 0,
                     lite: 1,
-                    order_column: "category_sort",
+                    order_column: "id",
                     order_type: "asc",
                     item_category_id: ""
                 },
@@ -244,9 +262,6 @@ export default {
         categories: function () {
             return this.$store.getters["tableItemCategory/lists"];
         },
-        items: function () {
-            return this.$store.getters["frontendItem/lists"];
-        },
         setting: function () {
             return this.$store.getters['frontendSetting/lists'];
         },
@@ -255,11 +270,31 @@ export default {
         },
         paymentMethod: function () {
             return this.$store.getters['tableCart/paymentMethod'];
+        },
+        sortedItems: function () {
+            const items = this.itemsLocal || [];
+            const categories = this.categories || [];
+
+            const categorySortMap = new Map();
+            categories.forEach((c, idx) => {
+                const sortVal = (c && typeof c.sort !== 'undefined') ? Number(c.sort) : idx + 1;
+                categorySortMap.set(Number(c.id), isNaN(sortVal) ? (idx + 1) : sortVal);
+            });
+
+            return [...items].sort((a, b) => {
+                const aCat = Number(a.item_category_id || 0);
+                const bCat = Number(b.item_category_id || 0);
+                const aSort = categorySortMap.has(aCat) ? categorySortMap.get(aCat) : 999999;
+                const bSort = categorySortMap.has(bCat) ? categorySortMap.get(bCat) : 999999;
+                if (aSort !== bSort) return aSort - bSort;
+                if (aCat !== bCat) return aCat - bCat;
+                return Number(a.id) - Number(b.id);
+            });
         }
     },
     mounted() {
         this.loading.isActive = true;
-        this.itemList();
+        this.itemList(true);
         this.$store.dispatch("tableItemCategory/lists", this.categoryProps.search).then(res => {
             this.loading.isActive = false;
         }).catch((err) => {
@@ -292,11 +327,11 @@ export default {
                 id: 0,
                 name: category.name
             }
-            this.itemList();
+            this.itemList(true);
         },
         setCategory: function (id, slug = null) {
             this.itemProps.search.item_category_id = id;
-            this.itemList();
+            this.itemList(true);
             if (slug !== null) {
                 this.loading.isActive = true;
                 this.$store.dispatch("tableItemCategory/show", {
@@ -309,7 +344,7 @@ export default {
                 });
             }
         },
-        itemList: function () {
+        itemList: function (reset = false) {
             this.loading.isActive = true;
             const currentTable = this.$store.getters['tableCart/table'];
             const ensureTable = () => {
@@ -323,15 +358,40 @@ export default {
             };
 
             ensureTable().then((table) => {
-                if (table && table.branch_id) {
-                    this.itemProps.search.branch_id = table.branch_id;
+                if (reset) {
+                    this.itemsOffset = 0;
+                    this.itemsLocal = [];
+                    this.hasMoreItems = false;
                 }
-                return this.$store.dispatch("frontendItem/lists", this.itemProps.search);
-            }).then(() => {
+
+                this.itemsLoading = true;
+                const payload = {
+                    ...this.itemProps.search,
+                    branch_id: table?.branch_id || null,
+                    order_column: 'id', // fetch fast, then sort client-side by category sort
+                    order_type: 'asc',
+                    limit: this.itemsLimit,
+                    offset: this.itemsOffset,
+                    vuex: false,
+                };
+
+                return this.$store.dispatch("frontendItem/lists", payload);
+            }).then((res) => {
+                const newItems = res?.data?.data || [];
+                this.itemsLocal = [...this.itemsLocal, ...newItems];
+                this.itemsOffset += newItems.length;
+                this.hasMoreItems = newItems.length === this.itemsLimit;
+                this.itemsLoading = false;
                 this.loading.isActive = false;
             }).catch(() => {
+                this.itemsLoading = false;
                 this.loading.isActive = false;
             });
+        },
+        loadMoreItems: function () {
+            if (!this.itemsLoading && this.hasMoreItems) {
+                this.itemList(false);
+            }
         },
         itemTypeSet: function (e) {
             this.itemProps.property.type = e;
