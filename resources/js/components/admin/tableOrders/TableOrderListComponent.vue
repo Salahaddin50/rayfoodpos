@@ -568,8 +568,9 @@ export default {
             }
         },
         isDriverApplicable(order) {
-            // Only Takeaway and Delivery ("Online") orders have a driver.
-            return order && (order.order_type === this.enums.orderTypeEnum.TAKEAWAY || order.order_type === this.enums.orderTypeEnum.DELIVERY);
+            // Takeaway + Online orders only.
+            // In this table, "Online" is represented by `whatsapp_number`.
+            return !!(order && (order.order_type === this.enums.orderTypeEnum.TAKEAWAY || order.order_type === this.enums.orderTypeEnum.DELIVERY || order.whatsapp_number));
         },
         assignDriver(order, driverId) {
             if (!order) return;

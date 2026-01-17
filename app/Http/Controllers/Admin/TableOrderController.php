@@ -116,8 +116,11 @@ class TableOrderController extends AdminController
                 return response(['status' => false, 'message' => 'Driver can be assigned only when order is delivered.'], 422);
             }
 
-            if (!in_array((int) $order->order_type, [OrderType::TAKEAWAY, OrderType::DELIVERY], true)) {
-                return response(['status' => false, 'message' => 'Driver can be assigned only for takeaway or delivery orders.'], 422);
+            // Allow driver only for Takeaway and Online orders.
+            // In this project, online orders in the Table Orders screen are represented by `whatsapp_number`.
+            $isOnline = !empty($order->whatsapp_number);
+            if (!$isOnline && !in_array((int) $order->order_type, [OrderType::TAKEAWAY, OrderType::DELIVERY], true)) {
+                return response(['status' => false, 'message' => 'Driver can be assigned only for takeaway or online orders.'], 422);
             }
 
             $driverId = $request->input('driver_id');
