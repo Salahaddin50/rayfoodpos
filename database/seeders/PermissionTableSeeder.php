@@ -443,6 +443,48 @@ class PermissionTableSeeder extends Seeder
                 ]
             ],
             [
+                'title'      => 'Online Users',
+                'name'       => 'online_users',
+                'guard_name' => 'sanctum',
+                'url'        => 'online-users',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'title'      => 'Drivers',
+                'name'       => 'drivers',
+                'guard_name' => 'sanctum',
+                'url'        => 'drivers',
+                'created_at' => now(),
+                'updated_at' => now(),
+                'children'   => [
+                    [
+                        'title'      => 'Drivers Create',
+                        'name'       => 'drivers_create',
+                        'guard_name' => 'sanctum',
+                        'url'        => 'drivers/create',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ],
+                    [
+                        'title'      => 'Drivers Edit',
+                        'name'       => 'drivers_edit',
+                        'guard_name' => 'sanctum',
+                        'url'        => 'drivers/edit',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ],
+                    [
+                        'title'      => 'Drivers Delete',
+                        'name'       => 'drivers_delete',
+                        'guard_name' => 'sanctum',
+                        'url'        => 'drivers/delete',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ],
+                ]
+            ],
+            [
                 'title'      => 'Transactions',
                 'name'       => 'transactions',
                 'guard_name' => 'sanctum',

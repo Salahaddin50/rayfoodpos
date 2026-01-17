@@ -79,7 +79,9 @@
         "k_d_s": "K.D.S",
         "o_s_s": "O.S.S",
         "chefs": "Chefs",
-        "waiters": "Waiters"
+        "waiters": "Waiters",
+        "online_users": "Online Users",
+        "drivers": "Drivers"
     },
     "label": {
         "previous": "Previous",
@@ -103,6 +105,10 @@
         "not_available": "Not Available",
         "branch_specific_status": "Branch-specific status",
         "branch": "Branch",
+        "whatsapp_number": "WhatsApp Number",
+        "transport_type": "Transport Type",
+        "location": "Location",
+        "last_order": "Last Order",
         "role": "Role",
         "members": "Members",
         "permissions": "Permissions",

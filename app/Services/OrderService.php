@@ -34,6 +34,7 @@ use Dipokhalder\Settings\Facades\Settings;
 use App\Http\Requests\OrderStatusRequest;
 use App\Http\Requests\PaymentStatusRequest;
 use App\Http\Requests\TableOrderTokenRequest;
+use App\Services\OnlineUserService;
 
 class OrderService
 {
@@ -432,6 +433,10 @@ class OrderService
                 $this->order->delivery_time   = "$start - $end";
                 $this->order->save();
             });
+
+            // Persist WhatsApp/location into online_users for quick lookup in Admin → Users → Online Users.
+            // Includes dining-table orders as well if whatsapp_number is provided.
+            app(OnlineUserService::class)->upsertFromOrder($this->order);
             
             // Dispatch notifications after transaction commits to prevent checkout failure when notification services fail.
             // IMPORTANT: Some providers (e.g., Twilio) can throw TypeError (which is not an Exception), so we catch Throwable.

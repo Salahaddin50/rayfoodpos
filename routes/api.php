@@ -69,6 +69,8 @@ use App\Http\Controllers\Admin\OrderStatusScreenController;
 use App\Http\Controllers\Admin\CreditBalanceReportController;
 use App\Http\Controllers\Admin\AdministratorAddressController;
 use App\Http\Controllers\Admin\KitchenDisplaySystemController;
+use App\Http\Controllers\Admin\DriverController;
+use App\Http\Controllers\Admin\OnlineUserController;
 use App\Http\Controllers\Table\OrderController as TableOrderController;
 use App\Http\Controllers\Frontend\ItemController as FrontendItemController;
 use App\Http\Controllers\Frontend\PageController as FrontendPageController;
@@ -498,6 +500,17 @@ Route::prefix('admin')->name('admin.')->middleware(['installed', 'apiKey', 'auth
 
     Route::prefix('users')->name('users.')->group(function () {
         Route::get('/', [SimpleUserController::class, 'index']);
+    });
+
+    Route::prefix('online-users')->name('online-users.')->group(function () {
+        Route::get('/', [OnlineUserController::class, 'index']);
+    });
+
+    Route::prefix('drivers')->name('drivers.')->group(function () {
+        Route::get('/', [DriverController::class, 'index']);
+        Route::post('/', [DriverController::class, 'store']);
+        Route::match(['post', 'put', 'patch'], '/{driver}', [DriverController::class, 'update']);
+        Route::delete('/{driver}', [DriverController::class, 'destroy']);
     });
 
     Route::prefix('pos-category')->name('pos-category.')->group(function () {

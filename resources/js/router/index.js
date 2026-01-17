@@ -28,6 +28,8 @@ import orderStatusScreenRoutes from "./modules/orderStatusScreenRoutes";
 import waiterRoutes from "./modules/waiterRoutes";
 import chefRoutes from "./modules/chefRoutes";
 import onlineOrderRoutes from "./modules/onlineOrderRoutes";
+import onlineUserRoutes from "./modules/onlineUserRoutes";
+import driverRoutes from "./modules/driverRoutes";
 
 
 const baseRoutes = [
@@ -85,7 +87,9 @@ export const routes = baseRoutes.concat(
     orderStatusScreenRoutes,
     waiterRoutes,
     chefRoutes,
-    onlineOrderRoutes
+    onlineOrderRoutes,
+    onlineUserRoutes,
+    driverRoutes
 );
 
 const permission = store.getters.authPermission;

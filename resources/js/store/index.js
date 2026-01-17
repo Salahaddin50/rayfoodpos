@@ -74,6 +74,8 @@ import { chefAddress } from './modules/chefAddress';
 import { waiterAddress } from './modules/waiterAddress';
 import { token } from './modules/token';
 import { takeawayType } from './modules/takeawayType';
+import { onlineUser } from './modules/onlineUser';
+import { driver } from './modules/driver';
 
 
 export default new createStore({
@@ -153,7 +155,9 @@ export default new createStore({
         chefAddress,
         waiterAddress,
         token,
-        takeawayType
+        takeawayType,
+        onlineUser,
+        driver
     },
     plugins: [
         createPersistedState({
