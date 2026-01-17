@@ -13,20 +13,20 @@
                         <div class="text-xs text-gray-500" v-if="branch && branch.name">
                             {{ $t("label.branch") }}: <b class="font-medium">{{ branch.name }}</b>
                         </div>
-                        <div class="dropdown-group">
+                        <div v-if="permissionChecker('drivers')" class="dropdown-group">
                             <ExportComponent />
                             <div class="dropdown-list db-card-filter-dropdown-list transition-all duration-300 scale-y-0 origin-top">
                                 <ExcelComponent :method="xls" />
                             </div>
                         </div>
-                        <div class="dropdown-group">
+                        <div v-if="permissionChecker('drivers_create')" class="dropdown-group">
                             <ImportComponent />
                             <div class="dropdown-list db-card-filter-dropdown-list transition-all duration-300 scale-y-0 origin-top">
                                 <SampleFileComponent @click="downloadSample" />
                                 <UploadFileComponent :dataModal="'driverUpload'" @click="uploadModal('#driverUpload')" />
                             </div>
                         </div>
-                        <button class="db-btn py-2 text-white bg-primary" @click.prevent="openCreate">
+                        <button v-if="permissionChecker('drivers_create')" class="db-btn py-2 text-white bg-primary" @click.prevent="openCreate">
                             <i class="lab lab-add-circle-line lab-font-size-16"></i>
                             <span>{{ $t("button.add") }}</span>
                         </button>
@@ -41,6 +41,9 @@
                             <th class="db-table-head-th">{{ $t("label.name") }}</th>
                             <th class="db-table-head-th">{{ $t("label.transport_type") }}</th>
                             <th class="db-table-head-th">{{ $t("label.whatsapp_number") }}</th>
+                            <th class="db-table-head-th hidden-print" v-if="permissionChecker('drivers_edit') || permissionChecker('drivers_delete')">
+                                {{ $t("label.action") }}
+                            </th>
                         </tr>
                     </thead>
                     <tbody class="db-table-body" v-if="rows.length > 0">
@@ -48,6 +51,12 @@
                             <td class="db-table-body-td">{{ row.name }}</td>
                             <td class="db-table-body-td">{{ row.transport_type }}</td>
                             <td class="db-table-body-td"><span dir="ltr">{{ row.whatsapp }}</span></td>
+                            <td class="db-table-body-td hidden-print" v-if="permissionChecker('drivers_edit') || permissionChecker('drivers_delete')">
+                                <div class="flex justify-start items-center gap-1.5">
+                                    <SmIconModalEditComponent v-if="permissionChecker('drivers_edit')" @click="openEdit(row)" />
+                                    <SmIconDeleteComponent v-if="permissionChecker('drivers_delete')" @click="destroy(row.id)" />
+                                </div>
+                            </td>
                         </tr>
                     </tbody>
                     <tbody class="db-table-body" v-else>
@@ -64,7 +73,7 @@
         </div>
     </div>
 
-    <!-- UI-first modal (API wiring comes after DB + endpoints) -->
+    <!-- Create modal -->
     <div ref="createModal" class="modal ff-modal">
         <div class="modal-dialog max-w-[520px] p-0">
             <div class="modal-header p-4 border-b">
@@ -104,6 +113,46 @@
         </div>
     </div>
 
+    <!-- Edit modal -->
+    <div ref="editModal" class="modal ff-modal">
+        <div class="modal-dialog max-w-[520px] p-0">
+            <div class="modal-header p-4 border-b">
+                <h3 class="text-base font-medium">{{ $t("button.edit") }}</h3>
+                <button class="modal-close" @click.prevent="closeEdit">
+                    <i class="fa-regular fa-circle-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body p-4">
+                <form @submit.prevent="update">
+                    <div class="row">
+                        <div class="col-12 sm:col-6">
+                            <label class="db-field-title after:hidden">{{ $t("label.name") }}</label>
+                            <input v-model="editForm.name" type="text" class="db-field-control" />
+                        </div>
+                        <div class="col-12 sm:col-6">
+                            <label class="db-field-title after:hidden">{{ $t("label.transport_type") }}</label>
+                            <input v-model="editForm.transport_type" type="text" class="db-field-control" />
+                        </div>
+                        <div class="col-12">
+                            <label class="db-field-title after:hidden">{{ $t("label.whatsapp_number") }}</label>
+                            <input v-model="editForm.whatsapp" type="text" class="db-field-control" />
+                        </div>
+                        <div class="col-12">
+                            <div class="flex flex-wrap gap-3 mt-4">
+                                <button class="db-btn py-2 text-white bg-primary" type="submit">
+                                    <span>{{ $t("button.update") }}</span>
+                                </button>
+                                <button class="db-btn py-2 text-white bg-gray-600" type="button" @click.prevent="closeEdit">
+                                    <span>{{ $t("button.cancel") }}</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <DriverUploadComponent v-on:list="list" />
 </template>
 
@@ -117,6 +166,8 @@ import UploadFileComponent from "../components/buttons/import/UploadFileComponen
 import DriverUploadComponent from "./DriverUploadComponent.vue";
 import appService from "../../../services/appService";
 import alertService from "../../../services/alertService";
+import SmIconDeleteComponent from "../components/buttons/SmIconDeleteComponent.vue";
+import SmIconModalEditComponent from "../components/buttons/SmIconModalEditComponent.vue";
 
 export default {
     name: "DriverListComponent",
@@ -128,12 +179,20 @@ export default {
         SampleFileComponent,
         UploadFileComponent,
         DriverUploadComponent,
+        SmIconDeleteComponent,
+        SmIconModalEditComponent,
     },
     data() {
         return {
             loading: { isActive: false },
             rows: [],
             form: {
+                name: "",
+                transport_type: "",
+                whatsapp: "",
+            },
+            editId: null,
+            editForm: {
                 name: "",
                 transport_type: "",
                 whatsapp: "",
@@ -152,6 +211,9 @@ export default {
         this.list();
     },
     methods: {
+        permissionChecker(e) {
+            return appService.permissionChecker(e);
+        },
         list() {
             this.loading.isActive = true;
             this.$store
@@ -169,6 +231,18 @@ export default {
         },
         closeCreate() {
             appService.modalHide(this.$refs.createModal);
+        },
+        openEdit(row) {
+            this.editId = row.id;
+            this.editForm = {
+                name: row.name || "",
+                transport_type: row.transport_type || "",
+                whatsapp: row.whatsapp || "",
+            };
+            appService.modalShow(this.$refs.editModal);
+        },
+        closeEdit() {
+            appService.modalHide(this.$refs.editModal);
         },
         uploadModal(id) {
             appService.modalShow(id);
@@ -224,6 +298,33 @@ export default {
                     this.loading.isActive = false;
                     alertService.error(err?.response?.data?.message || "Failed to save driver");
                 });
+        },
+        update() {
+            if (!this.editId) return;
+            this.loading.isActive = true;
+            this.$store
+                .dispatch("driver/update", { id: this.editId, data: this.editForm })
+                .then(() => {
+                    this.loading.isActive = false;
+                    this.closeEdit();
+                    this.list();
+                })
+                .catch((err) => {
+                    this.loading.isActive = false;
+                    alertService.error(err?.response?.data?.message || "Failed to update driver");
+                });
+        },
+        destroy(id) {
+            appService.destroyConfirmation().then(() => {
+                this.loading.isActive = true;
+                this.$store.dispatch("driver/destroy", id).then(() => {
+                    this.loading.isActive = false;
+                    this.list();
+                }).catch((err) => {
+                    this.loading.isActive = false;
+                    alertService.error(err?.response?.data?.message || "Failed to delete driver");
+                });
+            });
         },
     },
 };

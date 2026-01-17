@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ImportFileRequest;
+use App\Http\Requests\OnlineUserRequest;
 use App\Http\Resources\OnlineUserResource;
 use App\Exports\OnlineUserExport;
 use App\Exports\OnlineUserSampleExport;
 use App\Imports\OnlineUserImport;
 use App\Models\OnlineUser;
 use App\Services\OnlineUserService;
+use App\Traits\DefaultAccessModelTrait;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -18,6 +20,8 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class OnlineUserController extends Controller implements HasMiddleware
 {
+    use DefaultAccessModelTrait;
+
     public function __construct(private readonly OnlineUserService $onlineUserService)
     {
     }
@@ -27,6 +31,9 @@ class OnlineUserController extends Controller implements HasMiddleware
         return [
             // Only admins can access this section (per requirement).
             new Middleware('permission:online_users', only: ['index', 'export', 'downloadSample', 'import']),
+            new Middleware('permission:online_users_create', only: ['store']),
+            new Middleware('permission:online_users_edit', only: ['update']),
+            new Middleware('permission:online_users_delete', only: ['destroy']),
         ];
     }
 
@@ -71,6 +78,41 @@ class OnlineUserController extends Controller implements HasMiddleware
             Excel::import(new OnlineUserImport(), $request->file('file'));
             return response('', 202);
         } catch (Exception $exception) {
+            return response(['status' => false, 'message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function store(OnlineUserRequest $request)
+    {
+        try {
+            $data = $request->validated();
+            $onlineUser = OnlineUser::create([
+                'branch_id' => $this->branch(),
+                'whatsapp'  => $data['whatsapp'],
+                'location'  => $data['location'] ?? null,
+            ]);
+            return new OnlineUserResource($onlineUser);
+        } catch (\Throwable $exception) {
+            return response(['status' => false, 'message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function update(OnlineUserRequest $request, OnlineUser $onlineUser)
+    {
+        try {
+            $onlineUser->update($request->validated());
+            return new OnlineUserResource($onlineUser->fresh());
+        } catch (\Throwable $exception) {
+            return response(['status' => false, 'message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function destroy(OnlineUser $onlineUser)
+    {
+        try {
+            $onlineUser->delete();
+            return response(['status' => true]);
+        } catch (\Throwable $exception) {
             return response(['status' => false, 'message' => $exception->getMessage()], 422);
         }
     }

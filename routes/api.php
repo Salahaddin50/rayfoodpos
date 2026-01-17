@@ -507,6 +507,9 @@ Route::prefix('admin')->name('admin.')->middleware(['installed', 'apiKey', 'auth
         Route::get('/export', [OnlineUserController::class, 'export']);
         Route::get('/download-sample', [OnlineUserController::class, 'downloadSample']);
         Route::post('/import/file', [OnlineUserController::class, 'import']);
+        Route::post('/', [OnlineUserController::class, 'store']);
+        Route::match(['post', 'put', 'patch'], '/{onlineUser}', [OnlineUserController::class, 'update']);
+        Route::delete('/{onlineUser}', [OnlineUserController::class, 'destroy']);
     });
 
     Route::prefix('drivers')->name('drivers.')->group(function () {

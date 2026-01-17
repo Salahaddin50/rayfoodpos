@@ -54,6 +54,30 @@ export const onlineUser = {
                 }).catch((err) => reject(err));
             });
         },
+        store: function (context, payload) {
+            return new Promise((resolve, reject) => {
+                axios
+                    .post("admin/online-users", payload)
+                    .then((res) => resolve(res))
+                    .catch((err) => reject(err));
+            });
+        },
+        update: function (context, payload) {
+            return new Promise((resolve, reject) => {
+                axios
+                    .post(`admin/online-users/${payload.id}`, payload.data)
+                    .then((res) => resolve(res))
+                    .catch((err) => reject(err));
+            });
+        },
+        destroy: function (context, payload) {
+            return new Promise((resolve, reject) => {
+                axios
+                    .delete(`admin/online-users/${payload}`)
+                    .then((res) => resolve(res))
+                    .catch((err) => reject(err));
+            });
+        },
     },
     mutations: {
         lists: function (state, payload) {
