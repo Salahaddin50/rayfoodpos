@@ -19,7 +19,7 @@ class SettingController extends Controller
         $this->settingService = $settingService;
     }
 
-    public function index() : \Illuminate\Http\Response | SettingResource | \Illuminate\Contracts\Foundation\Application | \Illuminate\Contracts\Routing\ResponseFactory
+    public function index() : \Illuminate\Http\Response | \Illuminate\Http\JsonResponse | SettingResource | \Illuminate\Contracts\Foundation\Application | \Illuminate\Contracts\Routing\ResponseFactory
     {
         try {
             $start = microtime(true);

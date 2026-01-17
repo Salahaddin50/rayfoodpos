@@ -25,7 +25,7 @@ class ItemController extends Controller
 
     public function index(
         PaginateRequest $request
-    ): \Illuminate\Http\Response | \Illuminate\Http\Resources\Json\AnonymousResourceCollection | \Illuminate\Contracts\Foundation\Application | \Illuminate\Contracts\Routing\ResponseFactory {
+    ): \Illuminate\Http\Response | \Illuminate\Http\JsonResponse | \Illuminate\Http\Resources\Json\AnonymousResourceCollection | \Illuminate\Contracts\Foundation\Application | \Illuminate\Contracts\Routing\ResponseFactory {
         try {
             $start = microtime(true);
 
