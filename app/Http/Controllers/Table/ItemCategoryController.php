@@ -12,6 +12,7 @@ use App\Services\ItemCategoryService;
 use App\Http\Requests\PaginateRequest;
 use App\Http\Resources\ItemCategoryResource;
 use Illuminate\Support\Facades\Cache;
+use Throwable;
 
 
 class ItemCategoryController extends Controller
@@ -37,9 +38,44 @@ class ItemCategoryController extends Controller
             // can sort items client-side without an expensive DB join.
             if ((int) $request->get('paginate', 0) === 0) {
                 $cacheKey = 'table:item-category:' . md5($request->fullUrl());
-                $cacheHit = Cache::has($cacheKey);
+                try {
+                    $cacheHit = Cache::has($cacheKey);
 
-                $payload = Cache::remember($cacheKey, 300, function () use ($request) {
+                    $payload = Cache::remember($cacheKey, 300, function () use ($request) {
+                        $itemCategoryArray = [];
+                        $itemCategories    = $this->itemCategoryService->list($request);
+                        $allCategory[]     = [
+                            'id'     => 0,
+                            'name'   => trans('all.label.all_items'),
+                            'slug'   => 'all-items',
+                            'description' => "",
+                            'status' => Status::ACTIVE,
+                            'sort'   => 0,
+                            'thumb'  => asset("images/default/all-category.png"),
+                            'cover'  => asset("images/default/all-category.png")
+                        ];
+                        foreach ($itemCategories as $itemCategory) {
+                            $itemCategoryArray[] = [
+                                'id'          => $itemCategory->id,
+                                'name'        => $itemCategory->name,
+                                'slug'        => $itemCategory->slug,
+                                'description' => $itemCategory->description === null ? '' : $itemCategory->description,
+                                'status'      => $itemCategory->status,
+                                'sort'        => (int) ($itemCategory->sort ?? 0),
+                                'thumb'       => $itemCategory->thumb,
+                                'cover'       => $itemCategory->cover
+                            ];
+                        }
+                        return ['data' => array_merge($allCategory, $itemCategoryArray)];
+                    });
+
+                    $durMs = (microtime(true) - $start) * 1000;
+                    return response()
+                        ->json($payload)
+                        ->header('Cache-Control', 'public, max-age=300')
+                        ->header('Server-Timing', 'app;dur=' . round($durMs, 2) . ', cache;desc=' . ($cacheHit ? 'hit' : 'miss'));
+                } catch (Throwable $e) {
+                    // Fail-safe: if cache isn't available, keep endpoint working.
                     $itemCategoryArray = [];
                     $itemCategories    = $this->itemCategoryService->list($request);
                     $allCategory[]     = [
@@ -64,13 +100,12 @@ class ItemCategoryController extends Controller
                             'cover'       => $itemCategory->cover
                         ];
                     }
-                    return ['data' => array_merge($allCategory, $itemCategoryArray)];
-                });
 
-                $durMs = (microtime(true) - $start) * 1000;
-                return response($payload)
-                    ->header('Cache-Control', 'public, max-age=300')
-                    ->header('Server-Timing', 'app;dur=' . round($durMs, 2) . ', cache;desc=' . ($cacheHit ? 'hit' : 'miss'));
+                    $durMs = (microtime(true) - $start) * 1000;
+                    return response()
+                        ->json(['data' => array_merge($allCategory, $itemCategoryArray)])
+                        ->header('Server-Timing', 'app;dur=' . round($durMs, 2) . ', cache;desc=disabled');
+                }
             }
 
             $itemCategoryArray = [];

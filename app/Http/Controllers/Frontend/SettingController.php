@@ -8,6 +8,7 @@ use App\Services\SettingService;
 use Exception;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Cache;
+use Throwable;
 
 class SettingController extends Controller
 {
@@ -23,19 +24,28 @@ class SettingController extends Controller
         try {
             $start = microtime(true);
             $cacheKey = 'frontend:setting';
-            $cacheHit = Cache::has($cacheKey);
+            try {
+                $cacheHit = Cache::has($cacheKey);
+                $payload = Cache::remember($cacheKey, 300, function () {
+                    return (new SettingResource($this->settingService->list()))
+                        ->response()
+                        ->getData(true);
+                });
 
-            $payload = Cache::remember($cacheKey, 300, function () {
-                return (new SettingResource($this->settingService->list()))
-                    ->response()
-                    ->getData(true);
-            });
-
-            $durMs = (microtime(true) - $start) * 1000;
-            return response()
-                ->json($payload)
-                ->header('Cache-Control', 'public, max-age=300')
-                ->header('Server-Timing', 'app;dur=' . round($durMs, 2) . ', cache;desc=' . ($cacheHit ? 'hit' : 'miss'));
+                $durMs = (microtime(true) - $start) * 1000;
+                return response()
+                    ->json($payload)
+                    ->header('Cache-Control', 'public, max-age=300')
+                    ->header('Server-Timing', 'app;dur=' . round($durMs, 2) . ', cache;desc=' . ($cacheHit ? 'hit' : 'miss'));
+            } catch (Throwable $e) {
+                // Fail-safe: if cache store is misconfigured/unavailable in an environment,
+                // do not break the endpoint.
+                $res = new SettingResource($this->settingService->list());
+                $durMs = (microtime(true) - $start) * 1000;
+                return $res->additional([])->response()->withHeaders([
+                    'Server-Timing' => 'app;dur=' . round($durMs, 2) . ', cache;desc=disabled'
+                ]);
+            }
         } catch (Exception $exception) {
             return response(['status' => false, 'message' => $exception->getMessage()], 422);
         }

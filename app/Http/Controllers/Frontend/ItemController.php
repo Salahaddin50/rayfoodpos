@@ -11,6 +11,7 @@ use App\Http\Requests\PaginateRequest;
 use App\Http\Resources\NormalItemResource;
 use App\Http\Resources\SimpleItemResource;
 use Illuminate\Support\Facades\Cache;
+use Throwable;
 
 class ItemController extends Controller
 {
@@ -34,19 +35,27 @@ class ItemController extends Controller
                 // Biggest perf win without changing UI: cache the heavy "lite + non-paginated" menu list briefly.
                 if ((int) $request->get('paginate', 0) === 0) {
                     $cacheKey = 'frontend:item:lite:' . md5($request->fullUrl());
-                    $cacheHit = Cache::has($cacheKey);
+                    try {
+                        $cacheHit = Cache::has($cacheKey);
+                        $payload = Cache::remember($cacheKey, 60, function () use ($request) {
+                            return SimpleItemResource::collection($this->itemService->list($request))
+                                ->response()
+                                ->getData(true);
+                        });
 
-                    $payload = Cache::remember($cacheKey, 60, function () use ($request) {
-                        return SimpleItemResource::collection($this->itemService->list($request))
-                            ->response()
-                            ->getData(true);
-                    });
-
-                    $durMs = (microtime(true) - $start) * 1000;
-                    return response()
-                        ->json($payload)
-                        ->header('Cache-Control', 'public, max-age=60')
-                        ->header('Server-Timing', 'app;dur=' . round($durMs, 2) . ', cache;desc=' . ($cacheHit ? 'hit' : 'miss'));
+                        $durMs = (microtime(true) - $start) * 1000;
+                        return response()
+                            ->json($payload)
+                            ->header('Cache-Control', 'public, max-age=60')
+                            ->header('Server-Timing', 'app;dur=' . round($durMs, 2) . ', cache;desc=' . ($cacheHit ? 'hit' : 'miss'));
+                    } catch (Throwable $e) {
+                        // Fail-safe: don't break menu loading if cache is unavailable.
+                        $res = SimpleItemResource::collection($this->itemService->list($request));
+                        $durMs = (microtime(true) - $start) * 1000;
+                        return $res->additional([])->response()->withHeaders([
+                            'Server-Timing' => 'app;dur=' . round($durMs, 2) . ', cache;desc=disabled'
+                        ]);
+                    }
                 }
 
                 $res = SimpleItemResource::collection($this->itemService->list($request));

@@ -9,6 +9,7 @@ use App\Http\Requests\PaginateRequest;
 use App\Http\Resources\BranchResource;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Cache;
+use Throwable;
 
 class BranchController extends Controller
 {
@@ -27,19 +28,26 @@ class BranchController extends Controller
             // Cache non-paginated branch lists briefly (used by online branch selector/menu).
             if ((int) $request->get('paginate', 0) === 0) {
                 $cacheKey = 'frontend:branch:' . md5($request->fullUrl());
-                $cacheHit = Cache::has($cacheKey);
+                try {
+                    $cacheHit = Cache::has($cacheKey);
+                    $payload = Cache::remember($cacheKey, 300, function () use ($request) {
+                        return BranchResource::collection($this->branchService->list($request))
+                            ->response()
+                            ->getData(true);
+                    });
 
-                $payload = Cache::remember($cacheKey, 300, function () use ($request) {
-                    return BranchResource::collection($this->branchService->list($request))
-                        ->response()
-                        ->getData(true);
-                });
-
-                $durMs = (microtime(true) - $start) * 1000;
-                return response()
-                    ->json($payload)
-                    ->header('Cache-Control', 'public, max-age=300')
-                    ->header('Server-Timing', 'app;dur=' . round($durMs, 2) . ', cache;desc=' . ($cacheHit ? 'hit' : 'miss'));
+                    $durMs = (microtime(true) - $start) * 1000;
+                    return response()
+                        ->json($payload)
+                        ->header('Cache-Control', 'public, max-age=300')
+                        ->header('Server-Timing', 'app;dur=' . round($durMs, 2) . ', cache;desc=' . ($cacheHit ? 'hit' : 'miss'));
+                } catch (Throwable $e) {
+                    $res = BranchResource::collection($this->branchService->list($request));
+                    $durMs = (microtime(true) - $start) * 1000;
+                    return $res->additional([])->response()->withHeaders([
+                        'Server-Timing' => 'app;dur=' . round($durMs, 2) . ', cache;desc=disabled'
+                    ]);
+                }
             }
 
             $res = BranchResource::collection($this->branchService->list($request));
