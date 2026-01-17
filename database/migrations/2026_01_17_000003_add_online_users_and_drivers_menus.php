@@ -35,7 +35,7 @@ return new class extends Migration
                 'name'       => 'Drivers',
                 'language'   => 'drivers',
                 'url'        => 'drivers',
-                'icon'       => 'lab lab-delivery-boy',
+                'icon'       => 'lab lab-delivery-boys',
                 'priority'   => 100,
                 'status'     => 1,
                 'parent'     => $usersMenu->id,

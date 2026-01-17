@@ -5,7 +5,7 @@
         <div class="db-card">
             <div class="db-card-header border-none">
                 <h3 class="db-card-title flex items-center gap-2">
-                    <i class="lab lab-delivery-boy lab-font-size-20"></i>
+                    <i class="lab lab-delivery-boys lab-font-size-20"></i>
                     <span>{{ $t("menu.drivers") }}</span>
                 </h3>
                 <div class="db-card-filter">

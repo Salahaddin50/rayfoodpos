@@ -16,7 +16,7 @@ return new class extends Migration
                   ->orWhere('icon', 'lab')
                   ->orWhere('icon', 'lab ');
             })
-            ->update(['icon' => 'lab lab-delivery-boy']);
+            ->update(['icon' => 'lab lab-delivery-boys']);
     }
 
     public function down(): void
