@@ -139,14 +139,17 @@ class PosOrderController extends AdminController
             $whatsappLink = null;
             if ($driverId) {
                 try {
+                    \Illuminate\Support\Facades\Log::warning("PosOrderController assignDriver: Creating notification builder for order {$order->id}, driver_id: {$driverId}");
                     $notificationBuilder = new \App\Services\DriverAssignedWhatsAppNotificationBuilder($order);
                     // Send automatic WhatsApp/SMS via gateway
                     $notificationBuilder->send();
                     // Also generate WhatsApp link for opening WhatsApp app/web
+                    \Illuminate\Support\Facades\Log::warning("PosOrderController assignDriver: Calling getWhatsAppLink() for order {$order->id}");
                     $whatsappLink = $notificationBuilder->getWhatsAppLink();
+                    \Illuminate\Support\Facades\Log::warning("PosOrderController assignDriver: getWhatsAppLink() returned: " . var_export($whatsappLink, true));
                 } catch (\Throwable $e) {
                     // Log error but don't fail driver assignment if WhatsApp fails
-                    \Illuminate\Support\Facades\Log::warning("Driver WhatsApp notification failed for order {$order->id}: " . $e->getMessage());
+                    \Illuminate\Support\Facades\Log::warning("Driver WhatsApp notification failed for order {$order->id}: " . $e->getMessage() . " | Stack trace: " . $e->getTraceAsString());
                 }
             }
 
