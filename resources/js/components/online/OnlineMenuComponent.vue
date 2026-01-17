@@ -185,7 +185,7 @@ export default {
             itemProps: {
                 search: {
                     paginate: 0,
-                    order_column: "id",
+                    order_column: "category_sort",
                     order_type: "asc",
                     item_category_id: "",
                     branch_id: null

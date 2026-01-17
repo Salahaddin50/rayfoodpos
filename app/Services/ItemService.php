@@ -61,14 +61,14 @@ class ItemService
                             $explodes = explode('|', $request);
                             if (count($explodes)) {
                                 foreach ($explodes as $explode) {
-                                    $query->where('id', '!=', $explode);
+                                    $query->where('items.id', '!=', $explode);
                                 }
                             }
                         } else {
                             if ($key == "item_category_id") {
-                                $query->where($key, $request);
+                                $query->where('items.item_category_id', $request);
                             } else {
-                                $query->where($key, 'like', '%' . $request . '%');
+                                $query->where('items.' . $key, 'like', '%' . $request . '%');
                             }
                         }
                     }
@@ -83,13 +83,24 @@ class ItemService
                             // No override for this branch, fall back to global item status
                             $fallback->whereDoesntHave('branchItemStatuses', function ($bis) use ($branchId) {
                                 $bis->where('branch_id', $branchId);
-                            })->where('status', $statusFilter);
+                            })->where('items.status', $statusFilter);
                         });
                     } else {
-                        $sub->where('status', $statusFilter);
+                        $sub->where('items.status', $statusFilter);
                     }
                 });
-            })->orderBy($orderColumn, $orderType);
+            });
+
+            // Special ordering: allow ordering items by their category's sort value
+            // (used by POS /menu and Online menu so items appear grouped by category order).
+            if ($orderColumn === 'category_sort') {
+                $query->leftJoin('item_categories', 'items.item_category_id', '=', 'item_categories.id')
+                    ->select('items.*')
+                    ->orderBy('item_categories.sort', $orderType)
+                    ->orderBy('items.id', 'asc');
+            } else {
+                $query->orderBy($orderColumn, $orderType);
+            }
 
             return $query->$method($methodValue);
         } catch (Exception $exception) {
