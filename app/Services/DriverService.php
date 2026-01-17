@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Driver;
+use App\Support\WhatsAppNormalizer;
 use App\Traits\DefaultAccessModelTrait;
 use Exception;
 use Illuminate\Support\Facades\Log;
@@ -39,6 +40,15 @@ class DriverService
     {
         try {
             $data['branch_id'] = $this->branch();
+            if (isset($data['whatsapp'])) {
+                $data['whatsapp'] = WhatsAppNormalizer::normalize($data['whatsapp']);
+            }
+            $exists = Driver::where('branch_id', $data['branch_id'])
+                ->where('whatsapp', $data['whatsapp'])
+                ->exists();
+            if ($exists) {
+                throw new Exception("WhatsApp number already exists", 422);
+            }
             return Driver::create($data);
         } catch (Exception $exception) {
             Log::info($exception->getMessage());
@@ -52,6 +62,16 @@ class DriverService
     public function update(Driver $driver, array $data): Driver
     {
         try {
+            if (isset($data['whatsapp'])) {
+                $data['whatsapp'] = WhatsAppNormalizer::normalize($data['whatsapp']);
+                $dup = Driver::where('branch_id', $driver->branch_id)
+                    ->where('whatsapp', $data['whatsapp'])
+                    ->where('id', '!=', $driver->id)
+                    ->exists();
+                if ($dup) {
+                    throw new Exception("WhatsApp number already exists", 422);
+                }
+            }
             $driver->update($data);
             return $driver->fresh();
         } catch (Exception $exception) {

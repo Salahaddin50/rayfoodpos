@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\Source;
 use App\Models\FrontendOrder;
 use App\Models\OnlineUser;
+use App\Support\WhatsAppNormalizer;
 use App\Traits\DefaultAccessModelTrait;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -21,7 +22,7 @@ class OnlineUserService
     public function upsertFromOrder(FrontendOrder $order): void
     {
         try {
-            $whatsapp = trim((string) ($order->whatsapp_number ?? ''));
+            $whatsapp = WhatsAppNormalizer::normalize($order->whatsapp_number ?? null);
             if ($whatsapp === '') {
                 return;
             }
@@ -88,9 +89,13 @@ class OnlineUserService
                 ])
                 ->get()
                 ->map(function ($r) {
+                    $whatsapp = WhatsAppNormalizer::normalize($r->whatsapp ?? null);
+                    if ($whatsapp === '') {
+                        return null;
+                    }
                     return [
                         'branch_id'     => (int) $r->branch_id,
-                        'whatsapp'      => (string) $r->whatsapp,
+                        'whatsapp'      => $whatsapp,
                         'location'      => $r->location,
                         'last_order_id' => (int) $r->last_order_id,
                         'last_order_at' => $r->last_order_at,
@@ -98,6 +103,7 @@ class OnlineUserService
                         'updated_at'    => now(),
                     ];
                 })
+                ->filter()
                 ->values()
                 ->all();
 

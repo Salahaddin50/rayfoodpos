@@ -11,6 +11,7 @@ use App\Exports\OnlineUserSampleExport;
 use App\Imports\OnlineUserImport;
 use App\Models\OnlineUser;
 use App\Services\OnlineUserService;
+use App\Support\WhatsAppNormalizer;
 use App\Traits\DefaultAccessModelTrait;
 use Exception;
 use Illuminate\Http\Request;
@@ -86,9 +87,21 @@ class OnlineUserController extends Controller implements HasMiddleware
     {
         try {
             $data = $request->validated();
+
+            $branchId = $this->branch();
+            $whatsapp = WhatsAppNormalizer::normalize($data['whatsapp'] ?? null);
+            if ($whatsapp === '') {
+                return response(['status' => false, 'message' => 'Invalid WhatsApp number'], 422);
+            }
+
+            $exists = OnlineUser::where('branch_id', $branchId)->where('whatsapp', $whatsapp)->exists();
+            if ($exists) {
+                return response(['status' => false, 'message' => 'WhatsApp number already exists'], 422);
+            }
+
             $onlineUser = OnlineUser::create([
-                'branch_id' => $this->branch(),
-                'whatsapp'  => $data['whatsapp'],
+                'branch_id' => $branchId,
+                'whatsapp'  => $whatsapp,
                 'location'  => $data['location'] ?? null,
             ]);
             return new OnlineUserResource($onlineUser);
@@ -100,7 +113,26 @@ class OnlineUserController extends Controller implements HasMiddleware
     public function update(OnlineUserRequest $request, OnlineUser $onlineUser)
     {
         try {
-            $onlineUser->update($request->validated());
+            $data = $request->validated();
+            $branchId = $this->branch();
+
+            $whatsapp = WhatsAppNormalizer::normalize($data['whatsapp'] ?? null);
+            if ($whatsapp === '') {
+                return response(['status' => false, 'message' => 'Invalid WhatsApp number'], 422);
+            }
+
+            $duplicate = OnlineUser::where('branch_id', $branchId)
+                ->where('whatsapp', $whatsapp)
+                ->where('id', '!=', $onlineUser->id)
+                ->exists();
+            if ($duplicate) {
+                return response(['status' => false, 'message' => 'WhatsApp number already exists'], 422);
+            }
+
+            $onlineUser->update([
+                'whatsapp' => $whatsapp,
+                'location' => $data['location'] ?? null,
+            ]);
             return new OnlineUserResource($onlineUser->fresh());
         } catch (\Throwable $exception) {
             return response(['status' => false, 'message' => $exception->getMessage()], 422);

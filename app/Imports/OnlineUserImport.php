@@ -3,6 +3,7 @@
 namespace App\Imports;
 
 use App\Models\OnlineUser;
+use App\Support\WhatsAppNormalizer;
 use App\Traits\DefaultAccessModelTrait;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
@@ -18,8 +19,11 @@ class OnlineUserImport implements ToModel, WithHeadingRow, WithValidation, Skips
 
     public function model(array $row)
     {
-        $whatsapp = trim((string) ($row['whatsapp'] ?? ''));
+        $whatsapp = WhatsAppNormalizer::normalize($row['whatsapp'] ?? null);
         $location = isset($row['location']) ? trim((string) $row['location']) : null;
+        if ($whatsapp === '') {
+            return null;
+        }
 
         return OnlineUser::updateOrCreate(
             [

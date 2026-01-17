@@ -4,6 +4,7 @@ namespace App\Imports;
 
 use App\Models\Driver;
 use App\Services\DriverService;
+use App\Support\WhatsAppNormalizer;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
@@ -24,8 +25,11 @@ class DriverImport implements ToModel, WithHeadingRow, WithValidation, SkipsOnFa
     {
         $name = trim((string) ($row['name'] ?? ''));
         $transport = trim((string) ($row['transport_type'] ?? ''));
-        $whatsapp = trim((string) ($row['whatsapp'] ?? ''));
+        $whatsapp = WhatsAppNormalizer::normalize($row['whatsapp'] ?? null);
         $status = isset($row['status']) && $row['status'] !== '' ? (int) $row['status'] : 1;
+        if ($whatsapp === '') {
+            return null;
+        }
 
         // Upsert by branch + whatsapp (simple, avoids duplicates per branch)
         return Driver::updateOrCreate(

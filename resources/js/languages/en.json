@@ -653,6 +653,7 @@
     "button": {
         "add": "Add",
         "save": "Save",
+        "update": "Update",
         "edit": "Edit",
         "delete": "Delete",
         "view": "View",
