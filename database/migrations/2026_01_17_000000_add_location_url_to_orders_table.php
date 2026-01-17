@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('orders', function (Blueprint $table) {
-            $table->string('location_url')->nullable()->after('whatsapp_number');
-        });
+        if (!Schema::hasColumn('orders', 'location_url')) {
+            Schema::table('orders', function (Blueprint $table) {
+                $table->string('location_url')->nullable()->after('whatsapp_number');
+            });
+        }
     }
 
     /**
@@ -21,9 +23,11 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('orders', function (Blueprint $table) {
-            $table->dropColumn('location_url');
-        });
+        if (Schema::hasColumn('orders', 'location_url')) {
+            Schema::table('orders', function (Blueprint $table) {
+                $table->dropColumn('location_url');
+            });
+        }
     }
 };
 

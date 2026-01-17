@@ -13,9 +13,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('orders', function (Blueprint $table) {
-            $table->string('whatsapp_number', 20)->nullable()->after('dining_table_id');
-        });
+        if (!Schema::hasColumn('orders', 'whatsapp_number')) {
+            Schema::table('orders', function (Blueprint $table) {
+                $table->string('whatsapp_number', 20)->nullable()->after('dining_table_id');
+            });
+        }
     }
 
     /**
@@ -25,9 +27,11 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('orders', function (Blueprint $table) {
-            $table->dropColumn('whatsapp_number');
-        });
+        if (Schema::hasColumn('orders', 'whatsapp_number')) {
+            Schema::table('orders', function (Blueprint $table) {
+                $table->dropColumn('whatsapp_number');
+            });
+        }
     }
 };
 
