@@ -550,6 +550,22 @@ export default {
                 this.loading.isActive = false;
                 if (driverId) {
                     alertService.success(this.$t('message.driver_added') || 'Driver Added Successfully.');
+                    // Open WhatsApp app/web with pre-filled message if link is available
+                    if (data?.whatsapp_link) {
+                        console.log('Opening WhatsApp with link:', data.whatsapp_link);
+                        // Use setTimeout to avoid popup blocker, or create a click event
+                        setTimeout(() => {
+                            const link = document.createElement('a');
+                            link.href = data.whatsapp_link;
+                            link.target = '_blank';
+                            link.rel = 'noopener noreferrer';
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                        }, 100);
+                    } else {
+                        console.warn('WhatsApp link not found in response:', data);
+                    }
                 } else {
                     alertService.successFlip(null, this.$t('label.driver') || 'Driver');
                 }

@@ -19,8 +19,8 @@ class DriverAssignedWhatsAppNotificationBuilder
     public function send(): void
     {
         try {
-            // Reload order with driver relationship
-            $order = $this->order->load('driver');
+            // Refresh order from database and load driver relationship
+            $order = $this->order->fresh()->load('driver');
             
             // Check if order has a driver with WhatsApp number
             if (blank($order->driver) || blank($order->driver->whatsapp)) {
@@ -49,11 +49,18 @@ class DriverAssignedWhatsAppNotificationBuilder
     public function getWhatsAppLink(): ?string
     {
         try {
-            // Reload order with driver relationship
-            $order = $this->order->load('driver');
+            // Refresh order from database and load driver relationship
+            $order = $this->order->fresh()->load('driver');
             
-            // Check if order has a driver with WhatsApp number
-            if (blank($order->driver) || blank($order->driver->whatsapp)) {
+            // Check if order has a driver
+            if (blank($order->driver)) {
+                Log::warning("DriverAssignedWhatsAppNotificationBuilder: Order {$order->id} has no driver");
+                return null;
+            }
+            
+            // Check if driver has WhatsApp number
+            if (blank($order->driver->whatsapp)) {
+                Log::warning("DriverAssignedWhatsAppNotificationBuilder: Driver ID {$order->driver->id} has no WhatsApp number");
                 return null;
             }
 
@@ -62,6 +69,7 @@ class DriverAssignedWhatsAppNotificationBuilder
             $parsed = $this->parseWhatsAppNumber($whatsapp);
             
             if (blank($parsed['code']) || blank($parsed['phone'])) {
+                Log::warning("DriverAssignedWhatsAppNotificationBuilder: Failed to parse WhatsApp number for driver ID {$order->driver->id}: {$whatsapp}");
                 return null;
             }
 
