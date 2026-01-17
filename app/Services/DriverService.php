@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\Status;
 use App\Models\Driver;
 use App\Support\WhatsAppNormalizer;
 use App\Traits\DefaultAccessModelTrait;
@@ -23,7 +24,13 @@ class DriverService
             $status      = $search['status'] ?? null;
 
             $query = Driver::query()
-                ->when($status !== null, fn ($q) => $q->where('status', $status))
+                // Backward-compat: some environments have legacy drivers.status=1 meaning "active".
+                ->when($status !== null, function ($q) use ($status) {
+                    if ((int) $status === Status::ACTIVE) {
+                        return $q->whereIn('status', [1, Status::ACTIVE]);
+                    }
+                    return $q->where('status', $status);
+                })
                 ->orderBy($orderColumn, $orderType);
 
             return $query->get();
@@ -40,6 +47,9 @@ class DriverService
     {
         try {
             $data['branch_id'] = $this->branch();
+            if (!isset($data['status']) || $data['status'] === null || $data['status'] === '') {
+                $data['status'] = Status::ACTIVE;
+            }
             if (isset($data['whatsapp'])) {
                 $data['whatsapp'] = WhatsAppNormalizer::normalize($data['whatsapp']);
             }
