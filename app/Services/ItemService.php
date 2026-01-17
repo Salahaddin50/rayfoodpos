@@ -128,6 +128,11 @@ class ItemService
                         $sub->where('branch_id', $branchId);
                     }]);
                 })
+                // Join categories for category-based sorting
+                ->when($orderColumn === 'category_sort', function ($q) {
+                    $q->leftJoin('item_categories', 'items.item_category_id', '=', 'item_categories.id')
+                      ->select('items.*');
+                })
                 ->where(function ($query) use ($requests) {
                 foreach ($requests as $key => $request) {
                     if (in_array($key, $this->itemFilter)) {
@@ -135,14 +140,14 @@ class ItemService
                             $explodes = explode('|', $request);
                             if (count($explodes)) {
                                 foreach ($explodes as $explode) {
-                                    $query->where('id', '!=', $explode);
+                                    $query->where('items.id', '!=', $explode);
                                 }
                             }
                         } else {
                             if ($key == "item_category_id") {
-                                $query->where($key, $request);
+                                $query->where('items.' . $key, $request);
                             } else {
-                                $query->where($key, 'like', '%' . $request . '%');
+                                $query->where('items.' . $key, 'like', '%' . $request . '%');
                             }
                         }
                     }
@@ -157,13 +162,21 @@ class ItemService
                             // No override for this branch, fall back to global item status
                             $fallback->whereDoesntHave('branchItemStatuses', function ($bis) use ($branchId) {
                                 $bis->where('branch_id', $branchId);
-                            })->where('status', $statusFilter);
+                            })->where('items.status', $statusFilter);
                         });
                     } else {
-                        $sub->where('status', $statusFilter);
+                        $sub->where('items.status', $statusFilter);
                     }
                 });
-            })->orderBy($orderColumn, $orderType);
+            });
+
+            // Order by category sort, then item id
+            if ($orderColumn === 'category_sort') {
+                $query->orderBy('item_categories.sort', 'asc')
+                    ->orderBy('items.id', 'asc');
+            } else {
+                $query->orderBy($orderColumn, $orderType);
+            }
 
             return $query->$method($methodValue);
         } catch (Exception $exception) {
