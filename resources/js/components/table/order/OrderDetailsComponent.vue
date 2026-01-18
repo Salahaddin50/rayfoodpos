@@ -197,6 +197,7 @@ export default {
             loading: {
                 isActive: false,
             },
+            refreshInterval: null,
             enums: {
                 activityEnum: activityEnum,
                 orderStatusEnum: orderStatusEnum,
@@ -307,6 +308,8 @@ export default {
             this.loading.isActive = true;
             this.$store.dispatch("tableDiningOrder/show", this.$route.params.id).then(res => {
                 this.loading.isActive = false;
+                // Start auto-refresh every 1 minute
+                this.startAutoRefresh();
             }).catch((error) => {
                 this.loading.isActive = false;
             });
@@ -342,9 +345,26 @@ export default {
                 .finally(() => {
                     this.loading.isActive = false;
                 });
+        },
+        startAutoRefresh() {
+            // Clear any existing interval
+            if (this.refreshInterval) {
+                clearInterval(this.refreshInterval);
+            }
+            // Set interval to refresh every 1 minute (60000ms)
+            this.refreshInterval = setInterval(() => {
+                this.refreshStatus();
+            }, 60000);
+        },
+        stopAutoRefresh() {
+            if (this.refreshInterval) {
+                clearInterval(this.refreshInterval);
+                this.refreshInterval = null;
+            }
         }
     },
     beforeUnmount() {
+        this.stopAutoRefresh();
         this.$store.dispatch("tableCart/resetPaymentMethod").then().catch();
     }
 }
