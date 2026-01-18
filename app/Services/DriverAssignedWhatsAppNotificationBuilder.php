@@ -63,43 +63,23 @@ class DriverAssignedWhatsAppNotificationBuilder
             Log::warning("DriverAssignedWhatsAppNotificationBuilder getWhatsAppLink: After fresh() - order ID {$order->id}, driver_id: {$order->driver_id}");
             
             // Load driver without global scopes to avoid BranchScope filtering
-            $driver = null;
             if ($order->driver_id) {
-                // Try multiple methods to load driver
                 $driver = \App\Models\Driver::withoutGlobalScopes()->find($order->driver_id);
-                
-                // Fallback: direct database query if model doesn't work
-                if (!$driver) {
-                    $driverData = \Illuminate\Support\Facades\DB::table('drivers')
-                        ->where('id', $order->driver_id)
-                        ->first(['id', 'name', 'whatsapp']);
-                    if ($driverData) {
-                        // Create a simple object to access properties
-                        $driver = (object) [
-                            'id' => $driverData->id,
-                            'name' => $driverData->name,
-                            'whatsapp' => $driverData->whatsapp
-                        ];
-                    }
-                }
-                
-                Log::warning("DriverAssignedWhatsAppNotificationBuilder getWhatsAppLink: Looking for driver ID {$order->driver_id}, found: " . ($driver ? "YES (ID: " . ($driver->id ?? 'N/A') . ", Name: " . ($driver->name ?? 'N/A') . ", WhatsApp: " . ($driver->whatsapp ?? 'N/A') . ")" : "NO"));
-                
                 if (!$driver) {
                     Log::warning("DriverAssignedWhatsAppNotificationBuilder getWhatsAppLink: Driver ID {$order->driver_id} not found for order {$order->id}");
                     return null;
                 }
-                
-                if (is_object($driver) && method_exists($driver, 'setRelation')) {
-                    $order->setRelation('driver', $driver);
-                }
-            } else {
-                Log::warning("DriverAssignedWhatsAppNotificationBuilder getWhatsAppLink: Order {$order->id} has no driver_id");
+                $order->setRelation('driver', $driver);
+            }
+            
+            // Check if order has a driver
+            if (blank($order->driver)) {
+                Log::warning("DriverAssignedWhatsAppNotificationBuilder getWhatsAppLink: Order {$order->id} has no driver. driver_id = {$order->driver_id}");
                 return null;
             }
             
-            // Check if driver has WhatsApp number - access raw attribute to avoid any accessor issues
-            $driverWhatsapp = is_object($driver) ? ($driver->whatsapp ?? null) : null;
+            // Check if driver has WhatsApp number
+            $driverWhatsapp = $order->driver->whatsapp;
             
             // Debug logging - use warning level so it's more visible
             Log::warning("DriverAssignedWhatsAppNotificationBuilder getWhatsAppLink: Driver ID {$order->driver->id}, WhatsApp value: " . var_export($driverWhatsapp, true) . ", Type: " . gettype($driverWhatsapp) . ", Is blank: " . (blank($driverWhatsapp) ? 'yes' : 'no'));

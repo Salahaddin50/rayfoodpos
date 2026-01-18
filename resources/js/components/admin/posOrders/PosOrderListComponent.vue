@@ -551,12 +551,49 @@ export default {
                 if (driverId) {
                     alertService.success(this.$t('message.driver_added') || 'Driver Added Successfully.');
                     // Open WhatsApp app/web with pre-filled message if link is available
-                    if (data?.whatsapp_link) {
-                        console.log('Opening WhatsApp with link:', data.whatsapp_link);
+                    let whatsappLink = data?.whatsapp_link;
+                    
+                    // If backend didn't provide WhatsApp link, generate it from driver's WhatsApp number
+                    if (!whatsappLink && driverId) {
+                        const driver = this.drivers.find(d => d.id === driverId);
+                        if (driver && driver.whatsapp) {
+                            // Build WhatsApp message like backend does
+                            // For POS orders, it's always Takeaway (no whatsapp_number means Takeaway, not Online)
+                            const orderType = order.whatsapp_number ? 'Online' : (order.order_type === this.enums.orderTypeEnum.DELIVERY ? 'Delivery' : 'Takeaway');
+                            const messageParts = [
+                                `You have been assigned a ${orderType} order.`,
+                                `Order Number: ${order.order_serial_no}`
+                            ];
+                            if (order.token) {
+                                messageParts.push(`Token Number: ${order.token}`);
+                            }
+                            if (order.whatsapp_number) {
+                                messageParts.push(`Client WhatsApp: ${order.whatsapp_number}`);
+                            }
+                            if (order.location_url) {
+                                messageParts.push(`Location: ${order.location_url}`);
+                            }
+                            const message = messageParts.join('\n');
+                            
+                            // Format WhatsApp number for URL
+                            let phoneNumber = driver.whatsapp.replace(/\D/g, '');
+                            if (phoneNumber.startsWith('9940')) {
+                                phoneNumber = '994' + phoneNumber.substring(4);
+                            } else if (phoneNumber.startsWith('0')) {
+                                phoneNumber = '994' + phoneNumber.substring(1);
+                            } else if (!phoneNumber.startsWith('994')) {
+                                phoneNumber = '994' + phoneNumber;
+                            }
+                            whatsappLink = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+                        }
+                    }
+                    
+                    if (whatsappLink) {
+                        console.log('Opening WhatsApp with link:', whatsappLink);
                         // Use setTimeout to avoid popup blocker, or create a click event
                         setTimeout(() => {
                             const link = document.createElement('a');
-                            link.href = data.whatsapp_link;
+                            link.href = whatsappLink;
                             link.target = '_blank';
                             link.rel = 'noopener noreferrer';
                             document.body.appendChild(link);
@@ -564,7 +601,7 @@ export default {
                             document.body.removeChild(link);
                         }, 100);
                     } else {
-                        console.warn('WhatsApp link not found in response:', data);
+                        console.warn('WhatsApp link not found in response and driver WhatsApp not available:', data);
                     }
                 } else {
                     alertService.successFlip(null, this.$t('label.driver') || 'Driver');
@@ -573,7 +610,8 @@ export default {
                 this.loading.isActive = false;
                 alertService.error(err?.response?.data?.message ?? err);
                 // revert UI selection by reloading list
-                this.list(this.paginationPage || 1);
+                const pageNum = typeof this.paginationPage === 'number' ? this.paginationPage : 1;
+                this.list(pageNum);
             });
         },
     }

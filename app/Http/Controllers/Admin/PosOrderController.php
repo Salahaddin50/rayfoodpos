@@ -122,8 +122,8 @@ class PosOrderController extends AdminController
 
             $driverId = $request->input('driver_id');
             if ($driverId) {
-                // Apply BranchScope: this will return null if driver isn't in this branch.
-                $driver = Driver::find($driverId);
+                // Use withoutGlobalScopes to ensure we find the driver regardless of branch scope
+                $driver = Driver::withoutGlobalScopes()->find($driverId);
                 if (!$driver) {
                     return response(['status' => false, 'message' => 'Driver not found.'], 422);
                 }
@@ -133,17 +133,28 @@ class PosOrderController extends AdminController
             }
 
             $order->save();
+            // Reload order with driver relationship
+            $order->refresh();
             $order->load('driver');
 
             // Send WhatsApp notification to driver if assigned
             $whatsappLink = null;
             if ($driverId) {
                 try {
+                    // Ensure order is fresh and driver is loaded
+                    $order->refresh();
+                    $order->load('driver');
+                    
                     $notificationBuilder = new \App\Services\DriverAssignedWhatsAppNotificationBuilder($order);
                     // Send automatic WhatsApp/SMS via gateway
                     $notificationBuilder->send();
                     // Also generate WhatsApp link for opening WhatsApp app/web
                     $whatsappLink = $notificationBuilder->getWhatsAppLink();
+                    
+                    // Log if WhatsApp link is null for debugging
+                    if (!$whatsappLink && $order->driver) {
+                        \Illuminate\Support\Facades\Log::warning("Driver WhatsApp link is null for order {$order->id}, driver ID: {$order->driver->id}, driver WhatsApp: " . ($order->driver->whatsapp ?? 'null'));
+                    }
                 } catch (\Throwable $e) {
                     // Log error but don't fail driver assignment if WhatsApp fails
                     \Illuminate\Support\Facades\Log::warning("Driver WhatsApp notification failed for order {$order->id}: " . $e->getMessage());
