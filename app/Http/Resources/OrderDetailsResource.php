@@ -22,6 +22,7 @@ class OrderDetailsResource extends JsonResource
             'token'                               => $this->token,
             'driver_id'                           => $this->driver_id,
             'driver_name'                         => $this->driver?->name,
+            'driver_whatsapp'                     => $this->driver?->whatsapp,
             "subtotal_currency_price"             => AppLibrary::currencyAmountFormat($this->subtotal),
             "subtotal_without_tax_currency_price" => AppLibrary::currencyAmountFormat($this->subtotal - $this->total_tax),
             "discount_currency_price"             => AppLibrary::currencyAmountFormat($this->discount),

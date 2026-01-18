@@ -46,7 +46,7 @@
         </h5>
         <h5 v-if="parseInt(props.status) === parseInt(enums.orderStatusEnum.PENDING)"
             class="text-xs font-normal text-center mb-8">
-            {{ $t("label.got_your_order", { name: profile.name, }) }}
+            {{ $t("label.got_your_order") }}
         </h5>
         <h5 v-if="parseInt(props.status) === parseInt(enums.orderStatusEnum.ACCEPT)"
             class="text-xs font-normal text-center mb-8">

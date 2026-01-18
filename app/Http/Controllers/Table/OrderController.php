@@ -34,6 +34,8 @@ class OrderController extends Controller
     public function show(FrontendOrder $frontendOrder): \Illuminate\Http\Response|OrderDetailsResource|\Illuminate\Contracts\Foundation\Application|\Illuminate\Contracts\Routing\ResponseFactory
     {
         try {
+            // Load driver relationship to ensure driver_whatsapp is available
+            $frontendOrder->load('driver');
             return new OrderDetailsResource($frontendOrder);
         } catch (Exception $exception) {
             return response(['status' => false, 'message' => $exception->getMessage()], 422);

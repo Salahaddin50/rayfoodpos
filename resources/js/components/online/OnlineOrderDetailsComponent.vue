@@ -29,6 +29,21 @@
 
                         <OrderStatusComponent :props="order" />
 
+                        <div v-if="order && order.driver_id" class="flex items-center justify-center gap-2 mt-4 p-3 rounded-lg bg-primary/5 border border-primary/20">
+                            <span class="text-sm font-medium text-heading">{{ $t('label.driver_assigned') }}:</span>
+                            <span class="text-sm font-semibold text-primary">
+                                <span v-if="order.driver_name">{{ order.driver_name }}</span>
+                                <span v-if="order.driver_name && order.driver_whatsapp" class="mx-1">-</span>
+                                <a v-if="order.driver_whatsapp" 
+                                   :href="formatDriverWhatsAppLink(order.driver_whatsapp)" 
+                                   target="_blank" 
+                                   rel="noopener noreferrer"
+                                   class="text-primary hover:underline">
+                                    {{ formatWhatsAppNumber(order.driver_whatsapp) }}
+                                </a>
+                            </span>
+                        </div>
+
                         <div class="flex justify-end mt-4">
                             <button
                                 type="button"
@@ -364,6 +379,32 @@ export default {
                 clearInterval(this.refreshInterval);
                 this.refreshInterval = null;
             }
+        },
+        formatWhatsAppNumber: function (number) {
+            if (!number) return '';
+            // Remove all non-digit characters
+            let phoneNumber = number.replace(/\D/g, '');
+            // Handle case where number already has 994 followed by 0
+            if (phoneNumber.startsWith('9940')) {
+                phoneNumber = '994' + phoneNumber.substring(4);
+            }
+            // If starts with 0, replace with 994
+            else if (phoneNumber.startsWith('0')) {
+                phoneNumber = '994' + phoneNumber.substring(1);
+            } 
+            // If doesn't start with 994, add it
+            else if (!phoneNumber.startsWith('994')) {
+                phoneNumber = '994' + phoneNumber;
+            }
+            // Return formatted with + sign
+            return '+' + phoneNumber;
+        },
+        formatDriverWhatsAppLink: function (number) {
+            if (!number) return '#';
+            // Get the formatted number without + sign for the URL
+            const formattedNumber = this.formatWhatsAppNumber(number).replace('+', '');
+            // Create WhatsApp link
+            return `https://wa.me/${formattedNumber}`;
         }
     },
     beforeUnmount() {

@@ -134,4 +134,9 @@ class FrontendOrder extends Model
     {
         return $this->belongsTo(FrontendDiningTable::class);
     }
+
+    public function driver(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Driver::class);
+    }
 }
