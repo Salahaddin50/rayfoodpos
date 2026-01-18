@@ -646,5 +646,6 @@ Route::prefix('table')->name('table.')->middleware(['installed', 'apiKey', 'loca
     Route::prefix('dining-order')->name('dining-order.')->group(function () {
         Route::get('/show/{frontendOrder}', [TableOrderController::class, 'show']);
         Route::post('/', [TableOrderController::class, 'store']);
+        Route::get('/track', [\App\Http\Controllers\Table\OrderController::class, 'trackByWhatsApp']);
     });
 });

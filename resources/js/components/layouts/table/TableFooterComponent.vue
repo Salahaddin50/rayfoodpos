@@ -29,9 +29,17 @@
                         </div>
                     </div>
                     <p v-if="setting.site_our_message" class="text-sm text-gray-600 max-w-md">{{ setting.site_our_message }}</p>
+                    <div class="flex flex-wrap items-center gap-4 gap-y-2">
+                        <a href="#" @click.prevent="trackOrder" class="text-sm capitalize text-gray-600 hover:text-primary transition-colors">
+                            {{ $t('button.track_order') }}
+                        </a>
+                        <a v-if="!isStandalone" href="#" @click.prevent="installApp" class="text-sm capitalize text-gray-600 hover:text-primary transition-colors">
+                            {{ $t('button.install_app') }}
+                        </a>
+                    </div>
                 </div>
-                <nav v-if="pages.length > 0" class="flex items-center gap-6">
-                    <router-link v-for="page in pages" class="text-sm capitalize text-gray-700 hover:text-primary"
+                <nav v-if="pages.length > 0" class="flex flex-wrap items-center gap-6">
+                    <router-link v-for="page in pages" :key="page.id" class="text-sm capitalize text-gray-700 hover:text-primary transition-colors"
                         :to="getPageRoute(page.slug)">
                         {{ page.title }}
                     </router-link>
@@ -39,10 +47,77 @@
             </div>
         </div>
     </footer>
+
+    <!-- Track Order Modal -->
+    <div ref="trackOrderModal" id="track-order-modal" class="modal ff-modal">
+        <div class="modal-dialog max-w-[500px] relative">
+            <button class="modal-close fa-regular fa-circle-xmark absolute top-5 right-5"
+                @click.prevent="closeTrackModal"></button>
+            <div class="modal-body">
+                <h3 class="capitalize text-lg font-medium text-center mt-2 mb-4">
+                    {{ $t('button.track_order') }}
+                </h3>
+                <form @submit.prevent="searchOrders" class="space-y-4">
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-gray-700">{{ $t('label.whatsapp_number') }}</label>
+                        <div class="flex gap-2">
+                            <select v-model="trackForm.prefix" class="w-[100px] text-sm rounded-lg border-gray-300 focus:border-primary focus:ring-primary">
+                                <option value="+994">+994</option>
+                            </select>
+                            <input 
+                                v-model="trackForm.number" 
+                                type="text" 
+                                placeholder="503531437" 
+                                class="flex-1 text-sm rounded-lg border-gray-300 focus:border-primary focus:ring-primary"
+                                required
+                                maxlength="12"
+                            />
+                        </div>
+                    </div>
+                    <button type="submit" :disabled="trackLoading.isActive" 
+                        class="w-full rounded-3xl text-center font-medium leading-6 py-3 bg-primary text-white hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                        {{ trackLoading.isActive ? $t('button.loading') : $t('button.search') }}
+                    </button>
+                </form>
+
+                <!-- Orders List -->
+                <div v-if="trackOrders.length > 0" class="mt-6 space-y-3">
+                    <h4 class="text-sm font-medium text-gray-700 mb-3">{{ $t('label.orders') }}</h4>
+                    <div class="space-y-2 max-h-[300px] overflow-y-auto">
+                        <a 
+                            v-for="order in trackOrders" 
+                            :key="order.id"
+                            :href="getOrderUrl(order)"
+                            @click="closeTrackModal"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="block p-3 rounded-lg border border-gray-200 hover:border-primary hover:bg-primary/5 transition-colors"
+                        >
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">{{ $t('label.order') }} #{{ order.order_serial_no }}</p>
+                                    <p class="text-xs text-gray-500 mt-1">{{ order.order_datetime }}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm font-semibold text-primary">{{ order.total_currency_price }}</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- No Orders Found -->
+                <div v-if="trackOrders.length === 0 && trackSearched" class="mt-6 text-center py-4">
+                    <p class="text-sm text-gray-600">{{ $t('message.no_orders_found') }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </template>
 
 
 <script>
+import axios from "axios";
 import statusEnum from "../../../enums/modules/statusEnum";
 import menuSectionEnum from "../../../enums/modules/menuSectionEnum";
 import LoadingComponent from "../../frontend/components/LoadingComponent";
@@ -54,7 +129,18 @@ export default {
         return {
             loading: {
                 isActive: false,
-            }
+            },
+            deferredPrompt: null,
+            showInstallButton: false,
+            trackForm: {
+                prefix: '+994',
+                number: ''
+            },
+            trackOrders: [],
+            trackLoading: {
+                isActive: false,
+            },
+            trackSearched: false,
         }
     },
     computed: {
@@ -69,6 +155,12 @@ export default {
         },
         hasSocialLinks: function () {
             return this.setting.site_facebook_link || this.setting.site_instagram_link || this.setting.site_tiktok_link;
+        },
+        isStandalone: function () {
+            // Check if app is already installed (running in standalone mode)
+            return window.matchMedia('(display-mode: standalone)').matches || 
+                   window.navigator.standalone === true ||
+                   document.referrer.includes('android-app://');
         }
     },
     methods: {
@@ -89,6 +181,98 @@ export default {
                     pageSlug: pageSlug 
                 } 
             };
+        },
+        trackOrder: function () {
+            // Reset form and results
+            this.trackForm.prefix = '+994';
+            this.trackForm.number = '';
+            this.trackOrders = [];
+            this.trackSearched = false;
+            
+            // Show modal
+            const modalTarget = this.$refs.trackOrderModal;
+            if (modalTarget) {
+                modalTarget.classList.add("active");
+                document.body.style.overflowY = "hidden";
+            }
+        },
+        closeTrackModal: function () {
+            const modalTarget = this.$refs.trackOrderModal;
+            if (modalTarget) {
+                modalTarget.classList.remove("active");
+                document.body.style.overflowY = "";
+            }
+            this.trackOrders = [];
+            this.trackSearched = false;
+        },
+        searchOrders: function () {
+            const phoneNumber = this.trackForm.prefix + this.trackForm.number;
+            
+            // Normalize: if number starts with 0, remove it (handles +9940503531437)
+            let normalizedNumber = phoneNumber;
+            if (normalizedNumber.startsWith('+9940')) {
+                normalizedNumber = '+994' + normalizedNumber.substring(5);
+            }
+            
+            this.trackLoading.isActive = true;
+            this.trackSearched = false;
+            
+            // Debug: log the request URL
+            console.log('Requesting URL:', axios.defaults.baseURL + '/table/dining-order/track?phone_number=' + normalizedNumber);
+            
+            // Fetch orders from API (axios already has /api in baseURL)
+            axios.get('table/dining-order/track', {
+                params: {
+                    phone_number: normalizedNumber
+                }
+            }).then((response) => {
+                console.log('Track order API response:', response.data);
+                if (response.data.status && response.data.data) {
+                    this.trackOrders = response.data.data;
+                    if (response.data.debug) {
+                        console.log('Debug info:', response.data.debug);
+                    }
+                } else {
+                    this.trackOrders = [];
+                }
+                this.trackSearched = true;
+                this.trackLoading.isActive = false;
+            }).catch((error) => {
+                console.error('Error searching orders:', error);
+                if (error.response) {
+                    console.error('Error response:', error.response.data);
+                }
+                this.trackOrders = [];
+                this.trackSearched = true;
+                this.trackLoading.isActive = false;
+            });
+        },
+        getOrderUrl: function (order) {
+            if (order.is_table_order && order.dining_table_slug) {
+                return `/table-order/${order.dining_table_slug}/${order.id}`;
+            } else {
+                return `/online/order/${order.branch_id}/${order.id}`;
+            }
+        },
+        installApp: function () {
+            if (this.deferredPrompt) {
+                // Show the install prompt - this starts the installation process
+                this.deferredPrompt.prompt();
+                
+                // Wait for the user to respond to the prompt
+                this.deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    } else {
+                        console.log('User dismissed the install prompt');
+                    }
+                    // Clear the deferred prompt so it can only be used once
+                    this.deferredPrompt = null;
+                }).catch((error) => {
+                    console.error('Error showing install prompt:', error);
+                    this.deferredPrompt = null;
+                });
+            }
         }
     },
     mounted() {
@@ -103,6 +287,23 @@ export default {
             this.loading.isActive = false;
         }).catch((err) => {
             this.loading.isActive = false;
+        });
+
+        // Listen for the beforeinstallprompt event (PWA install prompt)
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent the mini-infobar from appearing on mobile
+            e.preventDefault();
+            // Stash the event so it can be triggered later
+            this.deferredPrompt = e;
+            // Show the install button
+            this.showInstallButton = true;
+        });
+
+        // Listen for app installed event
+        window.addEventListener('appinstalled', () => {
+            this.deferredPrompt = null;
+            this.showInstallButton = false;
+            console.log('PWA was installed');
         });
     }
 }

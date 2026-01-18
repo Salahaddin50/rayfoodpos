@@ -725,6 +725,8 @@
         "pay_now": "İndi Ödə",
         "delivered_orders": "Çatdırılmış Sifarişlər",
         "go_home": "Əsas Səhifəyə Get",
+        "track_order": "Sifarişi İzlə",
+        "install_app": "Proqramı Quraşdır",
         "get_file_content": "Fayl Məzmununu Al",
         "let_me_check": "Gəlin yoxlayaq",
         "add_dining_table": "Masalar Əlavə Et",
@@ -815,6 +817,10 @@
         "location_added": "Məkan uğurla əlavə edildi",
         "location_optional_hint": "Çatdırılmaya kömək etmək üçün yerləşməni əlavə edin (isteğe bağlı)",
         "whatsapp_optional_hint": "Sifariş yeniləmələri üçün WhatsApp nömrənizi paylaşın (ixtiyari)",
+        "enter_order_id": "Sifariş ID-ni və ya seriya nömrəsini daxil edin:",
+        "pwa_install_instructions": "Bu proqramı quraşdırmaq üçün brauzerinizin menyusundan (adətən ünvan sətrində) \"Quraşdır\" və ya \"Ana Ekrana Əlavə Et\" seçimini edin.",
+        "pwa_install_ios": "iOS-da bu proqramı quraşdırmaq üçün:\n1. Paylaş düyməsinə toxunun\n2. \"Ana Ekrana Əlavə Et\" seçin",
+        "pwa_install_android": "Android-də bu proqramı quraşdırmaq üçün:\n1. Menyuyu toxunun (üç nöqtə)\n2. \"Proqramı Quraşdır\" və ya \"Ana Ekrana Əlavə Et\" seçin",
         "driver_added": "Sürücü Uğurla Əlavə Edildi."
     }
 }

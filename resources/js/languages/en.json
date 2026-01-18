@@ -735,6 +735,9 @@
         "pay_now": "Pay Now",
         "delivered_orders": "Delivered Orders",
         "go_home": "Go Home",
+        "track_order": "Track Order",
+        "install_app": "Install App",
+        "loading": "Loading...",
         "get_file_content": "Get File Content",
         "let_me_check": "Let me check",
         "add_dining_table": "Add Tables",
@@ -825,8 +828,13 @@
         "location_added": "Location added successfully",
         "location_optional_hint": "Add your location to help with delivery (optional)",
         "whatsapp_optional_hint": "Share your WhatsApp for order updates (optional)",
+        "enter_order_id": "Enter your order ID or serial number:",
+        "pwa_install_instructions": "To install this app, please use your browser's menu (usually in the address bar) and select \"Install\" or \"Add to Home Screen\".",
+        "pwa_install_ios": "To install this app on iOS:\n1. Tap the Share button\n2. Select \"Add to Home Screen\"",
+        "pwa_install_android": "To install this app on Android:\n1. Tap the menu (three dots)\n2. Select \"Install app\" or \"Add to Home Screen\"",
         "whatsapp_number_required": "WhatsApp number is required",
         "something_went_wrong": "Something went wrong. Please try again.",
-        "driver_added": "Driver Added Successfully."
+        "driver_added": "Driver Added Successfully.",
+        "no_orders_found": "No orders found for this WhatsApp number in the last 2 hours."
     }
 }
