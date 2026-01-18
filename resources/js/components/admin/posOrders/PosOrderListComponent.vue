@@ -150,7 +150,7 @@
                                         placeholder="--"
                                         :modelValue="order.driver_id"
                                         @update:modelValue="assignDriver(order, $event)"
-                                        :disabled="order.status !== enums.orderStatusEnum.DELIVERED"
+                                        :disabled="order.status !== enums.orderStatusEnum.DELIVERED && order.status !== enums.orderStatusEnum.PREPARED"
                                     />
                                 </template>
                                 <template v-else>
@@ -540,7 +540,7 @@ export default {
         assignDriver(order, driverId) {
             if (!order) return;
             if (!this.isDriverApplicable(order)) return;
-            if (order.status !== this.enums.orderStatusEnum.DELIVERED) return;
+            if (order.status !== this.enums.orderStatusEnum.DELIVERED && order.status !== this.enums.orderStatusEnum.PREPARED) return;
 
             this.loading.isActive = true;
             this.$store.dispatch('posOrder/assignDriver', { id: order.id, driver_id: driverId }).then((res) => {

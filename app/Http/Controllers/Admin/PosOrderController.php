@@ -111,8 +111,8 @@ class PosOrderController extends AdminController
                 'driver_id' => ['nullable', 'integer', 'exists:drivers,id'],
             ]);
 
-            if ((int) $order->status !== OrderStatus::DELIVERED) {
-                return response(['status' => false, 'message' => 'Driver can be assigned only when order is delivered.'], 422);
+            if ((int) $order->status !== OrderStatus::DELIVERED && (int) $order->status !== OrderStatus::PREPARED) {
+                return response(['status' => false, 'message' => 'Driver can be assigned only when order is prepared or delivered.'], 422);
             }
 
             // POS Orders screen is for POS source; allow driver only for takeaway/online flows.
@@ -138,22 +138,15 @@ class PosOrderController extends AdminController
             // Send WhatsApp notification to driver if assigned
             $whatsappLink = null;
             if ($driverId) {
-                $notificationBuilder = new \App\Services\DriverAssignedWhatsAppNotificationBuilder($order);
-                
-                // Try to send automatic WhatsApp/SMS via gateway (fail silently if SMS gateway not configured)
                 try {
+                    $notificationBuilder = new \App\Services\DriverAssignedWhatsAppNotificationBuilder($order);
+                    // Send automatic WhatsApp/SMS via gateway
                     $notificationBuilder->send();
-                } catch (\Throwable $e) {
-                    // Log error but don't fail driver assignment if SMS fails (e.g., Twilio not configured)
-                    \Illuminate\Support\Facades\Log::warning("Driver WhatsApp SMS sending failed for order {$order->id}: " . $e->getMessage());
-                }
-                
-                // Always try to generate WhatsApp link (separate from SMS sending)
-                try {
+                    // Also generate WhatsApp link for opening WhatsApp app/web
                     $whatsappLink = $notificationBuilder->getWhatsAppLink();
                 } catch (\Throwable $e) {
-                    // Log error but don't fail driver assignment if link generation fails
-                    \Illuminate\Support\Facades\Log::warning("Driver WhatsApp link generation failed for order {$order->id}: " . $e->getMessage());
+                    // Log error but don't fail driver assignment if WhatsApp fails
+                    \Illuminate\Support\Facades\Log::warning("Driver WhatsApp notification failed for order {$order->id}: " . $e->getMessage());
                 }
             }
 
