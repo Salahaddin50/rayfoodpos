@@ -239,6 +239,7 @@
         "work": "Работа",
         "other": "Другое",
         "orders": "Заказы",
+        "order": "Заказ",
         "password_confirmation": "Подтверждение пароля",
         "change_password": "Изменить пароль",
         "new_label": "Новая метка",

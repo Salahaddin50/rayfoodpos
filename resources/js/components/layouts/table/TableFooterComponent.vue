@@ -67,7 +67,7 @@
                             <input 
                                 v-model="trackForm.number" 
                                 type="text" 
-                                placeholder="503531437" 
+                                placeholder="50xxxxxx" 
                                 class="flex-1 text-sm rounded-lg border-gray-300 focus:border-primary focus:ring-primary"
                                 required
                                 maxlength="12"

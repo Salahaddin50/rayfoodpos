@@ -1,5 +1,5 @@
 <template>
-    <section class="mb-16 mt-4">
+    <section class="mb-24 md:mb-16 mt-4 pb-4">
         <div class="container">
             <LoadingComponent :props="loading" />
 
@@ -132,22 +132,20 @@
 
                 <div class="flex gap-6"
                     v-if="setting.site_online_payment_gateway === enums.activityEnum.ENABLE && order.transaction === null && order.payment_status === enums.paymentStatusEnum.UNPAID && paymentMethod === 'digitalPayment'">
-                    <router-link @click.prevent="closeModal"
-                        class="w-full rounded-3xl text-center font-medium leading-6 py-3 border border-primary text-primary bg-white"
-                        :to="{ name: 'online.order.details', params: { branchId: this.$route.params.branchId, id: order.id } }">
+                    <a :href="'/online/order/' + $route.params.branchId + '/' + order.id" @click="closeModalAndCleanUrl" target="_blank"
+                        class="w-full rounded-3xl text-center font-medium leading-6 py-3 border border-primary text-primary bg-white">
                         {{ $t('button.go_to_order') }}
-                    </router-link>
+                    </a>
                     <a :href="'/payment/' + order.id + '/pay'"
                         class="w-full rounded-3xl text-center font-medium leading-6 py-3 text-white bg-primary">
                         {{ $t('button.pay_now') }}
                     </a>
                 </div>
 
-                <router-link v-else @click.prevent="closeModal"
-                    class="w-full rounded-3xl text-center font-medium leading-6 py-3 text-white bg-primary"
-                    :to="{ name: 'online.order.details', params: { branchId: this.$route.params.branchId, id: order.id } }">
+                <a v-else :href="'/online/order/' + $route.params.branchId + '/' + order.id" @click="closeModalAndCleanUrl" target="_blank"
+                    class="w-full rounded-3xl text-center font-medium leading-6 py-3 text-white bg-primary">
                     {{ $t('button.go_to_order') }}
-                </router-link>
+                </a>
 
             </div>
         </div>
@@ -323,6 +321,13 @@ export default {
             modalTarget?.classList?.remove("active");
             document.body.style.overflowY = "auto";
             this.loading.isActive = false;
+        },
+        closeModalAndCleanUrl: function () {
+            // Remove query parameters from URL (e.g., ?id=152)
+            if (this.$route.query && Object.keys(this.$route.query).length > 0) {
+                this.$router.replace({ query: {} });
+            }
+            this.closeModal();
         },
         allCategory: function (category) {
             this.itemProps.search.item_category_id = "";

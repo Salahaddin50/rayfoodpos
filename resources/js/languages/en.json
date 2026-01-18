@@ -244,6 +244,7 @@
         "work": "Work",
         "other": "Other",
         "orders": "Orders",
+        "order": "Order",
         "password_confirmation": "Password Confirmation",
         "change_password": "Change Password",
         "new_label": "New Label",
