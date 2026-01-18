@@ -75,12 +75,12 @@
         const APP_DEMO = "{{ env('VITE_DEMO') }}";
     </script>
 
-    <script src="{{ asset('themes/default/js/drawer.js') }}"></script>
-    <script src="{{ asset('themes/default/js/modal.js') }}"></script>
-    <script src="{{ asset('themes/default/js/customScript.js') }}"></script>
-    <script src="{{ asset('themes/default/js/tabs.js') }}"></script>
-    <script src="{{ asset('themes/default/js/dropdown.js') }}"></script>
-    <script src="{{ asset('themes/default/js/apexcharts/apexcharts.min.js') }}"></script>
+    <script src="{{ asset('themes/default/js/drawer.js') }}" defer></script>
+    <script src="{{ asset('themes/default/js/modal.js') }}" defer></script>
+    <script src="{{ asset('themes/default/js/customScript.js') }}" defer></script>
+    <script src="{{ asset('themes/default/js/tabs.js') }}" defer></script>
+    <script src="{{ asset('themes/default/js/dropdown.js') }}" defer></script>
+    <script src="{{ asset('themes/default/js/apexcharts/apexcharts.min.js') }}" defer></script>
 </body>
 
 </html>
