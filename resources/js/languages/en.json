@@ -571,7 +571,7 @@
         "place": "Place",
         "inside": "Inside",
         "dining_table": "Dining Table",
-        "cash_card": "Cash (self or to driver)",
+        "cash_card": "Cash (Myself or to Driver)",
         "digital_payment": "Digital Payment",
         "table_name": "Table Name",
         "telr_store_id": "Telr Store Id",
