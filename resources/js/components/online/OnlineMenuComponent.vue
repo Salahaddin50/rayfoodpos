@@ -285,6 +285,19 @@ export default {
                 this.itemProps.search.branch_id = this.selectedBranchId;
                 this.$store.dispatch('tableCart/initOnlineBranch', this.selectedBranchId).then().catch();
                 this.itemList(true);
+            } else {
+                // Auto-select first branch after 2 seconds if no branch is selected
+                if (this.branches && this.branches.length > 0) {
+                    setTimeout(() => {
+                        if (!this.selectedBranchId) {
+                            const firstBranch = this.branches[0];
+                            if (firstBranch && firstBranch.id) {
+                                this.selectedBranchId = firstBranch.id;
+                                this.onBranchChange();
+                            }
+                        }
+                    }, 2000);
+                }
             }
         }).catch(() => {
             this.loading.isActive = false;

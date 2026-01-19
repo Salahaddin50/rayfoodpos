@@ -80,6 +80,16 @@ export default {
         this.loading.isActive = true;
         this.$store.dispatch("frontendBranch/lists", this.branchProps.search).then(res => {
             this.loading.isActive = false;
+            
+            // Auto-select first branch after 2 seconds
+            if (this.branches && this.branches.length > 0) {
+                setTimeout(() => {
+                    const firstBranch = this.branches[0];
+                    if (firstBranch && firstBranch.id) {
+                        this.selectBranch(firstBranch.id);
+                    }
+                }, 2000);
+            }
         }).catch((err) => {
             this.loading.isActive = false;
         });
