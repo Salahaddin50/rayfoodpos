@@ -40,6 +40,51 @@
                     </div>
 
                     <div class="mb-6 rounded-2xl shadow-xs bg-white">
+                        <h3 class="capitalize font-medium p-4 border-b border-gray-100">{{ $t('label.pickup_cost') }}</h3>
+                        <div class="p-4">
+                            <div v-if="subtotal >= 80" class="text-sm text-heading">
+                                {{ $t('message.delivery_free_over_75') }}
+                            </div>
+                            <ul v-else class="flex flex-col gap-4">
+                                <li class="flex items-center gap-1.5">
+                                    <div class="custom-radio">
+                                        <input type="radio" id="pickup_myself" v-model="pickupOption" value="pickup_myself"
+                                            class="custom-radio-field">
+                                        <span class="custom-radio-span border-gray-400"></span>
+                                    </div>
+                                    <label for="pickup_myself" class="db-field-label text-heading flex-1">
+                                        {{ $t('label.pickup_myself') }} - 
+                                        <span class="font-semibold">{{ currencyFormat(0, setting.site_digit_after_decimal_point, setting.site_default_currency_symbol, setting.site_currency_position) }}</span>
+                                    </label>
+                                </li>
+                                <li class="flex items-center gap-1.5">
+                                    <div class="custom-radio">
+                                        <input type="radio" id="pay_to_driver" v-model="pickupOption" value="pay_to_driver"
+                                            class="custom-radio-field">
+                                        <span class="custom-radio-span border-gray-400"></span>
+                                    </div>
+                                    <label for="pay_to_driver" class="db-field-label text-heading flex-1">
+                                        {{ $t('label.agree_with_driver') }} - 
+                                        <span class="font-semibold">{{ currencyFormat(0, setting.site_digit_after_decimal_point, setting.site_default_currency_symbol, setting.site_currency_position) }}</span>
+                                        <span class="text-xs text-gray-500 ml-1">{{ $t('label.you_will_pay_him') }}</span>
+                                    </label>
+                                </li>
+                                <li class="flex items-center gap-1.5">
+                                    <div class="custom-radio">
+                                        <input type="radio" id="pay_by_distance" v-model="pickupOption" value="pay_by_distance"
+                                            class="custom-radio-field">
+                                        <span class="custom-radio-span border-gray-400"></span>
+                                    </div>
+                                    <label for="pay_by_distance" class="db-field-label text-heading flex-1">
+                                        {{ $t('label.pay_for_pickup_cost_now') }} - 
+                                        <span class="font-semibold">{{ currencyFormat(5, setting.site_digit_after_decimal_point, setting.site_default_currency_symbol, setting.site_currency_position) }}</span>
+                                    </label>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="mb-6 rounded-2xl shadow-xs bg-white">
                         <h3 class="capitalize font-medium p-4 border-b border-gray-100">{{ $t('label.contact_information') }}</h3>
                         <div class="p-4">
                             <label for="whatsapp" class="db-field-label required">{{ $t('label.whatsapp_number') }}</label>
@@ -67,7 +112,7 @@
                             <small v-if="errors.whatsapp_number" class="db-field-alert">{{ errors.whatsapp_number[0] }}</small>
                             <small v-else class="text-xs text-gray-500 mt-1 block">{{ $t('message.phone_number_format_hint') }}</small>
                             
-                            <label for="location" class="db-field-label mt-4">{{ $t('label.delivery_location') }}</label>
+                            <label for="location" class="db-field-label required mt-4">{{ $t('label.delivery_location') }}</label>
                             <div class="flex gap-2">
                                 <input 
                                     type="text" 
@@ -75,6 +120,7 @@
                                     v-model="locationUrl"
                                     :placeholder="$t('label.paste_google_maps_link')"
                                     class="db-field-control flex-1"
+                                    :class="errors.location_url ? 'invalid' : ''"
                                     readonly
                                 >
                                 <button 
@@ -88,7 +134,8 @@
                                     {{ loadingLocation ? $t('button.getting_location') : $t('button.add_location') }}
                                 </button>
                             </div>
-                            <small class="text-xs text-gray-500 mt-1 block">{{ $t('message.location_optional_hint') }}</small>
+                            <small v-if="errors.location_url" class="db-field-alert">{{ errors.location_url[0] }}</small>
+                            <small v-else class="text-xs text-gray-500 mt-1 block">{{ $t('message.location_required_hint') }}</small>
                         </div>
                     </div>
 
@@ -174,6 +221,17 @@
                                             }}
                                         </span>
                                     </li>
+                                    <li v-if="subtotal < 80" class="flex items-center justify-between text-heading">
+                                        <span class="text-sm leading-6 capitalize">
+                                            {{ $t('label.pickup_cost') }}
+                                        </span>
+                                        <span class="text-sm leading-6 capitalize">
+                                            {{
+                                                currencyFormat(pickupCost, setting.site_digit_after_decimal_point,
+                                                    setting.site_default_currency_symbol, setting.site_currency_position)
+                                            }}
+                                        </span>
+                                    </li>
                                 </ul>
                                 <div class="flex items-center justify-between p-3">
                                     <h4 class="text-sm leading-6 font-semibold capitalize">
@@ -181,7 +239,7 @@
                                     </h4>
                                     <h5 class="text-sm leading-6 font-semibold capitalize">
                                         {{
-                                            currencyFormat(subtotal, setting.site_digit_after_decimal_point,
+                                            currencyFormat(total, setting.site_digit_after_decimal_point,
                                                 setting.site_default_currency_symbol, setting.site_currency_position)
                                         }}
                                     </h5>
@@ -222,6 +280,7 @@ export default {
             },
             placeOrderShow: false,
             paymentMethod: 'cashCard', // Default to cash payment
+            pickupOption: 'pickup_myself', // Default pickup option
             errors: {},
             countryCode: '+994', // Default to Azerbaijan
             phoneNumber: '',
@@ -280,6 +339,24 @@ export default {
         subtotal: function () {
             return this.$store.getters['tableCart/subtotal'];
         },
+        pickupCost: function () {
+            // If order is 80 AZN or above, pickup cost is 0
+            if (this.subtotal >= 80) {
+                return 0;
+            }
+            // Calculate pickup cost based on selected option
+            if (this.pickupOption === 'pickup_myself') {
+                return 0;
+            } else if (this.pickupOption === 'pay_to_driver') {
+                return 0;
+            } else if (this.pickupOption === 'pay_by_distance') {
+                return 5;
+            }
+            return 0;
+        },
+        total: function () {
+            return parseFloat(this.subtotal) + parseFloat(this.pickupCost);
+        },
     },
     methods: {
         currencyFormat: function (amount, decimal, currency, position) {
@@ -326,15 +403,21 @@ export default {
                 return alertService.error(this.$t('message.whatsapp_number_required'));
             }
 
+            if (!this.locationUrl || this.locationUrl.trim() === '') {
+                this.errors.location_url = [this.$t('message.location_required')];
+                return alertService.error(this.$t('message.location_required'));
+            }
+
             this.loading.isActive = true;
 
             this.checkoutProps.form.branch_id = parseInt(this.$route.params.branchId);
             this.checkoutProps.form.subtotal = this.subtotal;
-            this.checkoutProps.form.total = parseFloat(this.subtotal).toFixed(this.setting.site_digit_after_decimal_point);
+            this.checkoutProps.form.delivery_charge = this.pickupCost; // Store pickup cost in delivery_charge field
+            this.checkoutProps.form.total = parseFloat(this.total).toFixed(this.setting.site_digit_after_decimal_point);
             this.checkoutProps.form.items = [];
             
-            // Set location URL if available
-            this.checkoutProps.form.location_url = this.locationUrl || "";
+            // Set location URL (now mandatory)
+            this.checkoutProps.form.location_url = this.locationUrl;
             
             console.log('Submitting order with data:', {
                 branch_id: this.checkoutProps.form.branch_id,
