@@ -335,7 +335,10 @@ export default {
                 }
             },
             ENV: ENV,
-            autoRefreshInterval: null
+            autoRefreshInterval: null,
+            previousOrderIds: [],
+            previousAcceptOrPreparedOrderIds: [],
+            audioElement: null
         }
     },
     mounted() {
@@ -361,6 +364,12 @@ export default {
     beforeUnmount() {
         window.removeEventListener('rayfood:refresh-pos-orders', this.onExternalRefresh);
         this.stopAutoRefresh();
+        
+        // Clean up audio element
+        if (this.audioElement) {
+            this.audioElement.pause();
+            this.audioElement = null;
+        }
     },
     computed: {
         orders: function () {
@@ -380,6 +389,9 @@ export default {
         },
         drivers: function () {
             return this.$store.getters['driver/lists'];
+        },
+        setting: function () {
+            return this.$store.getters['frontendSetting/lists'];
         },
     },
     methods: {
@@ -442,9 +454,131 @@ export default {
             this.props.search.page = page;
             this.$store.dispatch('posOrder/lists', this.props.search).then(res => {
                 this.loading.isActive = false;
+                
+                // Initialize previousOrderIds if not already set (first load)
+                if (this.previousOrderIds.length === 0 && this.orders && this.orders.length > 0) {
+                    this.previousOrderIds = this.orders.map(order => order.id);
+                    // Get ACCEPT or PREPARED order IDs on first load
+                    const acceptOrPreparedOrders = this.orders.filter(order => 
+                        order.status === this.enums.orderStatusEnum.ACCEPT || 
+                        order.status === this.enums.orderStatusEnum.PREPARED
+                    );
+                    this.previousAcceptOrPreparedOrderIds = acceptOrPreparedOrders.map(order => order.id);
+                    console.log('First load - initialized with', this.previousOrderIds.length, 'orders,', this.previousAcceptOrPreparedOrderIds.length, 'with ACCEPT/PREPARED status');
+                } else {
+                    // Check for new orders and play sound (only after first load)
+                    this.checkForNewOrders();
+                }
             }).catch((err) => {
                 this.loading.isActive = false;
             });
+        },
+        checkForNewOrders: function () {
+            if (!this.orders || this.orders.length === 0) {
+                // If no orders, reset tracking
+                this.previousOrderIds = [];
+                this.previousAcceptOrPreparedOrderIds = [];
+                return;
+            }
+
+            // Get current order IDs
+            const currentOrderIds = this.orders.map(order => order.id);
+            
+            // Get current orders with ACCEPT or PREPARED status
+            const acceptOrPreparedOrders = this.orders.filter(order => 
+                order.status === this.enums.orderStatusEnum.ACCEPT || 
+                order.status === this.enums.orderStatusEnum.PREPARED
+            );
+            const currentAcceptOrPreparedOrderIds = acceptOrPreparedOrders.map(order => order.id);
+            
+            console.log('Current ACCEPT/PREPARED order IDs:', currentAcceptOrPreparedOrderIds);
+            console.log('Previous ACCEPT/PREPARED order IDs:', this.previousAcceptOrPreparedOrderIds);
+            console.log('All orders statuses:', this.orders.map(o => ({ id: o.id, serial: o.order_serial_no, status: o.status })));
+            
+            // Check if we have previous orders to compare
+            if (this.previousOrderIds.length > 0) {
+                // Find new orders (orders that weren't in previous list)
+                const newOrderIds = currentOrderIds.filter(id => !this.previousOrderIds.includes(id));
+                
+                // Find orders that changed TO ACCEPT or PREPARED status (were not ACCEPT/PREPARED before, but are now)
+                const newAcceptOrPreparedOrderIds = currentAcceptOrPreparedOrderIds.filter(id => 
+                    !this.previousAcceptOrPreparedOrderIds.includes(id)
+                );
+                
+                console.log('New order IDs found:', newOrderIds);
+                console.log('New ACCEPT/PREPARED order IDs (status changed):', newAcceptOrPreparedOrderIds);
+                
+                // Play sound if:
+                // 1. New orders with ACCEPT or PREPARED status appeared, OR
+                // 2. Existing orders changed status TO ACCEPT or PREPARED
+                if (newAcceptOrPreparedOrderIds.length > 0) {
+                    console.log('New ACCEPT/PREPARED orders detected (new orders or status changed) - playing sound');
+                    this.playRingingSound();
+                } else if (newOrderIds.length > 0) {
+                    // Check if any of the new orders have ACCEPT or PREPARED status
+                    const newOrdersWithAcceptOrPrepared = this.orders.filter(order => 
+                        newOrderIds.includes(order.id) && 
+                        (order.status === this.enums.orderStatusEnum.ACCEPT || 
+                         order.status === this.enums.orderStatusEnum.PREPARED)
+                    );
+                    
+                    if (newOrdersWithAcceptOrPrepared.length > 0) {
+                        console.log('New orders with ACCEPT/PREPARED status detected:', newOrdersWithAcceptOrPrepared.length);
+                        this.playRingingSound();
+                    } else {
+                        console.log('New orders found but none have ACCEPT/PREPARED status');
+                    }
+                } else {
+                    console.log('No new ACCEPT/PREPARED orders detected');
+                }
+            } else {
+                // First load - initialize tracking
+                console.log('First load - initializing order tracking');
+            }
+            
+            // Update previous order IDs and ACCEPT/PREPARED order IDs for next comparison
+            this.previousOrderIds = [...currentOrderIds];
+            this.previousAcceptOrPreparedOrderIds = [...currentAcceptOrPreparedOrderIds];
+        },
+        playRingingSound: function () {
+            try {
+                // Stop any currently playing audio
+                if (this.audioElement) {
+                    this.audioElement.pause();
+                    this.audioElement.currentTime = 0;
+                    this.audioElement = null;
+                }
+
+                // Get audio file path from settings or use default
+                const audioPath = this.setting?.notification_audio || '/audio/notification.mp3';
+                
+                // Play sound twice with a small gap between
+                this.playSoundOnce(audioPath, 0);
+                this.playSoundOnce(audioPath, 2000); // Play second time after 2 seconds
+            } catch (error) {
+                console.error('Error in playRingingSound:', error);
+            }
+        },
+        playSoundOnce: function (audioPath, delay) {
+            setTimeout(() => {
+                try {
+                    const audio = new Audio(audioPath);
+                    audio.volume = 1.0; // Maximum volume
+                    audio.loop = false;
+                    
+                    audio.play().catch(err => {
+                        console.error('Could not play notification sound:', err);
+                    });
+                    
+                    // Stop after 3 seconds
+                    setTimeout(() => {
+                        audio.pause();
+                        audio.currentTime = 0;
+                    }, 3000);
+                } catch (error) {
+                    console.error('Error playing sound:', error);
+                }
+            }, delay);
         },
         destroy: function (id) {
             appService.destroyConfirmation().then((res) => {
