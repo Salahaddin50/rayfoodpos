@@ -704,9 +704,18 @@ export default {
             }
         },
         isDriverApplicable(order) {
-            // Takeaway + Online orders only.
-            // In this table, "Online" is represented by `whatsapp_number`.
-            return !!(order && (order.order_type === this.enums.orderTypeEnum.TAKEAWAY || order.order_type === this.enums.orderTypeEnum.DELIVERY || order.whatsapp_number));
+            // Driver assignment is only for online orders (orders without dining_table_id)
+            // Dining table orders (orders with dining_table_id) should not have driver assignment
+            if (!order) return false;
+            
+            // If order has dining_table_id, it's a dining table order - driver not applicable
+            if (order.dining_table_id) return false;
+            
+            // For orders without dining_table_id (online orders), driver assignment is allowed
+            // Takeaway, Delivery, or Online orders (with whatsapp_number) can have drivers
+            return !!(order.order_type === this.enums.orderTypeEnum.TAKEAWAY || 
+                     order.order_type === this.enums.orderTypeEnum.DELIVERY || 
+                     order.whatsapp_number);
         },
         assignDriver(order, driverId) {
             if (!order) return;
