@@ -405,6 +405,7 @@
         "got_your_order": "Got your order!",
         "your_order": "Your order is {order}",
         "estimated_delivery_time": "Estimated delivery time",
+        "min": "min",
         "your_order_has_been_delivered": "Your order has been delivered",
         "forget_password": "Forgot Password",
         "verify_email": "Verify Email",

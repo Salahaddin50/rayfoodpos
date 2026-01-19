@@ -48,7 +48,8 @@ return [
         'items_report'     =>  'Items Report',
         'unit_price'       => 'Unit Price',
         'total_income'     => 'Total Income',
-        'options'          => 'Options'
+        'options'          => 'Options',
+        'min'              => 'min'
     ],
     'message' => [
         'validation_error'            => 'Validation Error.',

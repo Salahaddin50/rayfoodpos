@@ -30,7 +30,7 @@
 
         <div v-if="parseInt(props.status) !== parseInt(enums.orderStatusEnum.DELIVERED)">
             <p class="text-xs text-center mb-4">{{ $t('label.estimated_delivery_time') }}</p>
-            <h4 class="text-xl font-medium text-center mb-4">{{ props.preparation_time }} min</h4>
+            <h4 class="text-xl font-medium text-center mb-4">{{ estimatedDeliveryTimeRange }} {{ $t('label.min') }}</h4>
         </div>
 
         <img v-if="parseInt(props.status) === parseInt(enums.orderStatusEnum.DELIVERED)" class="h-32 mx-auto mb-3"
@@ -130,6 +130,13 @@ export default {
                 [orderStatusEnum.PREPARED]: this.$t("label.prepared"),
                 [orderStatusEnum.DELIVERED]: this.$t("label.delivered"),
             };
+        },
+        estimatedDeliveryTimeRange() {
+            // Calculate estimated delivery time: (preparation_time + 10) to (preparation_time + 15) minutes
+            const baseTime = parseInt(this.props.preparation_time) || 15;
+            const minTime = baseTime + 10;
+            const maxTime = baseTime + 15;
+            return `${minTime}-${maxTime}`;
         }
     },
 }

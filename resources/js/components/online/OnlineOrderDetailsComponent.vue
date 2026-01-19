@@ -20,12 +20,19 @@
                                 {{ $t('label.online_order') }}
                             </span>
                         </div>
-                        <div v-if="order.whatsapp_number" class="flex flex-wrap items-center gap-2 mb-5">
+                        <div v-if="order.whatsapp_number" class="flex flex-wrap items-center gap-2 mb-1">
                             <span class="text-sm capitalize">{{ $t("label.whatsapp_number") }}:</span>
                             <span class="text-sm capitalize text-heading">
                                 {{ order.whatsapp_number }}
                             </span>
                         </div>
+                        <div v-if="order.token && order.token !== null && order.token !== ''" class="flex flex-wrap items-center gap-2 mb-5">
+                            <span class="text-sm capitalize">{{ $t("label.token_no") }}:</span>
+                            <span class="text-sm capitalize text-heading">
+                                {{ order.token }}
+                            </span>
+                        </div>
+                        <div v-else-if="!order.whatsapp_number" class="mb-5"></div>
 
                         <OrderStatusComponent :props="order" />
 
@@ -219,6 +226,8 @@ export default {
                 isActive: false,
             },
             refreshInterval: null,
+            previousDriverId: null,
+            audioElement: null,
             enums: {
                 activityEnum: activityEnum,
                 orderStatusEnum: orderStatusEnum,
@@ -326,6 +335,12 @@ export default {
             this.loading.isActive = true;
             this.$store.dispatch("tableDiningOrder/show", this.$route.params.id).then(res => {
                 this.loading.isActive = false;
+                // Initialize previous driver_id on first load
+                if (this.order && this.order.driver_id) {
+                    this.previousDriverId = this.order.driver_id;
+                } else {
+                    this.previousDriverId = null;
+                }
                 // Start auto-refresh every 1 minute
                 this.startAutoRefresh();
             }).catch((error) => {
@@ -360,9 +375,68 @@ export default {
             this.loading.isActive = true;
             this.$store
                 .dispatch("tableDiningOrder/show", this.$route.params.id)
-                .finally(() => {
+                .then(() => {
+                    // Check if driver has been assigned
+                    if (this.order) {
+                        const currentDriverId = this.order.driver_id || null;
+                        
+                        // If driver was just assigned (changed from null/empty to a value), play sound
+                        if (currentDriverId && 
+                            (this.previousDriverId === null || this.previousDriverId === undefined || this.previousDriverId === '') &&
+                            currentDriverId !== this.previousDriverId) {
+                            console.log('Driver assigned - playing sound. Driver ID:', currentDriverId);
+                            this.playRingingSound();
+                        }
+                        
+                        // Update previous driver_id
+                        this.previousDriverId = currentDriverId;
+                    }
+                    this.loading.isActive = false;
+                })
+                .catch(() => {
                     this.loading.isActive = false;
                 });
+        },
+        playRingingSound: function () {
+            try {
+                // Stop any currently playing audio
+                if (this.audioElement) {
+                    this.audioElement.pause();
+                    this.audioElement.currentTime = 0;
+                    this.audioElement = null;
+                }
+
+                // Get audio file path from settings or use default
+                const audioPath = this.setting?.notification_audio || '/audio/notification.mp3';
+                console.log('Playing ringing sound:', audioPath);
+                
+                // Play sound twice with a small gap between
+                this.playSoundOnce(audioPath, 0);
+                this.playSoundOnce(audioPath, 2000); // Play second time after 2 seconds
+            } catch (error) {
+                console.error('Error in playRingingSound:', error);
+            }
+        },
+        playSoundOnce: function (audioPath, delay) {
+            setTimeout(() => {
+                try {
+                    const audio = new Audio(audioPath);
+                    audio.volume = 1.0; // Maximum volume
+                    audio.loop = false;
+                    
+                    audio.play().catch(err => {
+                        console.error('Could not play notification sound:', err);
+                    });
+                    
+                    // Stop after 3 seconds
+                    setTimeout(() => {
+                        audio.pause();
+                        audio.currentTime = 0;
+                    }, 3000);
+                } catch (error) {
+                    console.error('Error playing sound:', error);
+                }
+            }, delay);
         },
         startAutoRefresh() {
             // Clear any existing interval
@@ -409,6 +483,13 @@ export default {
     },
     beforeUnmount() {
         this.stopAutoRefresh();
+        
+        // Clean up audio element
+        if (this.audioElement) {
+            this.audioElement.pause();
+            this.audioElement = null;
+        }
+        
         this.$store.dispatch("tableCart/resetPaymentMethod").then().catch();
     }
 }

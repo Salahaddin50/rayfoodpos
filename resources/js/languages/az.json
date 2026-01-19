@@ -382,6 +382,7 @@
         "got_your_order": "Sifarişinizi aldıq!",
         "your_order": "Sifarişiniz {order}",
         "estimated_delivery_time": "Təxmini çatdırılma vaxtı",
+        "min": "dəq",
         "your_order_has_been_delivered": "Sifarişiniz çatdırıldı",
         "forget_password": "Şifrəni Unutdum",
         "verify_email": "E-poçtu Təsdiq Et",

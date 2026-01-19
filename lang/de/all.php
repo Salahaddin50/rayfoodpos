@@ -46,7 +46,7 @@ return [
         'description'      => 'Beschreibung',
         'sales_report'     => 'Verkaufsbericht',
         'items_report'     => 'Güter bericht',
-        
+        'min'              => 'Min'
     ],
     'message' => [
         'validation_error'            => 'Validierungsfehler.',

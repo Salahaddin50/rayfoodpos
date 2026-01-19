@@ -378,6 +378,7 @@
         "got_your_order": "Получили ваш заказ!",
         "your_order": "Ваш заказ {order}",
         "estimated_delivery_time": "Предполагаемое время доставки",
+        "min": "мин",
         "your_order_has_been_delivered": "Ваш заказ доставлен",
         "forget_password": "Забыли пароль",
         "verify_email": "Подтвердить email",

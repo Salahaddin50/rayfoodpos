@@ -45,7 +45,8 @@ return [
         'caution'           => 'تحذير',
         'description'       => 'الوصف',
         'sales_report'      => 'تقرير المبيعات',
-        'items_report'      => 'تقرير العناصر'
+        'items_report'      => 'تقرير العناصر',
+        'min'               => 'دقيقة'
     ],
     'message' => [
         'validation_error'            => 'خطأ في التحقق.',
