@@ -283,10 +283,14 @@ class AppLibrary
 
     public static function currencyAmountFormat($amount): string
     {
-        if (env('CURRENCY_POSITION') == CurrencyPosition::LEFT) {
-            return env('CURRENCY_SYMBOL') . number_format($amount, env('CURRENCY_DECIMAL_POINT'), '.', '');
+        $currencySymbol = Settings::group('site')->get('site_default_currency_symbol', env('CURRENCY_SYMBOL', '$'));
+        $currencyPosition = Settings::group('site')->get('site_currency_position', env('CURRENCY_POSITION', CurrencyPosition::LEFT));
+        $decimalPoint = Settings::group('site')->get('site_digit_after_decimal_point', env('CURRENCY_DECIMAL_POINT', 2));
+        
+        if ($currencyPosition == CurrencyPosition::LEFT) {
+            return $currencySymbol . number_format($amount, $decimalPoint, '.', '');
         }
-        return number_format($amount, env('CURRENCY_DECIMAL_POINT'), '.', '') . env('CURRENCY_SYMBOL');
+        return number_format($amount, $decimalPoint, '.', '') . $currencySymbol;
     }
 
     public static function flatAmountFormat($amount): string
