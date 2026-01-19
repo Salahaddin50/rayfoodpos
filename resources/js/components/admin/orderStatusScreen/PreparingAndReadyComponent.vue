@@ -15,7 +15,7 @@
       <ul class="w-full text-center text-[#1F1F39] mb-20">
         <li v-for="preparingItem in preparingItems" :key="preparingItem.id" class="mb-6">
           <div class="text-[40px] font-semibold leading-10">
-            <template v-if="preparingItem.token && preparingItem.token !== 'online'">{{ preparingItem.token }}</template>
+            <template v-if="preparingItem.token && preparingItem.token !== 'online' && preparingItem.token !== '' && preparingItem.token !== null">{{ preparingItem.token }}</template>
             <template v-else>{{ $t('label.online') }}</template>
           </div>
           <div v-if="ossDetails(preparingItem)" class="text-sm font-medium text-[#6E7191] capitalize">
@@ -40,7 +40,7 @@
       <ul class="w-full text-center text-[#1F1F39] mb-20">
         <li v-for="preparedItem in preparedItems" :key="preparedItem.id" class="mb-6">
           <div class="text-[40px] font-semibold leading-10">
-            <template v-if="preparedItem.token && preparedItem.token !== 'online'">{{ preparedItem.token }}</template>
+            <template v-if="preparedItem.token && preparedItem.token !== 'online' && preparedItem.token !== '' && preparedItem.token !== null">{{ preparedItem.token }}</template>
             <template v-else>{{ $t('label.online') }}</template>
           </div>
           <div v-if="ossDetails(preparedItem)" class="text-sm font-medium text-[#6E7191] capitalize">
@@ -74,6 +74,9 @@ export default {
         orderTypeEnum: orderTypeEnum,
       },
       autoRefreshInterval: null,
+      previousOrderIds: [],
+      previousDeliveredOrderIds: [],
+      audioElement: null,
     };
   },
   computed: {
@@ -82,6 +85,9 @@ export default {
     },
     items: function () {
       return this.$store.getters["orderStatusScreenOrder/mostPopularItems"];
+    },
+    setting: function () {
+      return this.$store.getters['frontendSetting/lists'];
     },
   },
   mounted() {
@@ -98,7 +104,12 @@ export default {
         return item.takeaway_type_name ? `Takeaway/${item.takeaway_type_name}` : "";
       }
       if (item.order_type === orderTypeEnum.DINING_TABLE) {
-        return item.table_name ? `Table/${item.table_name}` : "";
+        let result = item.table_name ? `Table/${item.table_name}` : "";
+        // Add token number if assigned (token can be null, empty, or a string)
+        if (item.token && item.token !== 'online' && item.token !== '' && item.token !== null) {
+          result += result ? ` / Token: ${item.token}` : `Token: ${item.token}`;
+        }
+        return result;
       }
       return "";
     },
@@ -120,18 +131,144 @@ export default {
       this.$store
         .dispatch("orderStatusScreenOrder/lists")
         .then((res) => {
-          this.preparingItems = res.data.data.filter(
+          const allOrders = res.data.data || [];
+          
+          console.log('OSS Response - Total orders:', allOrders.length);
+          console.log('OSS Response - Order statuses:', allOrders.map(o => ({ id: o.id, serial: o.order_serial_no, status: o.status, token: o.token, table: o.table_name })));
+          
+          // Count DELIVERED orders
+          const deliveredOrders = allOrders.filter(order => order.status === orderStatusEnum.DELIVERED);
+          console.log('OSS DELIVERED orders in response:', deliveredOrders.length);
+          
+          this.preparingItems = allOrders.filter(
             (item) => item.status === orderStatusEnum.PREPARING
           );
-          this.preparedItems = res.data.data.filter(
+          this.preparedItems = allOrders.filter(
             (item) => item.status === orderStatusEnum.PREPARED
           );
 
           this.loading.isActive = false;
+          
+          // Initialize previousOrderIds if not already set (first load)
+          if (this.previousOrderIds.length === 0 && allOrders.length > 0) {
+            this.previousOrderIds = allOrders.map(order => order.id);
+            // Get DELIVERED order IDs on first load
+            this.previousDeliveredOrderIds = deliveredOrders.map(order => order.id);
+            console.log('OSS First load - initialized with', this.previousOrderIds.length, 'orders,', this.previousDeliveredOrderIds.length, 'with DELIVERED status');
+          } else {
+            // Check for new orders and play sound (only after first load)
+            this.checkForNewOrders(allOrders);
+          }
         })
         .catch((err) => {
           this.loading.isActive = false;
         });
+    },
+    checkForNewOrders: function (allOrders = null) {
+      // Use provided orders or fall back to computed property
+      const ordersToCheck = allOrders || this.orders || [];
+      
+      if (!ordersToCheck || ordersToCheck.length === 0) {
+        // If no orders, reset tracking
+        this.previousOrderIds = [];
+        this.previousDeliveredOrderIds = [];
+        return;
+      }
+
+      // Get current order IDs
+      const currentOrderIds = ordersToCheck.map(order => order.id);
+      
+      // Get current orders with DELIVERED status
+      const deliveredOrders = ordersToCheck.filter(order => order.status === orderStatusEnum.DELIVERED);
+      const currentDeliveredOrderIds = deliveredOrders.map(order => order.id);
+      
+      console.log('OSS Current DELIVERED order IDs:', currentDeliveredOrderIds);
+      console.log('OSS Previous DELIVERED order IDs:', this.previousDeliveredOrderIds);
+      console.log('OSS All orders statuses:', ordersToCheck.map(o => ({ id: o.id, serial: o.order_serial_no, status: o.status })));
+      
+      // Check if we have previous orders to compare
+      if (this.previousOrderIds.length > 0) {
+        // Find new orders (orders that weren't in previous list)
+        const newOrderIds = currentOrderIds.filter(id => !this.previousOrderIds.includes(id));
+        
+        // Find orders that changed TO DELIVERED status (were not DELIVERED before, but are now)
+        const newDeliveredOrderIds = currentDeliveredOrderIds.filter(id => 
+          !this.previousDeliveredOrderIds.includes(id)
+        );
+        
+        console.log('OSS New order IDs found:', newOrderIds);
+        console.log('OSS New DELIVERED order IDs (status changed):', newDeliveredOrderIds);
+        
+        // Play sound if:
+        // 1. New orders with DELIVERED status appeared, OR
+        // 2. Existing orders changed status TO DELIVERED
+        if (newDeliveredOrderIds.length > 0) {
+          console.log('OSS New DELIVERED orders detected (new orders or status changed) - playing sound');
+          this.playRingingSound();
+        } else if (newOrderIds.length > 0) {
+          // Check if any of the new orders have DELIVERED status
+          const newOrdersWithDelivered = ordersToCheck.filter(order => 
+            newOrderIds.includes(order.id) && 
+            order.status === orderStatusEnum.DELIVERED
+          );
+          
+          if (newOrdersWithDelivered.length > 0) {
+            console.log('OSS New orders with DELIVERED status detected:', newOrdersWithDelivered.length);
+            this.playRingingSound();
+          } else {
+            console.log('OSS New orders found but none have DELIVERED status');
+          }
+        } else {
+          console.log('OSS No new DELIVERED orders detected');
+        }
+      } else {
+        // First load - initialize tracking
+        console.log('OSS First load - initializing order tracking');
+      }
+      
+      // Update previous order IDs and DELIVERED order IDs for next comparison
+      this.previousOrderIds = [...currentOrderIds];
+      this.previousDeliveredOrderIds = [...currentDeliveredOrderIds];
+    },
+    playRingingSound: function () {
+      try {
+        // Stop any currently playing audio
+        if (this.audioElement) {
+          this.audioElement.pause();
+          this.audioElement.currentTime = 0;
+          this.audioElement = null;
+        }
+
+        // Get audio file path from settings or use default
+        const audioPath = this.setting?.notification_audio || '/audio/notification.mp3';
+        
+        // Play sound twice with a small gap between
+        this.playSoundOnce(audioPath, 0);
+        this.playSoundOnce(audioPath, 2000); // Play second time after 2 seconds
+      } catch (error) {
+        console.error('Error in playRingingSound:', error);
+      }
+    },
+    playSoundOnce: function (audioPath, delay) {
+      setTimeout(() => {
+        try {
+          const audio = new Audio(audioPath);
+          audio.volume = 1.0; // Maximum volume
+          audio.loop = false;
+          
+          audio.play().catch(err => {
+            console.error('Could not play notification sound:', err);
+          });
+          
+          // Stop after 3 seconds
+          setTimeout(() => {
+            audio.pause();
+            audio.currentTime = 0;
+          }, 3000);
+        } catch (error) {
+          console.error('Error playing sound:', error);
+        }
+      }, delay);
     },
     refreshPage: function () {
       // Refresh OSS data without reloading the page
@@ -140,7 +277,12 @@ export default {
   },
   beforeUnmount() {
     this.stopAutoRefresh();
-
+    
+    // Clean up audio element
+    if (this.audioElement) {
+      this.audioElement.pause();
+      this.audioElement = null;
+    }
   },
 };
 </script>

@@ -108,21 +108,21 @@
                                 {{ order.order_serial_no }}
                             </td>
                             <td class="db-table-body-td">
-                                <span v-if="order.whatsapp_number" class="db-table-badge text-blue-600 bg-blue-100">
-                                    {{ $t('label.online_order') }}
-                                </span>
-                                <span v-else :class="statusClass(order.order_type)">
+                                <span v-if="order.dining_table_id && order.table_name" :class="statusClass(order.order_type)">
                                     {{ enums.orderTypeEnumArray[order.order_type] }}
+                                </span>
+                                <span v-else class="db-table-badge text-blue-600 bg-blue-100">
+                                    {{ $t('label.online_order') }}
                                 </span>
                             </td>
                             <td class="db-table-body-td">
-                                <a v-if="order.whatsapp_number" 
+                                <span v-if="order.dining_table_id && order.table_name">{{ order.table_name }}</span>
+                                <a v-else-if="order.whatsapp_number" 
                                    :href="formatWhatsAppLink(order.whatsapp_number)" 
                                    target="_blank"
                                    class="text-blue-600 hover:text-blue-800 underline">
                                     {{ formatWhatsAppNumber(order.whatsapp_number) }}
                                 </a>
-                                <span v-else-if="order.table_name">{{ order.table_name }}</span>
                                 <span v-else>-</span>
                                 <span v-if="order.token"> / #{{ order.token }}</span>
                             </td>

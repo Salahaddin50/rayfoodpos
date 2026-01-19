@@ -39,6 +39,7 @@ class OrderResource extends JsonResource
             'status'                         => $this->status,
             'is_advance_order'               => $this->is_advance_order,
             'status_name'                    => trans('orderStatus.' . $this->status),
+            'dining_table_id'                => $this->dining_table_id,
             'table_name'                     => $this->diningTable?->name,
             'whatsapp_number'                => $this->whatsapp_number,
             'location_url'                   => $this->location_url,

@@ -42,7 +42,7 @@ class OrderStatusScreenOrderService
                         ->orWhereNotNull('dining_table_id')
                         ->orWhereNotNull('whatsapp_number');
                 })
-                ->whereIn('status', [OrderStatus::PREPARING, OrderStatus::PREPARED])
+                ->whereIn('status', [OrderStatus::PREPARING, OrderStatus::PREPARED, OrderStatus::DELIVERED])
                 ->where(function ($query) {
                 $query->where(function ($subQuery) {
                     $subQuery->whereDate('order_datetime', Carbon::today())->where('is_advance_order', Ask::NO);
