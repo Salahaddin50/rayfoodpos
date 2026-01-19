@@ -3,7 +3,7 @@
     <div v-if="design === itemDesignEnum.LIST" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
         <div v-for="item in items" :key="item" v-show="type === null || type === item.item_type"
             class="product-card-list relative" :class="isPassive(item) ? 'opacity-50 grayscale' : ''">
-            <img class="product-card-list-image" :src="item.thumb" alt="thumbnail">
+            <img class="product-card-list-image" :src="item.thumb" alt="thumbnail" loading="lazy">
             <div v-if="isPassive(item)" class="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
                 {{ $t('label.not_available') }}
             </div>
@@ -42,7 +42,7 @@
         class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 lg:gap-6">
         <div v-for="item in items" :key="item" v-show="type === null || type === item.item_type"
             class="product-card-grid relative" :class="isPassive(item) ? 'opacity-50 grayscale' : ''">
-            <img class="product-card-grid-image" :src="item.cover" alt="product">
+            <img class="product-card-grid-image" :src="item.cover" alt="product" loading="lazy">
             <div v-if="isPassive(item)" class="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
                 {{ $t('label.not_available') }}
             </div>
@@ -97,7 +97,7 @@
             <div class="modal-header items-start border-none pb-0">
                 <div class="flex gap-4">
                     <img class="flex-shrink-0 w-[72px] h-[72px] object-cover rounded-lg" :src="item.thumb"
-                        alt="thumbnail">
+                        alt="thumbnail" loading="lazy">
                     <div class="flex-auto">
                         <div class="flex items-start gap-2 mb-1">
                             <h3 class="text-sm font-semibold capitalize">{{ item.name }}</h3>
@@ -224,7 +224,7 @@
                                     <div @click.prevent="changeAddon(addon)"
                                         class="addon cursor-pointer w-fit min-w-[200px] h-[70px] rounded-lg flex border border-[#EFF0F6]">
                                         <img class="w-[68px] h-full object-cover ltr:rounded-l-lg rtl:rounded-r-lg flex-shrink-0"
-                                            :src="addon.thumb" alt="thumbnail">
+                                            :src="addon.thumb" alt="thumbnail" loading="lazy">
                                         <div class="rounded-r-lg w-full py-1 px-2">
                                             <span
                                                 class="block text-xs text-ellipsis whitespace-nowrap overflow-hidden w-fit max-w-[100px] capitalize text-heading">

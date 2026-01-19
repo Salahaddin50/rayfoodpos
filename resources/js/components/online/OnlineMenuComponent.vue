@@ -84,7 +84,23 @@
                 {{ $t('message.select_branch_to_order') }}
             </div>
 
-            <ItemComponent v-else-if="sortedItems.length > 0" :items="sortedItems" :type="itemProps.property.type"
+            <!-- Items Loading Skeleton -->
+            <div v-if="selectedBranchId && itemsLoading && sortedItems.length === 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
+                <div v-for="n in 6" :key="n" class="product-card-list relative animate-pulse">
+                    <div class="product-card-list-image bg-gray-200 h-48"></div>
+                    <div class="product-card-list-content-group">
+                        <div class="product-card-list-header-group">
+                            <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                        </div>
+                        <div class="h-3 bg-gray-200 rounded w-full mb-2"></div>
+                        <div class="h-3 bg-gray-200 rounded w-5/6"></div>
+                        <div class="product-card-list-footer-group mt-4">
+                            <div class="h-5 bg-gray-200 rounded w-1/3"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <ItemComponent v-else-if="selectedBranchId && sortedItems.length > 0" :items="sortedItems" :type="itemProps.property.type"
                 :design="itemProps.property.design" />
 
             <div v-else-if="selectedBranchId && !itemsLoading" class="mt-12">
@@ -270,8 +286,8 @@ export default {
         },
     },
     mounted() {
-        // Lazy load: show header immediately, then load branches + categories,
-        // and only load items AFTER a branch is selected.
+        // Step 1: Load branches + categories first (essential for UI)
+        // Don't block with full loading - only show for critical initial setup
         this.loading.isActive = true;
         
         Promise.all([
@@ -280,11 +296,15 @@ export default {
         ]).then(() => {
             this.loading.isActive = false;
 
+            // Step 2: After essential data loads, load items (lazy load)
             if (this.$route.params.branchId) {
                 this.selectedBranchId = parseInt(this.$route.params.branchId);
                 this.itemProps.search.branch_id = this.selectedBranchId;
                 this.$store.dispatch('tableCart/initOnlineBranch', this.selectedBranchId).then().catch();
-                this.itemList(true);
+                // Use nextTick to ensure UI is rendered before loading items
+                this.$nextTick(() => {
+                    this.itemList(true);
+                });
             } else {
                 // Auto-select first branch after 2 seconds if no branch is selected
                 if (this.branches && this.branches.length > 0) {
@@ -378,27 +398,31 @@ export default {
                 this.hasMoreItems = false;
             }
 
+            // Use itemsLoading instead of full page loading
             this.itemsLoading = true;
 
-            const payload = {
-                ...this.itemProps.search,
-                branch_id: this.selectedBranchId,
-                order_column: 'id', // fetch fast, then sort client-side by category sort
-                order_type: 'asc',
-                limit: this.itemsLimit,
-                offset: this.itemsOffset,
-                vuex: false,
-            };
-            
-            this.$store.dispatch("frontendItem/lists", payload).then((res) => {
-                const newItems = res?.data?.data || [];
-                this.itemsLocal = [...this.itemsLocal, ...newItems];
-                this.itemsOffset += newItems.length;
-                this.hasMoreItems = newItems.length === this.itemsLimit;
-                this.itemsLoading = false;
-            }).catch(() => {
-                this.itemsLoading = false;
-            });
+            // Small delay to allow UI to render (improves perceived performance)
+            setTimeout(() => {
+                const payload = {
+                    ...this.itemProps.search,
+                    branch_id: this.selectedBranchId,
+                    order_column: 'id', // fetch fast, then sort client-side by category sort
+                    order_type: 'asc',
+                    limit: this.itemsLimit,
+                    offset: this.itemsOffset,
+                    vuex: false,
+                };
+                
+                this.$store.dispatch("frontendItem/lists", payload).then((res) => {
+                    const newItems = res?.data?.data || [];
+                    this.itemsLocal = [...this.itemsLocal, ...newItems];
+                    this.itemsOffset += newItems.length;
+                    this.hasMoreItems = newItems.length === this.itemsLimit;
+                    this.itemsLoading = false;
+                }).catch(() => {
+                    this.itemsLoading = false;
+                });
+            }, 50); // Small delay for better UX
         },
         loadMoreItems: function () {
             if (!this.itemsLoading && this.hasMoreItems) {

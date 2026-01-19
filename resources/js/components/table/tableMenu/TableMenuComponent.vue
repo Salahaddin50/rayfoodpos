@@ -61,7 +61,23 @@
                         :class="itemProps.property.design === enums.itemDesignEnum.GRID ? 'text-primary' : 'text-[#A0A3BD]'"></button>
                 </div>
             </div>
-            <ItemComponent v-if="sortedItems.length > 0" :items="sortedItems" :type="itemProps.property.type"
+            <!-- Items Loading Skeleton -->
+            <div v-if="itemsLoading && sortedItems.length === 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
+                <div v-for="n in 6" :key="n" class="product-card-list relative animate-pulse">
+                    <div class="product-card-list-image bg-gray-200 h-48"></div>
+                    <div class="product-card-list-content-group">
+                        <div class="product-card-list-header-group">
+                            <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                        </div>
+                        <div class="h-3 bg-gray-200 rounded w-full mb-2"></div>
+                        <div class="h-3 bg-gray-200 rounded w-5/6"></div>
+                        <div class="product-card-list-footer-group mt-4">
+                            <div class="h-5 bg-gray-200 rounded w-1/3"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <ItemComponent v-else-if="sortedItems.length > 0" :items="sortedItems" :type="itemProps.property.type"
                 :design="itemProps.property.design" />
             <div class="mt-12" v-else-if="!itemsLoading">
                 <div class="max-w-[250px] mx-auto">
@@ -291,12 +307,20 @@ export default {
         }
     },
     mounted() {
+        // Step 1: Load categories first (fast, essential for UI)
         this.loading.isActive = true;
-        this.itemList(true);
         this.$store.dispatch("tableItemCategory/lists", this.categoryProps.search).then(res => {
             this.loading.isActive = false;
+            // Step 2: After categories load, load items (lazy load)
+            this.$nextTick(() => {
+                this.itemList(true);
+            });
         }).catch((err) => {
             this.loading.isActive = false;
+            // Even on error, try to load items
+            this.$nextTick(() => {
+                this.itemList(true);
+            });
         });
 
         if (Object.keys(this.$route.query).length > 0) {
@@ -350,7 +374,7 @@ export default {
             }
         },
         itemList: function (reset = false) {
-            this.loading.isActive = true;
+            // Don't use full page loading for items - use itemsLoading instead
             const currentTable = this.$store.getters['tableCart/table'];
             const ensureTable = () => {
                 if (currentTable && currentTable.branch_id) {
@@ -387,10 +411,8 @@ export default {
                 this.itemsOffset += newItems.length;
                 this.hasMoreItems = newItems.length === this.itemsLimit;
                 this.itemsLoading = false;
-                this.loading.isActive = false;
             }).catch(() => {
                 this.itemsLoading = false;
-                this.loading.isActive = false;
             });
         },
         loadMoreItems: function () {
