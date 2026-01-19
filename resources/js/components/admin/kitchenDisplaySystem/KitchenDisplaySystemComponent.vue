@@ -340,6 +340,9 @@ export default {
         askEnum: askEnum,
       },
       autoRefreshInterval: null,
+      previousOrderIds: [],
+      previousAcceptOrderIds: [],
+      audioElement: null,
     };
   },
   computed: {
@@ -348,6 +351,9 @@ export default {
     },
     orderItems: function () {
       return this.$store.getters["kitchenDisplaySystemOrder/orderItems"];
+    },
+    setting: function () {
+      return this.$store.getters['frontendSetting/lists'];
     },
   },
   mounted() {
@@ -399,10 +405,131 @@ export default {
           );
 
           this.loading.isActive = false;
+          
+          // Use the actual response data for tracking
+          const allOrders = res.data.data || [];
+          
+          // Initialize previousOrderIds if not already set (first load)
+          if (this.previousOrderIds.length === 0 && allOrders.length > 0) {
+            this.previousOrderIds = allOrders.map(order => order.id);
+            // Get ACCEPT order IDs on first load
+            const acceptOrders = allOrders.filter(order => order.status === this.enums.orderStatusEnum.ACCEPT);
+            this.previousAcceptOrderIds = acceptOrders.map(order => order.id);
+            console.log('KDS First load - initialized with', this.previousOrderIds.length, 'orders,', this.previousAcceptOrderIds.length, 'with ACCEPT status');
+          } else {
+            // Check for new orders and play sound (only after first load)
+            this.checkForNewOrders(allOrders);
+          }
         })
         .catch((err) => {
           this.loading.isActive = false;
         });
+    },
+    checkForNewOrders: function (allOrders = null) {
+      // Use provided orders or fall back to computed property
+      const ordersToCheck = allOrders || this.orders || [];
+      
+      if (!ordersToCheck || ordersToCheck.length === 0) {
+        // If no orders, reset tracking
+        this.previousOrderIds = [];
+        this.previousAcceptOrderIds = [];
+        return;
+      }
+
+      // Get current order IDs
+      const currentOrderIds = ordersToCheck.map(order => order.id);
+      
+      // Get current orders with ACCEPT status
+      const acceptOrders = ordersToCheck.filter(order => order.status === this.enums.orderStatusEnum.ACCEPT);
+      const currentAcceptOrderIds = acceptOrders.map(order => order.id);
+      
+      console.log('KDS Current ACCEPT order IDs:', currentAcceptOrderIds);
+      console.log('KDS Previous ACCEPT order IDs:', this.previousAcceptOrderIds);
+      console.log('KDS All orders statuses:', ordersToCheck.map(o => ({ id: o.id, serial: o.order_serial_no, status: o.status })));
+      
+      // Check if we have previous orders to compare
+      if (this.previousOrderIds.length > 0) {
+        // Find new orders (orders that weren't in previous list)
+        const newOrderIds = currentOrderIds.filter(id => !this.previousOrderIds.includes(id));
+        
+        // Find orders that changed TO ACCEPT status (were not ACCEPT before, but are now)
+        const newAcceptOrderIds = currentAcceptOrderIds.filter(id => 
+          !this.previousAcceptOrderIds.includes(id)
+        );
+        
+        console.log('KDS New order IDs found:', newOrderIds);
+        console.log('KDS New ACCEPT order IDs (status changed):', newAcceptOrderIds);
+        
+        // Play sound if:
+        // 1. New orders with ACCEPT status appeared, OR
+        // 2. Existing orders changed status TO ACCEPT
+        if (newAcceptOrderIds.length > 0) {
+          console.log('KDS New ACCEPT orders detected (new orders or status changed) - playing sound');
+          this.playRingingSound();
+        } else if (newOrderIds.length > 0) {
+          // Check if any of the new orders have ACCEPT status
+          const newOrdersWithAccept = ordersToCheck.filter(order => 
+            newOrderIds.includes(order.id) && 
+            order.status === this.enums.orderStatusEnum.ACCEPT
+          );
+          
+          if (newOrdersWithAccept.length > 0) {
+            console.log('KDS New orders with ACCEPT status detected:', newOrdersWithAccept.length);
+            this.playRingingSound();
+          } else {
+            console.log('KDS New orders found but none have ACCEPT status');
+          }
+        } else {
+          console.log('KDS No new ACCEPT orders detected');
+        }
+      } else {
+        // First load - initialize tracking
+        console.log('KDS First load - initializing order tracking');
+      }
+      
+      // Update previous order IDs and ACCEPT order IDs for next comparison
+      this.previousOrderIds = [...currentOrderIds];
+      this.previousAcceptOrderIds = [...currentAcceptOrderIds];
+    },
+    playRingingSound: function () {
+      try {
+        // Stop any currently playing audio
+        if (this.audioElement) {
+          this.audioElement.pause();
+          this.audioElement.currentTime = 0;
+          this.audioElement = null;
+        }
+
+        // Get audio file path from settings or use default
+        const audioPath = this.setting?.notification_audio || '/audio/notification.mp3';
+        
+        // Play sound twice with a small gap between
+        this.playSoundOnce(audioPath, 0);
+        this.playSoundOnce(audioPath, 2000); // Play second time after 2 seconds
+      } catch (error) {
+        console.error('Error in playRingingSound:', error);
+      }
+    },
+    playSoundOnce: function (audioPath, delay) {
+      setTimeout(() => {
+        try {
+          const audio = new Audio(audioPath);
+          audio.volume = 1.0; // Maximum volume
+          audio.loop = false;
+          
+          audio.play().catch(err => {
+            console.error('Could not play notification sound:', err);
+          });
+          
+          // Stop after 3 seconds
+          setTimeout(() => {
+            audio.pause();
+            audio.currentTime = 0;
+          }, 3000);
+        } catch (error) {
+          console.error('Error playing sound:', error);
+        }
+      }, delay);
     },
     items: function () {
       this.loading.isActive = true;
@@ -492,7 +619,12 @@ export default {
   beforeUnmount() {
     this.stopAutoRefresh();
     this.openSidebar();
-
+    
+    // Clean up audio element
+    if (this.audioElement) {
+      this.audioElement.pause();
+      this.audioElement = null;
+    }
   },
 };
 </script>
