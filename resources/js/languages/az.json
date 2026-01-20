@@ -554,6 +554,7 @@
         "delivery_location": "Çatdırılma yeri",
         "location": "Məkan",
         "pickup_cost": "Çatdırılma Xərci",
+        "pickup_type_cost": "Çatdırılma Növü/Xərci",
         "pickup_myself": "Özüm götürəcəm",
         "agree_with_driver": "Sürücü ilə razılaş",
         "you_will_pay_him": "(siz ona ödəyəcəksiniz)",

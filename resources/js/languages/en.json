@@ -358,6 +358,7 @@
         "delivery_location": "Delivery Location",
         "location": "Location",
         "pickup_cost": "Delivery Cost",
+        "pickup_type_cost": "Pickup Type/Cost",
         "pickup_myself": "Pick up myself",
         "agree_with_driver": "Agree with driver",
         "you_will_pay_him": "(you will pay him)",

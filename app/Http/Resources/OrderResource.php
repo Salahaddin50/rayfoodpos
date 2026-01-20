@@ -31,6 +31,8 @@ class OrderResource extends JsonResource
             "total_amount_price"             => AppLibrary::flatAmountFormat($this->total),
             "discount_currency_price"        => AppLibrary::currencyAmountFormat($this->discount),
             "delivery_charge_currency_price" => AppLibrary::currencyAmountFormat($this->delivery_charge),
+            "delivery_charge"                => $this->delivery_charge,
+            "subtotal"                       => $this->subtotal,
             'payment_method'                 => $this->payment_method,
             'payment_status'                 => $this->payment_status,
             'preparation_time'               => $this->preparation_time,
@@ -43,6 +45,8 @@ class OrderResource extends JsonResource
             'table_name'                     => $this->diningTable?->name,
             'whatsapp_number'                => $this->whatsapp_number,
             'location_url'                   => $this->location_url,
+            'pickup_option'                  => $this->pickup_option,
+            'delivery_charge'                => $this->delivery_charge,
             'customer'                       => new OrderUserResource($this->user->load('roles', 'media')),
             'transaction'                    => new TransactionResource($this->transaction?->load('order')),
         ];

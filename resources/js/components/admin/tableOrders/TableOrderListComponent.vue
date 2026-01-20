@@ -94,6 +94,7 @@
                             <th class="db-table-head-th">{{ $t("label.location") }}</th>
                             <th class="db-table-head-th" style="display: none;">{{ $t("label.customer") }}</th>
                             <th class="db-table-head-th">{{ $t("label.amount") }}</th>
+                            <th class="db-table-head-th">{{ $t("label.pickup_type_cost") }}</th>
                             <th class="db-table-head-th">{{ $t("label.date") }}</th>
                             <th class="db-table-head-th">{{ $t("label.status") }}</th>
                             <th class="db-table-head-th">Driver</th>
@@ -140,6 +141,16 @@
                                 {{ textShortener(order.customer.name, 20) }}
                             </td>
                             <td class="db-table-body-td">{{ order.total_amount_price }}</td>
+                            <td class="db-table-body-td">
+                                <div v-if="getPickupTypeLabel(order)" class="text-sm">
+                                    <div class="font-medium">{{ getPickupTypeLabel(order) }}</div>
+                                    <div v-if="order.delivery_charge_currency_price && parseFloat(order.delivery_charge || 0) > 0" class="text-gray-600">
+                                        {{ order.delivery_charge_currency_price }}
+                                    </div>
+                                    <div v-else class="text-gray-400">₼0.00</div>
+                                </div>
+                                <span v-else class="text-gray-400">-</span>
+                            </td>
                             <td class="db-table-body-td">
                                 {{ order.order_datetime }}
                             </td>
@@ -449,6 +460,40 @@ export default {
         },
         textShortener: function (text, number = 30) {
             return appService.textShortener(text, number);
+        },
+        getPickupTypeLabel: function (order) {
+            // Only show for online orders (not dining table orders)
+            if (order.dining_table_id && order.table_name) {
+                return null;
+            }
+            
+            // Determine pickup cost type based on stored pickup_option
+            if (order.pickup_option && order.pickup_option !== null && order.pickup_option !== '') {
+                if (order.pickup_option === 'pickup_myself') {
+                    return this.$t('label.pickup_myself');
+                } else if (order.pickup_option === 'pay_to_driver') {
+                    return this.$t('label.agree_with_driver');
+                } else if (order.pickup_option === 'pay_for_pickup_cost_now') {
+                    return this.$t('label.pay_for_pickup_cost_now');
+                } else if (order.pickup_option === 'free_delivery') {
+                    return this.$t('message.delivery_free_over_75');
+                }
+            }
+            
+            // Fallback: if pickup_option is not set (for old orders), try to determine from delivery_charge
+            const deliveryCharge = parseFloat(order.delivery_charge || 0);
+            const subtotal = parseFloat(order.subtotal || 0);
+            
+            if (subtotal >= parseFloat(this.setting.site_free_delivery_threshold || 80)) {
+                return this.$t('message.delivery_free_over_75');
+            } else if (deliveryCharge > 0) {
+                return this.$t('label.pay_for_pickup_cost_now');
+            } else if (deliveryCharge === 0 && order.whatsapp_number) {
+                // For online orders with 0 charge, could be either pickup_myself or pay_to_driver
+                return this.$t('label.pickup_myself') + ' / ' + this.$t('label.agree_with_driver');
+            }
+            
+            return null;
         },
         handleSlide: function (id) {
             return appService.handleSlide(id);

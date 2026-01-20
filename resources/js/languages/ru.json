@@ -550,6 +550,7 @@
         "delivery_location": "Место доставки",
         "location": "Местоположение",
         "pickup_cost": "Стоимость доставки",
+        "pickup_type_cost": "Тип доставки/Стоимость",
         "pickup_myself": "Заберу сам",
         "agree_with_driver": "Договориться с водителем",
         "you_will_pay_him": "(вы заплатите ему)",
