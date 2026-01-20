@@ -426,8 +426,9 @@ class OrderService
                 // Debug: Log what was saved
                 \Log::info('TableOrderStore - Order created:', [
                     'order_id' => $this->order->id,
-                    'pickup_option_saved' => $this->order->pickup_option,
-                    'delivery_charge_saved' => $this->order->delivery_charge
+                    'pickup_option_saved' => $this->order->pickup_option ?? 'NULL (column may not exist)',
+                    'delivery_charge_saved' => $this->order->delivery_charge,
+                    'column_exists' => Schema::hasColumn('orders', 'pickup_option')
                 ]);
 
                 $i            = 0;
