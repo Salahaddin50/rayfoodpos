@@ -549,6 +549,7 @@
         "whatsapp": "WhatsApp",
         "delivery_location": "Место доставки",
         "location": "Местоположение",
+        "distance": "Расстояние",
         "pickup_cost": "Стоимость доставки",
         "pickup_type_cost": "Тип доставки/Стоимость",
         "pickup_myself": "Заберу сам",

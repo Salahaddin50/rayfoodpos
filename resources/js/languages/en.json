@@ -357,6 +357,7 @@
         "whatsapp": "WhatsApp",
         "delivery_location": "Delivery Location",
         "location": "Location",
+        "distance": "Distance",
         "pickup_cost": "Delivery Cost",
         "pickup_type_cost": "Pickup Type/Cost",
         "pickup_myself": "Pick up myself",

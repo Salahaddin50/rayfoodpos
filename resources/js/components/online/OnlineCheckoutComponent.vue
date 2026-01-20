@@ -136,6 +136,10 @@
                             </div>
                             <small v-if="errors.location_url" class="db-field-alert">{{ errors.location_url[0] }}</small>
                             <small v-else class="text-xs text-gray-500 mt-1 block">{{ $t('message.location_required_hint') }}</small>
+                            <small v-if="distanceFromBranch && locationUrl" class="text-xs text-primary mt-1 block font-medium">
+                                <i class="lab lab-location text-xs mr-1"></i>
+                                {{ $t('label.distance') }}: {{ distanceFromBranch }}
+                            </small>
                         </div>
                     </div>
                 </div>
@@ -328,6 +332,10 @@ export default {
         if (this.$store.getters['tableCart/lists'].length === 0) {
             this.$router.push({ name: 'online.menu', params: { branchId: this.$route.params.branchId } });
         }
+        // Load branches if not already loaded
+        if (!this.branches || this.branches.length === 0) {
+            this.$store.dispatch("frontendBranch/lists", { paginate: 0 });
+        }
     },
     computed: {
         setting: function () {
@@ -361,6 +369,46 @@ export default {
         total: function () {
             return parseFloat(this.subtotal) + parseFloat(this.pickupCost);
         },
+        branches: function () {
+            return this.$store.getters["frontendBranch/lists"];
+        },
+        currentBranch: function () {
+            if (!this.branches || !this.$route.params.branchId) {
+                return null;
+            }
+            return this.branches.find(branch => branch.id === parseInt(this.$route.params.branchId));
+        },
+        distanceFromBranch: function () {
+            if (!this.locationUrl || !this.currentBranch) {
+                return null;
+            }
+            
+            // Extract coordinates from locationUrl (format: https://www.google.com/maps?q=lat,lng)
+            const match = this.locationUrl.match(/q=([\d.-]+),([\d.-]+)/);
+            if (!match) {
+                return null;
+            }
+            
+            const deliveryLat = parseFloat(match[1]);
+            const deliveryLng = parseFloat(match[2]);
+            
+            // Get branch coordinates
+            const branchLat = parseFloat(this.currentBranch.latitude);
+            const branchLng = parseFloat(this.currentBranch.longitude);
+            
+            if (!branchLat || !branchLng || isNaN(deliveryLat) || isNaN(deliveryLng)) {
+                return null;
+            }
+            
+            // Calculate distance using Haversine formula
+            const distance = this.calculateDistance(branchLat, branchLng, deliveryLat, deliveryLng);
+            
+            if (distance < 1) {
+                return (distance * 1000).toFixed(0) + ' m';
+            } else {
+                return distance.toFixed(2) + ' km';
+            }
+        },
     },
     methods: {
         currencyFormat: function (amount, decimal, currency, position) {
@@ -371,6 +419,22 @@ export default {
             this.phoneNumber = this.phoneNumber.replace(/[^\d]/g, '');
             // Combine country code with phone number
             this.checkoutProps.form.whatsapp_number = this.countryCode + this.phoneNumber;
+        },
+        calculateDistance: function (lat1, lon1, lat2, lon2) {
+            // Haversine formula to calculate distance between two coordinates
+            const R = 6371; // Radius of the Earth in kilometers
+            const dLat = this.deg2rad(lat2 - lat1);
+            const dLon = this.deg2rad(lon2 - lon1);
+            const a =
+                Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            const distance = R * c; // Distance in kilometers
+            return distance;
+        },
+        deg2rad: function (deg) {
+            return deg * (Math.PI / 180);
         },
         getLocation: function () {
             if (!navigator.geolocation) {
