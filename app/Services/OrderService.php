@@ -23,6 +23,7 @@ use App\Events\SendOrderGotSms;
 use App\Events\SendOrderGotMail;
 use App\Events\SendOrderGotPush;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use App\Http\Requests\OrderRequest;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
@@ -405,14 +406,22 @@ class OrderService
                     $validatedData['pickup_option'] = $pickupOption;
                 }
 
-                $this->order = FrontendOrder::create(
-                    $validatedData + [
-                        'user_id'          => $customer->id,
-                        'status'           => OrderStatus::PENDING,
-                        'order_datetime'   => date('Y-m-d H:i:s'),
-                        'preparation_time' => Settings::group('site')->get('site_food_preparation_time')
-                    ]
-                );
+                // Check if pickup_option column exists in database before including it
+                // This prevents errors if migration hasn't been run yet
+                $orderData = $validatedData + [
+                    'user_id'          => $customer->id,
+                    'status'           => OrderStatus::PENDING,
+                    'order_datetime'   => date('Y-m-d H:i:s'),
+                    'preparation_time' => Settings::group('site')->get('site_food_preparation_time')
+                ];
+                
+                // Only include pickup_option if column exists
+                if (isset($orderData['pickup_option']) && !Schema::hasColumn('orders', 'pickup_option')) {
+                    unset($orderData['pickup_option']);
+                    \Log::warning('TableOrderStore - pickup_option column does not exist, removing from data');
+                }
+
+                $this->order = FrontendOrder::create($orderData);
 
                 // Debug: Log what was saved
                 \Log::info('TableOrderStore - Order created:', [
