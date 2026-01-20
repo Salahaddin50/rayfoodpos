@@ -53,6 +53,26 @@ axios.interceptors.request.use(
     },
     error => Promise.reject(error),
 );
+
+// Response interceptor to handle 401 errors
+axios.interceptors.response.use(
+    response => response,
+    error => {
+        if (error.response && error.response.status === 401) {
+            // Clear auth token and redirect to login
+            if (localStorage.getItem('vuex')) {
+                const vuex = JSON.parse(localStorage.getItem('vuex'));
+                vuex.auth.authToken = null;
+                localStorage.setItem('vuex', JSON.stringify(vuex));
+            }
+            // Redirect to login page
+            if (window.location.pathname !== '/login' && window.location.pathname !== '/admin/login') {
+                window.location.href = '/admin/login';
+            }
+        }
+        return Promise.reject(error);
+    }
+);
 /* End axios code */
 
 const app = createApp(DefaultComponent);
