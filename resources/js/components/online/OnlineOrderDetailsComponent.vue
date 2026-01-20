@@ -331,7 +331,7 @@ export default {
     },
     mounted() {
         this.loading.isActive = true;
-        if (this.$route.params.id && this.paymentMethod) {
+        if (this.$route.params.id) {
             this.loading.isActive = true;
             this.$store.dispatch("tableDiningOrder/show", this.$route.params.id).then(res => {
                 this.loading.isActive = false;
@@ -345,6 +345,8 @@ export default {
                 this.startAutoRefresh();
             }).catch((error) => {
                 this.loading.isActive = false;
+                // If order not found, redirect to menu
+                router.push({ name: 'online.menu' });
             });
         } else {
             router.push({ name: 'online.menu' });
