@@ -53,7 +53,11 @@ class SiteTableSeeder extends Seeder
             'site_token_prefix'           => 'T',
             'site_token_padding'          => 3,
             'site_free_delivery_threshold' => "80",
-            'site_pickup_delivery_cost'    => "5",
+            'site_delivery_distance_threshold_1' => "5",  // km
+            'site_delivery_distance_threshold_2' => "10", // km
+            'site_delivery_cost_1' => "5",  // Cost for distance < threshold 1
+            'site_delivery_cost_2' => "8",  // Cost for threshold 1 <= distance < threshold 2
+            'site_delivery_cost_3' => "12", // Cost for distance >= threshold 2
         ]);
 
         $envService->addData([

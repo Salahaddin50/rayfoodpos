@@ -31,7 +31,11 @@ class SiteService
             $settings = Settings::group('site')->all();
             // Ensure the new fields are always present (for older DBs)
             $settings['site_free_delivery_threshold'] = $settings['site_free_delivery_threshold'] ?? '80';
-            $settings['site_pickup_delivery_cost'] = $settings['site_pickup_delivery_cost'] ?? '5';
+            $settings['site_delivery_distance_threshold_1'] = $settings['site_delivery_distance_threshold_1'] ?? '5';
+            $settings['site_delivery_distance_threshold_2'] = $settings['site_delivery_distance_threshold_2'] ?? '10';
+            $settings['site_delivery_cost_1'] = $settings['site_delivery_cost_1'] ?? '5';
+            $settings['site_delivery_cost_2'] = $settings['site_delivery_cost_2'] ?? '8';
+            $settings['site_delivery_cost_3'] = $settings['site_delivery_cost_3'] ?? '12';
             return $settings;
         } catch (Exception $exception) {
             throw new Exception(QueryExceptionLibrary::message($exception), 422);
@@ -47,12 +51,20 @@ class SiteService
             $currency = Currency::find($request->site_default_currency);
             $validated = $request->validated();
             
-            // Ensure the new fields are in the validated array as strings
-            if (isset($validated['site_free_delivery_threshold'])) {
-                $validated['site_free_delivery_threshold'] = (string) $validated['site_free_delivery_threshold'];
-            }
-            if (isset($validated['site_pickup_delivery_cost'])) {
-                $validated['site_pickup_delivery_cost'] = (string) $validated['site_pickup_delivery_cost'];
+            // Ensure numeric values are stored as strings for consistency
+            $numericFields = [
+                'site_free_delivery_threshold',
+                'site_delivery_distance_threshold_1',
+                'site_delivery_distance_threshold_2',
+                'site_delivery_cost_1',
+                'site_delivery_cost_2',
+                'site_delivery_cost_3'
+            ];
+            
+            foreach ($numericFields as $field) {
+                if (isset($validated[$field])) {
+                    $validated[$field] = (string) $validated[$field];
+                }
             }
             
             // Save all settings including the new ones

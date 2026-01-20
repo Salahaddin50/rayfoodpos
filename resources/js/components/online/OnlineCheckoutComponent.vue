@@ -77,7 +77,8 @@
                                     </div>
                                     <label for="pay_for_pickup_cost_now" class="db-field-label text-heading flex-1">
                                         {{ $t('label.pay_for_pickup_cost_now') }} - 
-                                        <span class="font-semibold">{{ currencyFormat(parseFloat(setting.site_pickup_delivery_cost || 5), setting.site_digit_after_decimal_point, setting.site_default_currency_symbol, setting.site_currency_position) }}</span>
+                                        <span class="font-semibold">{{ currencyFormat(pickupCost, setting.site_digit_after_decimal_point, setting.site_default_currency_symbol, setting.site_currency_position) }}</span>
+                                        <span v-if="distanceFromBranch && pickupOption === 'pay_for_pickup_cost_now'" class="text-xs text-gray-500 ml-1">({{ distanceFromBranch }})</span>
                                     </label>
                                 </li>
                             </ul>
@@ -350,21 +351,56 @@ export default {
         pickupCost: function () {
             // Get threshold and cost from settings
             const freeDeliveryThreshold = parseFloat(this.setting.site_free_delivery_threshold || 80);
-            const pickupDeliveryCost = parseFloat(this.setting.site_pickup_delivery_cost || 5);
             
             // If order is above threshold, pickup cost is 0
             if (this.subtotal >= freeDeliveryThreshold) {
                 return 0;
             }
+            
             // Calculate pickup cost based on selected option
             if (this.pickupOption === 'pickup_myself') {
                 return 0;
             } else if (this.pickupOption === 'pay_to_driver') {
                 return 0;
             } else if (this.pickupOption === 'pay_for_pickup_cost_now') {
-                return pickupDeliveryCost;
+                // Calculate cost based on distance
+                return this.calculateDeliveryCostByDistance();
             }
             return 0;
+        },
+        calculateDeliveryCostByDistance: function () {
+            // Get distance in km
+            if (!this.distanceFromBranch) {
+                // If no distance, use cost 1 as default
+                return parseFloat(this.setting.site_delivery_cost_1 || 5);
+            }
+            
+            // Extract numeric distance (remove "km" or "m")
+            const distanceStr = this.distanceFromBranch.replace(/[^\d.]/g, '');
+            let distance = parseFloat(distanceStr);
+            
+            // Convert meters to km if needed
+            if (this.distanceFromBranch.includes('m')) {
+                distance = distance / 1000;
+            }
+            
+            // Get thresholds and costs
+            const threshold1 = parseFloat(this.setting.site_delivery_distance_threshold_1 || 5);
+            const threshold2 = parseFloat(this.setting.site_delivery_distance_threshold_2 || 10);
+            const cost1 = parseFloat(this.setting.site_delivery_cost_1 || 5);
+            const cost2 = parseFloat(this.setting.site_delivery_cost_2 || 8);
+            const cost3 = parseFloat(this.setting.site_delivery_cost_3 || 12);
+            
+            // Calculate cost based on distance
+            if (distance < threshold1) {
+                return cost1;
+            } else if (distance < threshold2) {
+                // Use cost2 if set, otherwise cost1
+                return cost2 || cost1;
+            } else {
+                // Use cost3 if set, otherwise cost2, otherwise cost1
+                return cost3 || cost2 || cost1;
+            }
         },
         total: function () {
             return parseFloat(this.subtotal) + parseFloat(this.pickupCost);

@@ -47,7 +47,11 @@ class SiteRequest extends FormRequest
             'site_default_sms_gateway'       => ['nullable', 'numeric'],
             'site_food_preparation_time'     => ['required', 'numeric'],
             'site_free_delivery_threshold'   => ['required', 'numeric'],
-            'site_pickup_delivery_cost'      => ['required', 'numeric']
+            'site_delivery_distance_threshold_1' => ['nullable', 'numeric'],
+            'site_delivery_distance_threshold_2' => ['nullable', 'numeric'],
+            'site_delivery_cost_1'           => ['nullable', 'numeric'],
+            'site_delivery_cost_2'           => ['nullable', 'numeric'],
+            'site_delivery_cost_3'           => ['nullable', 'numeric']
         ];
     }
 }

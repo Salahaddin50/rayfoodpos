@@ -1,0 +1,50 @@
+========================================
+HOW TO START THE SERVER (SOLUTION)
+========================================
+
+The issue: Windows Firewall/security is blocking PHP from binding to ports.
+
+SOLUTION 1: Run as Administrator (Easiest)
+------------------------------------------
+1. Right-click on "start-server.bat" or "start-server-fixed.bat"
+2. Select "Run as administrator"
+3. The server should start on http://localhost:8000
+
+SOLUTION 2: Allow PHP through Windows Firewall
+-----------------------------------------------
+1. Open Windows Security (Windows Defender)
+2. Go to: Firewall & network protection > Allow an app through firewall
+3. Click "Change settings" (if needed)
+4. Click "Allow another app..." 
+5. Browse to your PHP installation folder (usually C:\laragon\bin\php\php-8.3.x\php.exe)
+6. Check both "Private" and "Public" boxes
+7. Click OK
+
+SOLUTION 3: Disable Firewall Temporarily (For Testing Only)
+-------------------------------------------------------------
+1. Open Windows Security
+2. Go to: Firewall & network protection
+3. Turn off firewall for Private network (temporarily for testing)
+4. Try starting the server
+5. Turn firewall back on after testing
+
+SOLUTION 4: Check Antivirus Software
+-------------------------------------
+If you have third-party antivirus (not Windows Defender):
+- Temporarily disable it and try starting the server
+- Or add PHP.exe to the antivirus exceptions/allowlist
+
+========================================
+WHY THIS HAPPENED
+========================================
+Since it was working yesterday:
+- Windows might have updated
+- Firewall rules might have reset
+- Antivirus might have updated and started blocking PHP
+
+The "Failed to listen on 127.0.0.1:8000 (reason: ?)" error
+is Windows blocking PHP from creating network listeners.
+
+========================================
+
+
