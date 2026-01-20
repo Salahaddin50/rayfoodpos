@@ -94,10 +94,10 @@
                             <th class="db-table-head-th">{{ $t("label.location") }}</th>
                             <th class="db-table-head-th" style="display: none;">{{ $t("label.customer") }}</th>
                             <th class="db-table-head-th">{{ $t("label.amount") }}</th>
-                            <th class="db-table-head-th">{{ $t("label.pickup_type_cost") }}</th>
+                            <th class="db-table-head-th" style="width: 140px;">{{ $t("label.pickup_type_cost") }}</th>
                             <th class="db-table-head-th">{{ $t("label.date") }}</th>
                             <th class="db-table-head-th">{{ $t("label.status") }}</th>
-                            <th class="db-table-head-th">Driver</th>
+                            <th class="db-table-head-th" style="width: 200px; min-width: 200px;">Driver</th>
                             <th class="db-table-head-th hidden-print" v-if="permissionChecker('table_orders_show') || permissionChecker('table_orders_edit') || permissionChecker('table_orders_delete')">
                                 {{ $t("label.action") }}
                             </th>
@@ -141,7 +141,7 @@
                                 {{ textShortener(order.customer.name, 20) }}
                             </td>
                             <td class="db-table-body-td">{{ order.total_amount_price }}</td>
-                            <td class="db-table-body-td">
+                            <td class="db-table-body-td" style="width: 140px;">
                                 <div v-if="getPickupTypeLabel(order)" class="text-sm">
                                     <div class="font-medium">{{ getPickupTypeLabel(order) }}</div>
                                     <div v-if="order.delivery_charge_currency_price && parseFloat(order.delivery_charge || 0) > 0" class="text-gray-600">
@@ -163,7 +163,7 @@
                                     {{ $t("label.advance") }}
                                 </span>
                             </td>
-                            <td class="db-table-body-td">
+                            <td class="db-table-body-td" style="width: 200px; min-width: 200px;">
                                 <template v-if="isDriverApplicable(order)">
                                     <vue-select
                                         class="db-field-control f-b-custom-select"
