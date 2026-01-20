@@ -42,8 +42,11 @@
                         </li>
                         <li class="text-xs">
                             {{ $t("label.order_type") }}:
-                            <span class="text-heading">
+                            <span class="text-heading" v-if="order.dining_table_id && order.table_name">
                                 {{ orderTypeEnumArray[order.order_type] }}
+                            </span>
+                            <span class="text-heading" v-else>
+                                {{ $t('label.online_order') }}
                             </span>
                         </li>
                         <li class="text-xs">
@@ -212,6 +215,12 @@
                                 order.subtotal_currency_price
                             }}</span>
                         </li>
+                        <li class="flex items-center justify-between text-heading" v-if="!order.dining_table_id || !order.table_name">
+                            <span class="text-sm leading-6 capitalize">{{ $t("label.pickup_cost") }}</span>
+                            <span class="text-sm leading-6 capitalize">{{
+                                order.delivery_charge_currency_price
+                            }}</span>
+                        </li>
                     </ul>
                     <div class="flex items-center justify-between p-3">
                         <h4 class="text-sm leading-6 font-bold capitalize">
@@ -223,28 +232,19 @@
                     </div>
                 </div>
             </div>
-            <div class="col-12">
+            <div class="col-12" v-if="!order.dining_table_id || !order.table_name">
                 <div class="db-card">
                     <div class="db-card-header">
-                        <h3 class="db-card-title">{{ $t("label.delivery_information") }}</h3>
+                        <h3 class="db-card-title">{{ $t("label.pickup_cost") }}</h3>
                     </div>
                     <div class="db-card-body">
-                        <div class="flex items-center gap-3 mb-4">
-                            <img class="w-8 rounded-full" :src="orderUser.image" alt="avatar" />
-                            <h4 class="font-semibold text-sm capitalize text-[#374151]">
-                                {{ textShortener(orderUser.name, 20) }}
-                            </h4>
-                        </div>
-                        <ul class="flex flex-col gap-3 py-4 mb-4 border-t border-[#EFF0F6]">
+                        <ul class="flex flex-col gap-3">
                             <li class="flex items-center gap-2.5">
-                                <i class="lab lab-mail lab-font-size-14"></i>
-                                <span class="text-xs">{{ orderUser.email }}</span>
-                            </li>
-                            <li class="flex items-center gap-2.5" v-if="orderUser.phone">
-                                <i class="lab lab-call-calling-linear lab-font-size-14"></i>
-                                <span dir="ltr" class="text-xs">{{
-                                    orderUser.country_code + "" + orderUser.phone
-                                }}</span>
+                                <i class="lab lab-money lab-font-size-16"></i>
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-semibold text-heading">{{ pickupCostTypeLabel }}</span>
+                                    <span class="text-xs text-gray-500">{{ order.delivery_charge_currency_price }}</span>
+                                </div>
                             </li>
                         </ul>
                     </div>
@@ -335,6 +335,8 @@ export default {
         },
         orderTypeEnumArray: function () {
             return {
+                [orderTypeEnum.DELIVERY]: this.$t("label.delivery"),
+                [orderTypeEnum.TAKEAWAY]: this.$t("label.takeaway"),
                 [orderTypeEnum.DINING_TABLE]: this.$t("label.dining_table"),
             }
         },
@@ -342,6 +344,46 @@ export default {
             return {
                 [paymentTypeEnum.CASH_ON_DELIVERY]: this.$t("label.cash_card"),
             }
+        },
+        pickupCostTypeLabel: function () {
+            // Only show for online orders (not dining table orders)
+            if (!this.order || (this.order.dining_table_id && this.order.table_name)) {
+                return '';
+            }
+            
+            // Debug: Check pickup_option value
+            console.log('Order pickup_option:', this.order.pickup_option);
+            console.log('Order delivery_charge:', this.order.delivery_charge);
+            console.log('Order subtotal:', this.order.subtotal);
+            
+            // Determine pickup cost type based on stored pickup_option
+            // First check if pickup_option is explicitly set
+            if (this.order.pickup_option && this.order.pickup_option !== null && this.order.pickup_option !== '') {
+                if (this.order.pickup_option === 'pickup_myself') {
+                    return this.$t('label.pickup_myself');
+                } else if (this.order.pickup_option === 'pay_to_driver') {
+                    return this.$t('label.agree_with_driver');
+                } else if (this.order.pickup_option === 'pay_for_pickup_cost_now') {
+                    return this.$t('label.pay_for_pickup_cost_now');
+                } else if (this.order.pickup_option === 'free_delivery') {
+                    return this.$t('message.delivery_free_over_75');
+                }
+            }
+            
+            // Fallback: if pickup_option is not set (for old orders), try to determine from delivery_charge and subtotal
+            const subtotal = parseFloat(this.order.subtotal) || 0;
+            const deliveryCharge = parseFloat(this.order.delivery_charge) || 0;
+            
+            if (subtotal >= 80) {
+                return this.$t('message.delivery_free_over_75');
+            } else if (deliveryCharge === 5) {
+                return this.$t('label.pay_for_pickup_cost_now');
+            } else if (deliveryCharge === 0) {
+                // Can't distinguish between pickup_myself and pay_to_driver for old orders, show both
+                return this.$t('label.pickup_myself') + ' / ' + this.$t('label.agree_with_driver');
+            }
+            
+            return '';
         },
     },
     mounted() {

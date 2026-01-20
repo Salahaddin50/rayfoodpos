@@ -60,6 +60,8 @@ class SettingResource extends JsonResource
             'order_setup_free_delivery_kilometer'  => $this->info['order_setup_free_delivery_kilometer'],
             'order_setup_basic_delivery_charge'    => $this->info['order_setup_basic_delivery_charge'],
             'order_setup_charge_per_kilo'          => $this->info['order_setup_charge_per_kilo'],
+            'site_free_delivery_threshold'         => $this->info['site_free_delivery_threshold'] ?? '80',
+            'site_pickup_delivery_cost'             => $this->info['site_pickup_delivery_cost'] ?? '5',
             'notification_fcm_api_key'             => $this->info['notification_fcm_api_key'],
             'notification_fcm_auth_domain'         => $this->info['notification_fcm_auth_domain'],
             'notification_fcm_project_id'          => $this->info['notification_fcm_project_id'],

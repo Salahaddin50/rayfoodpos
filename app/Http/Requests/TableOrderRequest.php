@@ -44,6 +44,7 @@ class TableOrderRequest extends FormRequest
             'source'           => ['required', 'numeric'],
             'whatsapp_number'  => ['nullable', 'string', 'max:20'],
             'location_url'     => ['nullable', 'string', 'max:255'],
+            'pickup_option'    => ['nullable', 'string', 'in:pickup_myself,pay_to_driver,pay_for_pickup_cost_now,free_delivery'],
             'items'            => ['required', 'json', new ValidJsonOrder]
         ];
     }

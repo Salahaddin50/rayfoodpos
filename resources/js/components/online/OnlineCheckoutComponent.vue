@@ -42,10 +42,10 @@
                     <div class="mb-6 rounded-2xl shadow-xs bg-white">
                         <h3 class="capitalize font-medium p-4 border-b border-gray-100">{{ $t('label.pickup_cost') }}</h3>
                         <div class="p-4">
-                            <div v-if="subtotal >= 80" class="text-sm text-heading">
+                            <div v-if="subtotal >= parseFloat(setting.site_free_delivery_threshold || 80)" class="text-sm text-heading">
                                 {{ $t('message.delivery_free_over_75') }}
                             </div>
-                            <ul v-else class="flex flex-col gap-4">
+                            <ul v-else-if="subtotal < parseFloat(setting.site_free_delivery_threshold || 80)" class="flex flex-col gap-4">
                                 <li class="flex items-center gap-1.5">
                                     <div class="custom-radio">
                                         <input type="radio" id="pickup_myself" v-model="pickupOption" value="pickup_myself"
@@ -71,13 +71,13 @@
                                 </li>
                                 <li class="flex items-center gap-1.5">
                                     <div class="custom-radio">
-                                        <input type="radio" id="pay_by_distance" v-model="pickupOption" value="pay_by_distance"
+                                        <input type="radio" id="pay_for_pickup_cost_now" v-model="pickupOption" value="pay_for_pickup_cost_now"
                                             class="custom-radio-field">
                                         <span class="custom-radio-span border-gray-400"></span>
                                     </div>
-                                    <label for="pay_by_distance" class="db-field-label text-heading flex-1">
+                                    <label for="pay_for_pickup_cost_now" class="db-field-label text-heading flex-1">
                                         {{ $t('label.pay_for_pickup_cost_now') }} - 
-                                        <span class="font-semibold">{{ currencyFormat(5, setting.site_digit_after_decimal_point, setting.site_default_currency_symbol, setting.site_currency_position) }}</span>
+                                        <span class="font-semibold">{{ currencyFormat(parseFloat(setting.site_pickup_delivery_cost || 5), setting.site_digit_after_decimal_point, setting.site_default_currency_symbol, setting.site_currency_position) }}</span>
                                     </label>
                                 </li>
                             </ul>
@@ -221,7 +221,7 @@
                                             }}
                                         </span>
                                     </li>
-                                    <li v-if="subtotal < 80" class="flex items-center justify-between text-heading">
+                                    <li v-if="subtotal < parseFloat(setting.site_free_delivery_threshold || 80)" class="flex items-center justify-between text-heading">
                                         <span class="text-sm leading-6 capitalize">
                                             {{ $t('label.pickup_cost') }}
                                         </span>
@@ -319,6 +319,7 @@ export default {
                     address_id: null,
                     whatsapp_number: "",
                     location_url: "",
+                    pickup_option: null, // Initialize pickup_option in form
                     items: []
                 }
             },
@@ -340,8 +341,12 @@ export default {
             return this.$store.getters['tableCart/subtotal'];
         },
         pickupCost: function () {
-            // If order is 80 AZN or above, pickup cost is 0
-            if (this.subtotal >= 80) {
+            // Get threshold and cost from settings
+            const freeDeliveryThreshold = parseFloat(this.setting.site_free_delivery_threshold || 80);
+            const pickupDeliveryCost = parseFloat(this.setting.site_pickup_delivery_cost || 5);
+            
+            // If order is above threshold, pickup cost is 0
+            if (this.subtotal >= freeDeliveryThreshold) {
                 return 0;
             }
             // Calculate pickup cost based on selected option
@@ -349,8 +354,8 @@ export default {
                 return 0;
             } else if (this.pickupOption === 'pay_to_driver') {
                 return 0;
-            } else if (this.pickupOption === 'pay_by_distance') {
-                return 5;
+            } else if (this.pickupOption === 'pay_for_pickup_cost_now') {
+                return pickupDeliveryCost;
             }
             return 0;
         },
@@ -419,14 +424,36 @@ export default {
             // Set location URL (now mandatory)
             this.checkoutProps.form.location_url = this.locationUrl;
             
+            // Set pickup option type
+            // If subtotal >= threshold, it's free delivery regardless of selected option
+            const freeDeliveryThreshold = parseFloat(this.setting.site_free_delivery_threshold || 80);
+            if (this.subtotal >= freeDeliveryThreshold) {
+                this.checkoutProps.form.pickup_option = 'free_delivery';
+            } else {
+                this.checkoutProps.form.pickup_option = this.pickupOption;
+            }
+            
+            // Explicitly verify pickup_option is set
+            console.log('=== PICKUP OPTION DEBUG ===');
+            console.log('Selected pickupOption:', this.pickupOption);
+            console.log('Subtotal:', this.subtotal);
+            console.log('pickup_option being set to:', this.checkoutProps.form.pickup_option);
+            console.log('Form pickup_option value:', this.checkoutProps.form.pickup_option);
+            console.log('=== END DEBUG ===');
+            
             console.log('Submitting order with data:', {
                 branch_id: this.checkoutProps.form.branch_id,
                 customer_id: this.checkoutProps.form.customer_id,
                 whatsapp_number: this.checkoutProps.form.whatsapp_number,
                 location_url: this.checkoutProps.form.location_url,
                 subtotal: this.checkoutProps.form.subtotal,
+                delivery_charge: this.checkoutProps.form.delivery_charge,
+                pickup_option: this.checkoutProps.form.pickup_option,
                 total: this.checkoutProps.form.total
             });
+            
+            // Log full form to verify
+            console.log('Full form object being sent:', JSON.stringify(this.checkoutProps.form, null, 2));
             
             _.forEach(this.carts, (item, index) => {
                 let item_variations = [];
@@ -482,6 +509,13 @@ export default {
                 });
             });
             this.checkoutProps.form.items = JSON.stringify(this.checkoutProps.form.items);
+
+            // Final verification before sending
+            console.log('=== FINAL CHECK BEFORE SENDING ===');
+            console.log('pickup_option in form:', this.checkoutProps.form.pickup_option);
+            console.log('pickup_option exists?', 'pickup_option' in this.checkoutProps.form);
+            console.log('All form keys:', Object.keys(this.checkoutProps.form));
+            console.log('=== END FINAL CHECK ===');
 
             this.$store.dispatch('tableDiningOrder/save', this.checkoutProps.form).then(orderResponse => {
                 this.checkoutProps.form.subtotal = 0;

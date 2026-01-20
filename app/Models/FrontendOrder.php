@@ -33,6 +33,7 @@ class FrontendOrder extends Model
         'dining_table_id',
         'whatsapp_number',
         'location_url',
+        'pickup_option',
         'source'
     ];
 
@@ -57,6 +58,7 @@ class FrontendOrder extends Model
         'dining_table_id'  => 'integer',
         'whatsapp_number'  => 'string',
         'location_url'     => 'string',
+        'pickup_option'    => 'string',
         'source'           => 'string'
     ];
 

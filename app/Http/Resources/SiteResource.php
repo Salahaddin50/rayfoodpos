@@ -47,7 +47,9 @@ class SiteResource extends JsonResource
             "site_tiktok_link"               => $this->info['site_tiktok_link'] ?? '',
             "site_online_payment_gateway"    => $this->info['site_online_payment_gateway'],
             "site_default_sms_gateway"       => $this->info['site_default_sms_gateway'],
-            "site_food_preparation_time"     => $this->info['site_food_preparation_time']
+            "site_food_preparation_time"     => $this->info['site_food_preparation_time'],
+            "site_free_delivery_threshold"    => $this->info['site_free_delivery_threshold'] ?? '80',
+            "site_pickup_delivery_cost"       => $this->info['site_pickup_delivery_cost'] ?? '5'
         ];
     }
 }

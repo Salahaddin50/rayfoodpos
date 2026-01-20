@@ -374,14 +374,52 @@ class OrderService
                     throw new Exception("Default customer not found. Please create/restore a customer user with username 'default-customer' (Walking Customer).", 422);
                 }
 
+                // Debug: Log what's being received
+                \Log::info('TableOrderStore - Request data:', [
+                    'pickup_option_raw' => $request->input('pickup_option'),
+                    'pickup_option_validated' => $request->validated()['pickup_option'] ?? 'NOT_IN_VALIDATED',
+                    'whatsapp_number' => $request->input('whatsapp_number'),
+                    'delivery_charge' => $request->input('delivery_charge'),
+                    'all_request_data' => $request->all()
+                ]);
+
+                $validatedData = $request->validated();
+                
+                // Debug: Check validated data
+                \Log::info('TableOrderStore - Validated data keys:', [
+                    'keys' => array_keys($validatedData),
+                    'has_pickup_option' => isset($validatedData['pickup_option']),
+                    'pickup_option_value' => $validatedData['pickup_option'] ?? 'NOT_IN_VALIDATED',
+                    'pickup_option_raw' => $request->input('pickup_option'),
+                    'all_request_keys' => array_keys($request->all())
+                ]);
+                
+                // Ensure pickup_option is included if present in request
+                // Laravel's validated() may omit nullable fields if they're not explicitly set
+                $pickupOption = $request->input('pickup_option');
+                if (!empty($pickupOption) && is_string($pickupOption)) {
+                    $validatedData['pickup_option'] = $pickupOption;
+                    \Log::info('TableOrderStore - pickup_option explicitly added to validated data:', ['value' => $pickupOption]);
+                } elseif ($pickupOption !== null) {
+                    // Even if it's an empty string, ensure it's in the array
+                    $validatedData['pickup_option'] = $pickupOption;
+                }
+
                 $this->order = FrontendOrder::create(
-                    $request->validated() + [
+                    $validatedData + [
                         'user_id'          => $customer->id,
                         'status'           => OrderStatus::PENDING,
                         'order_datetime'   => date('Y-m-d H:i:s'),
                         'preparation_time' => Settings::group('site')->get('site_food_preparation_time')
                     ]
                 );
+
+                // Debug: Log what was saved
+                \Log::info('TableOrderStore - Order created:', [
+                    'order_id' => $this->order->id,
+                    'pickup_option_saved' => $this->order->pickup_option,
+                    'delivery_charge_saved' => $this->order->delivery_charge
+                ]);
 
                 $i            = 0;
                 $totalTax     = 0;

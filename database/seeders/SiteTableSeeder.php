@@ -52,6 +52,8 @@ class SiteTableSeeder extends Seeder
             'site_auto_token_enabled'     => Activity::ENABLE,
             'site_token_prefix'           => 'T',
             'site_token_padding'          => 3,
+            'site_free_delivery_threshold' => "80",
+            'site_pickup_delivery_cost'    => "5",
         ]);
 
         $envService->addData([

@@ -7,7 +7,7 @@ use Exception;
 use App\Enums\Activity;
 use App\Models\Currency;
 use App\Http\Requests\SiteRequest;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 use Dipokhalder\EnvEditor\EnvEditor;
 use Illuminate\Support\Facades\Artisan;
 use App\Libraries\QueryExceptionLibrary;
@@ -28,9 +28,12 @@ class SiteService
     public function list()
     {
         try {
-            return Settings::group('site')->all();
+            $settings = Settings::group('site')->all();
+            // Ensure the new fields are always present (for older DBs)
+            $settings['site_free_delivery_threshold'] = $settings['site_free_delivery_threshold'] ?? '80';
+            $settings['site_pickup_delivery_cost'] = $settings['site_pickup_delivery_cost'] ?? '5';
+            return $settings;
         } catch (Exception $exception) {
-            Log::info($exception->getMessage());
             throw new Exception(QueryExceptionLibrary::message($exception), 422);
         }
     }
@@ -42,7 +45,18 @@ class SiteService
     {
         try {
             $currency = Currency::find($request->site_default_currency);
-            Settings::group('site')->set($request->validated() + ['site_default_currency_symbol' => $currency->symbol]);
+            $validated = $request->validated();
+            
+            // Ensure the new fields are in the validated array as strings
+            if (isset($validated['site_free_delivery_threshold'])) {
+                $validated['site_free_delivery_threshold'] = (string) $validated['site_free_delivery_threshold'];
+            }
+            if (isset($validated['site_pickup_delivery_cost'])) {
+                $validated['site_pickup_delivery_cost'] = (string) $validated['site_pickup_delivery_cost'];
+            }
+            
+            // Save all settings including the new ones
+            Settings::group('site')->set($validated + ['site_default_currency_symbol' => $currency->symbol]);
 
             $this->envService->addData([
                 'APP_DEBUG'              => $request->site_app_debug == Activity::ENABLE ? 'true' : 'false',
@@ -62,9 +76,11 @@ class SiteService
             }
 
             Artisan::call('optimize:clear');
+            // Clear frontend settings cache
+            Cache::forget('frontend:setting');
+
             return $this->list();
         } catch (Exception $exception) {
-            Log::info($exception->getMessage());
             throw new Exception(QueryExceptionLibrary::message($exception), 422);
         }
     }

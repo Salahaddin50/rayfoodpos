@@ -45,7 +45,9 @@ class SiteRequest extends FormRequest
             'site_tiktok_link'               => ['nullable', 'string', 'max:190'],
             'site_online_payment_gateway'    => ['required', 'numeric'],
             'site_default_sms_gateway'       => ['nullable', 'numeric'],
-            'site_food_preparation_time'     => ['required', 'numeric']
+            'site_food_preparation_time'     => ['required', 'numeric'],
+            'site_free_delivery_threshold'   => ['required', 'numeric'],
+            'site_pickup_delivery_cost'      => ['required', 'numeric']
         ];
     }
 }
