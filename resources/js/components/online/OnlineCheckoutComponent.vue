@@ -138,12 +138,6 @@
                             <small v-else class="text-xs text-gray-500 mt-1 block">{{ $t('message.location_required_hint') }}</small>
                         </div>
                     </div>
-
-                    <button type="button"
-                        class="hidden md:block w-full rounded-3xl capitalize font-medium leading-6 py-3 text-white bg-primary"
-                        @click="orderSubmit">
-                        {{ $t('button.place_order') }}
-                    </button>
                 </div>
 
                 <div class="col-12 md:col-5">
@@ -245,6 +239,11 @@
                                     </h5>
                                 </div>
                             </div>
+                            <button type="button"
+                                class="hidden md:block w-full rounded-3xl capitalize font-medium leading-6 py-3 text-white bg-primary"
+                                @click="orderSubmit">
+                                {{ $t('button.place_order') }}
+                            </button>
                             <button type="button"
                                 class="block md:hidden w-full rounded-3xl capitalize font-medium leading-6 py-3 text-white bg-primary"
                                 @click="orderSubmit">
