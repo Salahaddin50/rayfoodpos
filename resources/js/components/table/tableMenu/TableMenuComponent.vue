@@ -105,7 +105,7 @@
         class="modal confirm-order ff-modal">
         <div class="modal-dialog max-w-[360px] relative">
             <button class="modal-close fa-regular fa-circle-xmark absolute top-5 right-5"
-                @click.prevent="closeModal"></button>
+                @click.prevent="closeModalAndCleanUrl"></button>
             <div class="modal-body">
                 <h3 class="capitalize text-base font-medium text-center mt-2 mb-3">
                     {{ $t('message.order_thank_you') }}
