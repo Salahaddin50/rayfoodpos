@@ -24,13 +24,12 @@ class RootController extends Controller
     {
         try {
             $companyName = Settings::group('company')->get('company_name') ?? 'Restaurant POS';
-            $themeFavicon = ThemeSetting::where(['key' => 'theme_favicon_logo'])->first();
-            $favicon = $themeFavicon?->faviconLogo ?? asset('images/theme/theme-favicon-logo.png');
         } catch (\Exception $e) {
-            // Fallback if settings are not available
             $companyName = 'Restaurant POS';
-            $favicon = asset('images/theme/theme-favicon-logo.png');
         }
+
+        // Always use local assets for PWA icons to ensure they're accessible
+        $iconBase = asset('images/theme/theme-favicon-logo.png');
 
         return response()->json([
             'name' => $companyName,
@@ -48,13 +47,13 @@ class RootController extends Controller
                     'type' => 'image/x-icon'
                 ],
                 [
-                    'src' => $favicon,
+                    'src' => $iconBase,
                     'sizes' => '192x192',
                     'type' => 'image/png',
                     'purpose' => 'any maskable'
                 ],
                 [
-                    'src' => $favicon,
+                    'src' => $iconBase,
                     'sizes' => '512x512',
                     'type' => 'image/png',
                     'purpose' => 'any maskable'
