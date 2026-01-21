@@ -121,6 +121,29 @@
             </div>
         </div>
     </div>
+
+    <!-- PWA Install Instructions Modal (fallback for mobile browsers without beforeinstallprompt) -->
+    <div ref="installAppModal" id="install-app-modal" class="modal ff-modal">
+        <div class="modal-dialog max-w-[500px] relative">
+            <button class="modal-close fa-regular fa-circle-xmark absolute top-5 right-5"
+                    @click.prevent="closeInstallModal"></button>
+            <div class="modal-body">
+                <h3 class="capitalize text-lg font-medium text-center mt-2 mb-4">
+                    {{ $t('button.install_app') }}
+                </h3>
+                <p class="text-sm text-gray-700 whitespace-pre-line">
+                    {{ installInstructions }}
+                </p>
+                <button
+                    type="button"
+                    class="w-full mt-6 rounded-3xl text-center font-medium leading-6 py-3 bg-primary text-white hover:bg-primary-dark transition-colors"
+                    @click.prevent="closeInstallModal"
+                >
+                    {{ $t('button.continue') }}
+                </button>
+            </div>
+        </div>
+    </div>
 </template>
 
 
@@ -202,6 +225,37 @@ export default {
         }
     },
     methods: {
+        isIOSDevice: function () {
+            // iOS Safari does not support the native beforeinstallprompt flow.
+            // (Chrome on iOS is also Safari under the hood.)
+            return /iphone|ipad|ipod/i.test(window.navigator.userAgent || '');
+        },
+        isAndroidDevice: function () {
+            return /android/i.test(window.navigator.userAgent || '');
+        },
+        getInstallInstructions: function () {
+            if (this.isIOSDevice()) {
+                return this.$t('message.pwa_install_ios');
+            }
+            if (this.isAndroidDevice()) {
+                return this.$t('message.pwa_install_android');
+            }
+            return this.$t('message.pwa_install_instructions');
+        },
+        openInstallModal: function () {
+            const modalTarget = this.$refs.installAppModal;
+            if (modalTarget) {
+                modalTarget.classList.add("active");
+                document.body.style.overflowY = "hidden";
+            }
+        },
+        closeInstallModal: function () {
+            const modalTarget = this.$refs.installAppModal;
+            if (modalTarget) {
+                modalTarget.classList.remove("active");
+                document.body.style.overflowY = "";
+            }
+        },
         getPageRoute: function (pageSlug) {
             if (this.isOnlineOrder) {
                 return { 
@@ -310,6 +364,9 @@ export default {
                     console.error('Error showing install prompt:', error);
                     this.deferredPrompt = null;
                 });
+            } else {
+                // Fallback for mobile browsers (notably iOS) where beforeinstallprompt never fires.
+                this.openInstallModal();
             }
         }
     },
