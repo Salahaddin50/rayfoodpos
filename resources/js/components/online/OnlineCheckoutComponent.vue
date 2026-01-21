@@ -42,10 +42,10 @@
                     <div class="mb-6 rounded-2xl shadow-xs bg-white">
                         <h3 class="capitalize font-medium p-4 border-b border-gray-100">{{ $t('label.pickup_cost') }}</h3>
                         <div class="p-4">
-                            <div v-if="subtotal >= parseFloat(currentBranch?.free_delivery_threshold || 80)" class="text-sm text-heading">
+                            <div v-if="isDeliveryFree" class="text-sm text-heading">
                                 {{ $t('message.delivery_free_over_75') }}
                             </div>
-                            <ul v-else-if="subtotal < parseFloat(currentBranch?.free_delivery_threshold || 80)" class="flex flex-col gap-4">
+                            <ul v-else-if="!isDeliveryFree" class="flex flex-col gap-4">
                                 <li class="flex items-center gap-1.5">
                                     <div class="custom-radio">
                                         <input type="radio" id="pickup_myself" v-model="pickupOption" value="pickup_myself"
@@ -220,7 +220,7 @@
                                             }}
                                         </span>
                                     </li>
-                                    <li v-if="subtotal < parseFloat(currentBranch?.free_delivery_threshold || 80)" class="flex items-center justify-between text-heading">
+                                    <li v-if="!isDeliveryFree" class="flex items-center justify-between text-heading">
                                         <span class="text-sm leading-6 capitalize">
                                             {{ $t('label.pickup_cost') }}
                                         </span>
@@ -389,6 +389,27 @@ export default {
                 return null;
             }
             return this.branches.find(branch => branch.id === parseInt(this.$route.params.branchId));
+        },
+        isDeliveryFree: function () {
+            // First check: If distance is within free_delivery_distance, delivery is free
+            const freeDeliveryDistance = parseFloat(this.currentBranch?.free_delivery_distance);
+            if (freeDeliveryDistance && this.distanceFromBranch) {
+                const distanceInKm = this.getDistanceInKm();
+                if (distanceInKm !== null && distanceInKm <= freeDeliveryDistance) {
+                    return true; // Free delivery within distance threshold
+                }
+            }
+            
+            // Second check: If order subtotal is above free_delivery_threshold, delivery is free
+            const freeDeliveryThreshold =
+                parseFloat(this.currentBranch?.free_delivery_threshold) ||
+                80;
+            
+            if (this.subtotal >= freeDeliveryThreshold) {
+                return true;
+            }
+            
+            return false;
         },
         distanceFromBranch: function () {
             if (!this.locationUrl || !this.currentBranch) {
@@ -590,11 +611,8 @@ export default {
             this.checkoutProps.form.location_url = this.locationUrl;
             
             // Set pickup option type
-            // If subtotal >= threshold, it's free delivery regardless of selected option
-            const freeDeliveryThreshold =
-                parseFloat(this.currentBranch?.free_delivery_threshold) ||
-                80;
-            if (this.subtotal >= freeDeliveryThreshold) {
+            // If delivery is free (by distance or threshold), set pickup_option to 'free_delivery'
+            if (this.isDeliveryFree) {
                 this.checkoutProps.form.pickup_option = 'free_delivery';
             } else {
                 this.checkoutProps.form.pickup_option = this.pickupOption;
