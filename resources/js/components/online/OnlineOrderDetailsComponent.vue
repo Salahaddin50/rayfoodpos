@@ -187,6 +187,12 @@
                                         {{ order.subtotal_currency_price }}
                                     </span>
                                 </li>
+                                <li v-if="order.delivery_charge && parseFloat(order.delivery_charge) > 0" class="flex items-center justify-between text-heading">
+                                    <span class="text-sm leading-6 capitalize">{{ $t("label.delivery_charge") }}</span>
+                                    <span class="text-sm leading-6 capitalize">
+                                        {{ order.delivery_charge_currency_price }}
+                                    </span>
+                                </li>
                             </ul>
                             <div class="flex items-center justify-between p-3">
                                 <h4 class="text-sm leading-6 font-semibold capitalize">{{ $t("label.total") }}</h4>
