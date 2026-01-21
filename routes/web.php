@@ -34,6 +34,9 @@ Route::prefix('install')->name('installer.')->middleware(['web'])->group(functio
 
 
 Route::get('/manifest.json', [RootController::class, 'manifest'])->name('manifest');
+Route::get('/sw.js', function () {
+    return response()->file(public_path('sw.js'), ['Content-Type' => 'application/javascript']);
+})->name('service-worker');
 Route::get('/', [RootController::class, 'index'])->middleware(['installed'])->name('home');
 Route::prefix('payment')->name('payment.')->middleware(['installed'])->group(function () {
     Route::get('/{order}/pay', [PaymentController::class, 'index'])->name('index');
@@ -44,4 +47,4 @@ Route::prefix('payment')->name('payment.')->middleware(['installed'])->group(fun
     Route::get('/successful/{order}', [PaymentController::class, 'successful'])->name('successful');
 });
 
-Route::any('/{any}', [RootController::class, 'index'])->middleware(['installed'])->where(['any' => '.*']);
+Route::any('/{any}', [RootController::class, 'index'])->middleware(['installed'])->where(['any' => '^(?!manifest\.json|sw\.js).*']);
