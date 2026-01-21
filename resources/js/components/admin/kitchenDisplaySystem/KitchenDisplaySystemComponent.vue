@@ -121,8 +121,12 @@
                     <span class="text-sm font-normal">#{{ dineinOrder.order_serial_no }}</span>
                   </div>
 
-                  <span class="py-0.5 px-2 rounded-[4px] text-[10px] font-client leading-4 capitalize text-white "
-                    :class="dineinOrder.status === enums.orderStatusEnum.PREPARED ? 'bg-[#2AC769]' : (dineinOrder.status === enums.orderStatusEnum.ACCEPT ? 'bg-primary' : 'bg-[#F6A609]')">{{
+                  <span
+                    class="py-0.5 px-2 rounded-[4px] text-[10px] font-client leading-4 capitalize text-white "
+                    :class="[
+                      dineinOrder.status === enums.orderStatusEnum.PREPARED ? 'bg-[#2AC769]' : (dineinOrder.status === enums.orderStatusEnum.ACCEPT ? 'bg-primary' : 'bg-[#F6A609]'),
+                      { 'ff-blink-confirmed': dineinOrder.status === enums.orderStatusEnum.ACCEPT }
+                    ]">{{
                       dineinOrder.status === enums.orderStatusEnum.PREPARED ? $t("label.done") : (dineinOrder.status ===
                         enums.orderStatusEnum.ACCEPT ? $t("label.confirmed") : dineinOrder.status_name)
                     }}</span>
@@ -211,8 +215,12 @@
                     <i class="lab lab-processing lab-font-size-16 text-[#9837FF]"></i>
                     <span class="text-sm font-normal">#{{ takeawayOrder.order_serial_no }}</span>
                   </div>
-                  <span class="py-0.5 px-2 rounded-[4px] text-[10px] font-client leading-4 capitalize text-white "
-                    :class="takeawayOrder.status === enums.orderStatusEnum.PREPARED ? 'bg-[#2AC769]' : (takeawayOrder.status === enums.orderStatusEnum.ACCEPT ? 'bg-primary' : 'bg-[#F6A609]')">{{
+                  <span
+                    class="py-0.5 px-2 rounded-[4px] text-[10px] font-client leading-4 capitalize text-white "
+                    :class="[
+                      takeawayOrder.status === enums.orderStatusEnum.PREPARED ? 'bg-[#2AC769]' : (takeawayOrder.status === enums.orderStatusEnum.ACCEPT ? 'bg-primary' : 'bg-[#F6A609]'),
+                      { 'ff-blink-confirmed': takeawayOrder.status === enums.orderStatusEnum.ACCEPT }
+                    ]">{{
                       takeawayOrder.status === enums.orderStatusEnum.PREPARED ? $t("label.done") :
                         (takeawayOrder.status ===
                           enums.orderStatusEnum.ACCEPT ? $t("label.confirmed") : takeawayOrder.status_name)
@@ -628,3 +636,27 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+/* Blink the "Confirmed" badge (status = ACCEPT) in KDS cards. */
+.ff-blink-confirmed {
+  animation: ffConfirmedBlink 1.1s ease-in-out infinite;
+}
+
+@keyframes ffConfirmedBlink {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+  }
+  50% {
+    opacity: 0.6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ff-blink-confirmed {
+    animation: none;
+  }
+}
+</style>
