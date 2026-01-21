@@ -49,6 +49,17 @@ export default {
             theme: "frontend",
         }
     },
+    methods: {
+        applyThemeFromRoute(route) {
+            if (route?.meta?.isFrontend === true) {
+                this.theme = "frontend";
+            } else if (route?.meta?.isTable === true) {
+                this.theme = "table";
+            } else {
+                this.theme = "backend";
+            }
+        },
+    },
     computed: {
         direction: function () {
             return this.$store.getters['frontendLanguage/show'].display_mode === displayModeEnum.RTL ? 'rtl' : 'ltr';
@@ -58,6 +69,9 @@ export default {
         }
     },
     beforeMount() {
+        // Ensure correct layout on initial load (watcher only runs on subsequent navigations).
+        this.applyThemeFromRoute(this.$route);
+
         this.$store.dispatch('frontendSetting/lists').then(res => {
             this.$store.dispatch('frontendLanguage/show', res.data.data.site_default_language).then(res => {
 
@@ -79,13 +93,7 @@ export default {
     },
     watch: {
         $route(e) {
-            if (e.meta.isFrontend === true) {
-                this.theme = "frontend";
-            } else if (e.meta.isTable === true) {
-                this.theme = "table";
-            } else {
-                this.theme = "backend";
-            }
+            this.applyThemeFromRoute(e);
         }
     }
 }

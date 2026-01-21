@@ -181,6 +181,9 @@ export default {
         pages: function () {
             return this.$store.getters['frontendPage/lists'];
         },
+        installInstructions: function () {
+            return this.getInstallInstructions();
+        },
         isOnlineOrder: function () {
             return this.$route.name && this.$route.name.startsWith('online.');
         },
@@ -222,9 +225,6 @@ export default {
             }
             
             return null;
-        },
-        installInstructions: function () {
-            return this.getInstallInstructions();
         }
     },
     methods: {
