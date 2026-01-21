@@ -127,6 +127,19 @@
                         </div>
 
                         <div class="form-col-12 sm:form-col-6">
+                            <label for="free_delivery_distance" class="db-field-title">
+                                {{ $t("label.free_delivery_distance") }} (km)
+                            </label>
+                            <input v-on:keypress="floatNumber($event)" v-model="props.form.free_delivery_distance"
+                                v-bind:class="errors.free_delivery_distance ? 'invalid' : ''" type="text"
+                                id="free_delivery_distance" class="db-field-control" />
+                            <small class="db-field-alert" v-if="errors.free_delivery_distance">{{
+                                errors.free_delivery_distance[0]
+                            }}</small>
+                            <small class="text-xs text-gray-500 mt-1 block">{{ $t("label.free_delivery_within_distance") }}</small>
+                        </div>
+
+                        <div class="form-col-12 sm:form-col-6">
                             <label for="delivery_distance_threshold_1" class="db-field-title">
                                 {{ $t("label.delivery_distance_threshold_1") }} (km)
                             </label>
@@ -308,6 +321,7 @@ export default {
                 address: "",
                 status: statusEnum.ACTIVE,
                 free_delivery_threshold: "",
+                free_delivery_distance: "",
                 delivery_distance_threshold_1: "",
                 delivery_distance_threshold_2: "",
                 delivery_cost_1: "",
@@ -344,6 +358,7 @@ export default {
                         address: "",
                         status: statusEnum.ACTIVE,
                         free_delivery_threshold: "",
+                        free_delivery_distance: "",
                         delivery_distance_threshold_1: "",
                         delivery_distance_threshold_2: "",
                         delivery_cost_1: "",

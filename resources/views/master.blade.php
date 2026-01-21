@@ -6,6 +6,13 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#696cff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="{{ Settings::group('company')->get('company_name') }}">
+
+    <!-- PWA MANIFEST -->
+    <link rel="manifest" href="{{ route('manifest') }}">
 
     <!-- FONTS -->
     <link rel="stylesheet" href="{{ asset('themes/default/fonts/fontawesome/fontawesome.css') }}">
@@ -81,6 +88,21 @@
     <script src="{{ asset('themes/default/js/tabs.js') }}" defer></script>
     <script src="{{ asset('themes/default/js/dropdown.js') }}" defer></script>
     <script src="{{ asset('themes/default/js/apexcharts/apexcharts.min.js') }}" defer></script>
+
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(function(err) {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+    </script>
 </body>
 
 </html>

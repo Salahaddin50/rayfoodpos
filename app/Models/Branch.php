@@ -22,6 +22,7 @@ class Branch extends Model
         'status',
         // Delivery rules (branch-specific)
         'free_delivery_threshold',
+        'free_delivery_distance',
         'delivery_distance_threshold_1',
         'delivery_distance_threshold_2',
         'delivery_cost_1',
@@ -41,6 +42,7 @@ class Branch extends Model
         'address'   => 'string',
         'status'    => 'integer',
         'free_delivery_threshold' => 'decimal:2',
+        'free_delivery_distance' => 'decimal:2',
         'delivery_distance_threshold_1' => 'decimal:2',
         'delivery_distance_threshold_2' => 'decimal:2',
         'delivery_cost_1' => 'decimal:2',

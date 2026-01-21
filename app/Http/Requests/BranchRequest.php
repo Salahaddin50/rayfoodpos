@@ -44,6 +44,7 @@ class BranchRequest extends FormRequest
 
             // Branch-specific delivery rules
             'free_delivery_threshold'        => ['nullable', 'numeric'],
+            'free_delivery_distance'         => ['nullable', 'numeric'],
             'delivery_distance_threshold_1'  => ['nullable', 'numeric'],
             'delivery_distance_threshold_2'  => ['nullable', 'numeric'],
             'delivery_cost_1'                => ['nullable', 'numeric'],

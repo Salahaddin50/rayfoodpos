@@ -299,6 +299,8 @@
         "food_preparation_time": "Food Preparation Time",
         "in_minute": "( In Minute )",
         "free_delivery_threshold": "Free Delivery Threshold",
+        "free_delivery_distance": "Free Delivery Distance",
+        "free_delivery_within_distance": "Free delivery for orders within this distance",
         "pickup_delivery_cost": "Pickup Delivery Cost",
         "digit_after_decimal_point": "Digit After Decimal Point",
         "ex": "( Ex: 0.00 )",

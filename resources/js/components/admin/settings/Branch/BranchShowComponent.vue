@@ -97,6 +97,10 @@
                             <span class="db-list-item-text">{{ branch.free_delivery_threshold ?? '-' }}</span>
                         </li>
                         <li class="db-list-item">
+                            <span class="db-list-item-title">{{ $t("label.free_delivery_distance") }} (km)</span>
+                            <span class="db-list-item-text">{{ branch.free_delivery_distance ?? '-' }}</span>
+                        </li>
+                        <li class="db-list-item">
                             <span class="db-list-item-title">{{ $t("label.delivery_distance_threshold_1") }} (km)</span>
                             <span class="db-list-item-text">{{ branch.delivery_distance_threshold_1 ?? '-' }}</span>
                         </li>

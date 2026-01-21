@@ -294,6 +294,8 @@
         "food_preparation_time": "Время приготовления еды",
         "in_minute": "(В минутах)",
         "free_delivery_threshold": "Порог бесплатной доставки",
+        "free_delivery_distance": "Расстояние бесплатной доставки",
+        "free_delivery_within_distance": "Бесплатная доставка для заказов в пределах этого расстояния",
         "pickup_delivery_cost": "Стоимость доставки",
         "digit_after_decimal_point": "Цифры после десятичной точки",
         "ex": "(Например: 0.00)",

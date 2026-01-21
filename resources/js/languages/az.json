@@ -294,6 +294,8 @@
         "food_preparation_time": "Yemək Hazırlama Vaxtı",
         "in_minute": "(Dəqiqə ilə)",
         "free_delivery_threshold": "Pulsuz Çatdırılma Həddi",
+        "free_delivery_distance": "Pulsuz Çatdırılma Məsafəsi",
+        "free_delivery_within_distance": "Bu məsafə daxilində olan sifarişlər üçün pulsuz çatdırılma",
         "pickup_delivery_cost": "Çatdırılma Xərci",
         "digit_after_decimal_point": "Onluq Nöqtədən Sonra Rəqəm",
         "ex": "(Məs: 0.00)",

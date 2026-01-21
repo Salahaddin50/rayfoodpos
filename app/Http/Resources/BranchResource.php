@@ -30,6 +30,7 @@ class BranchResource extends JsonResource
 
             // Branch-specific delivery rules (nullable)
             "free_delivery_threshold"       => $this->free_delivery_threshold,
+            "free_delivery_distance"        => $this->free_delivery_distance,
             "delivery_distance_threshold_1" => $this->delivery_distance_threshold_1,
             "delivery_distance_threshold_2" => $this->delivery_distance_threshold_2,
             "delivery_cost_1"               => $this->delivery_cost_1,

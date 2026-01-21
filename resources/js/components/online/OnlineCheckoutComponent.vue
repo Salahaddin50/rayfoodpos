@@ -349,23 +349,31 @@ export default {
             return this.$store.getters['tableCart/subtotal'];
         },
         pickupCost: function () {
-            // Use branch-specific free delivery threshold when available
-            const freeDeliveryThreshold =
-                parseFloat(this.currentBranch?.free_delivery_threshold) ||
-                80;
-            
-            // If order is above threshold, pickup cost is 0
-            if (this.subtotal >= freeDeliveryThreshold) {
-                return 0;
-            }
-            
             // Calculate pickup cost based on selected option
             if (this.pickupOption === 'pickup_myself') {
                 return 0;
             } else if (this.pickupOption === 'pay_to_driver') {
                 return 0;
             } else if (this.pickupOption === 'pay_for_pickup_cost_now') {
-                // Calculate cost based on distance
+                // First check: If distance is within free_delivery_distance, delivery is free
+                const freeDeliveryDistance = parseFloat(this.currentBranch?.free_delivery_distance);
+                if (freeDeliveryDistance && this.distanceFromBranch) {
+                    const distanceInKm = this.getDistanceInKm();
+                    if (distanceInKm !== null && distanceInKm <= freeDeliveryDistance) {
+                        return 0; // Free delivery within distance threshold
+                    }
+                }
+                
+                // Second check: If order subtotal is above free_delivery_threshold, delivery is free
+                const freeDeliveryThreshold =
+                    parseFloat(this.currentBranch?.free_delivery_threshold) ||
+                    80;
+                
+                if (this.subtotal >= freeDeliveryThreshold) {
+                    return 0;
+                }
+                
+                // Otherwise, calculate cost based on distance tiers
                 return this.calculateDeliveryCostByDistance();
             }
             return 0;
@@ -507,6 +515,28 @@ export default {
         },
         deg2rad: function (deg) {
             return deg * (Math.PI / 180);
+        },
+        getDistanceInKm: function () {
+            if (!this.distanceFromBranch) {
+                return null;
+            }
+            
+            // Parse distance string like "1678.37 km" or "850 m" safely
+            const trimmed = String(this.distanceFromBranch).trim();
+            const unitMatch = trimmed.match(/([\d.]+)\s*(km|m)\s*$/i);
+            if (unitMatch) {
+                let distance = parseFloat(unitMatch[1]);
+                const unit = unitMatch[2].toLowerCase();
+                if (unit === 'm') {
+                    distance = distance / 1000;
+                }
+                return distance;
+            }
+            
+            // Fallback: best-effort numeric extraction
+            const distanceStr = trimmed.replace(/[^\d.]/g, '');
+            const distance = parseFloat(distanceStr);
+            return isNaN(distance) ? null : distance;
         },
         getLocation: function () {
             if (!navigator.geolocation) {
