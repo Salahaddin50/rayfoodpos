@@ -124,6 +124,12 @@ export default {
                     zip_code: "",
                     address: "",
                     status: statusEnum.ACTIVE,
+                    free_delivery_threshold: "",
+                    delivery_distance_threshold_1: "",
+                    delivery_distance_threshold_2: "",
+                    delivery_cost_1: "",
+                    delivery_cost_2: "",
+                    delivery_cost_3: "",
                 },
                 search: {
                     paginate: 1,
@@ -192,6 +198,12 @@ export default {
                 zip_code: branch.zip_code,
                 address: branch.address,
                 status: branch.status,
+                free_delivery_threshold: branch.free_delivery_threshold ?? "",
+                delivery_distance_threshold_1: branch.delivery_distance_threshold_1 ?? "",
+                delivery_distance_threshold_2: branch.delivery_distance_threshold_2 ?? "",
+                delivery_cost_1: branch.delivery_cost_1 ?? "",
+                delivery_cost_2: branch.delivery_cost_2 ?? "",
+                delivery_cost_3: branch.delivery_cost_3 ?? "",
             };
             this.loading.isActive = false;
         },

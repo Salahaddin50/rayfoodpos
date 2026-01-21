@@ -91,6 +91,31 @@
                                 }}</span>
                             </span>
                         </li>
+
+                        <li class="db-list-item">
+                            <span class="db-list-item-title">{{ $t("label.free_delivery_threshold") }}</span>
+                            <span class="db-list-item-text">{{ branch.free_delivery_threshold ?? '-' }}</span>
+                        </li>
+                        <li class="db-list-item">
+                            <span class="db-list-item-title">{{ $t("label.delivery_distance_threshold_1") }} (km)</span>
+                            <span class="db-list-item-text">{{ branch.delivery_distance_threshold_1 ?? '-' }}</span>
+                        </li>
+                        <li class="db-list-item">
+                            <span class="db-list-item-title">{{ $t("label.delivery_distance_threshold_2") }} (km)</span>
+                            <span class="db-list-item-text">{{ branch.delivery_distance_threshold_2 ?? '-' }}</span>
+                        </li>
+                        <li class="db-list-item">
+                            <span class="db-list-item-title">{{ $t("label.delivery_cost_1") }}</span>
+                            <span class="db-list-item-text">{{ branch.delivery_cost_1 ?? '-' }}</span>
+                        </li>
+                        <li class="db-list-item">
+                            <span class="db-list-item-title">{{ $t("label.delivery_cost_2") }}</span>
+                            <span class="db-list-item-text">{{ branch.delivery_cost_2 ?? '-' }}</span>
+                        </li>
+                        <li class="db-list-item">
+                            <span class="db-list-item-title">{{ $t("label.delivery_cost_3") }}</span>
+                            <span class="db-list-item-text">{{ branch.delivery_cost_3 ?? '-' }}</span>
+                        </li>
                     </ul>
                 </div>
             </div>

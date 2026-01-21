@@ -41,6 +41,14 @@ class BranchRequest extends FormRequest
             'zip_code'  => ['required', 'string'],
             'address'   => ['required', 'string', 'max:500'],
             'status'    => ['required', 'numeric', 'max:24'],
+
+            // Branch-specific delivery rules
+            'free_delivery_threshold'        => ['nullable', 'numeric'],
+            'delivery_distance_threshold_1'  => ['nullable', 'numeric'],
+            'delivery_distance_threshold_2'  => ['nullable', 'numeric'],
+            'delivery_cost_1'                => ['nullable', 'numeric'],
+            'delivery_cost_2'                => ['nullable', 'numeric'],
+            'delivery_cost_3'                => ['nullable', 'numeric'],
         ];
     }
 }

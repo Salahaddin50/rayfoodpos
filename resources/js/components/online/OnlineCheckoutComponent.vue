@@ -42,10 +42,10 @@
                     <div class="mb-6 rounded-2xl shadow-xs bg-white">
                         <h3 class="capitalize font-medium p-4 border-b border-gray-100">{{ $t('label.pickup_cost') }}</h3>
                         <div class="p-4">
-                            <div v-if="subtotal >= parseFloat(setting.site_free_delivery_threshold || 80)" class="text-sm text-heading">
+                            <div v-if="subtotal >= parseFloat(currentBranch?.free_delivery_threshold || setting.site_free_delivery_threshold || 80)" class="text-sm text-heading">
                                 {{ $t('message.delivery_free_over_75') }}
                             </div>
-                            <ul v-else-if="subtotal < parseFloat(setting.site_free_delivery_threshold || 80)" class="flex flex-col gap-4">
+                            <ul v-else-if="subtotal < parseFloat(currentBranch?.free_delivery_threshold || setting.site_free_delivery_threshold || 80)" class="flex flex-col gap-4">
                                 <li class="flex items-center gap-1.5">
                                     <div class="custom-radio">
                                         <input type="radio" id="pickup_myself" v-model="pickupOption" value="pickup_myself"
@@ -220,7 +220,7 @@
                                             }}
                                         </span>
                                     </li>
-                                    <li v-if="subtotal < parseFloat(setting.site_free_delivery_threshold || 80)" class="flex items-center justify-between text-heading">
+                                    <li v-if="subtotal < parseFloat(currentBranch?.free_delivery_threshold || setting.site_free_delivery_threshold || 80)" class="flex items-center justify-between text-heading">
                                         <span class="text-sm leading-6 capitalize">
                                             {{ $t('label.pickup_cost') }}
                                         </span>
@@ -349,8 +349,10 @@ export default {
             return this.$store.getters['tableCart/subtotal'];
         },
         pickupCost: function () {
-            // Get threshold and cost from settings
-            const freeDeliveryThreshold = parseFloat(this.setting.site_free_delivery_threshold || 80);
+            // Use branch-specific free delivery threshold when available
+            const freeDeliveryThreshold =
+                parseFloat(this.currentBranch?.free_delivery_threshold) ||
+                parseFloat(this.setting.site_free_delivery_threshold || 80);
             
             // If order is above threshold, pickup cost is 0
             if (this.subtotal >= freeDeliveryThreshold) {
@@ -438,12 +440,31 @@ export default {
                 distance = distance / 1000;
             }
             
-            // Get thresholds and costs
-            const threshold1 = parseFloat(this.setting.site_delivery_distance_threshold_1) || 0;
-            const threshold2 = parseFloat(this.setting.site_delivery_distance_threshold_2) || null;
-            const cost1 = parseFloat(this.setting.site_delivery_cost_1) || 0;
-            const cost2 = parseFloat(this.setting.site_delivery_cost_2) || null;
-            const cost3 = parseFloat(this.setting.site_delivery_cost_3) || null;
+            // Get thresholds and costs (branch-specific first, then fall back to site defaults)
+            const threshold1 =
+                parseFloat(this.currentBranch?.delivery_distance_threshold_1) ||
+                parseFloat(this.setting.site_delivery_distance_threshold_1) ||
+                0;
+            const threshold2 =
+                parseFloat(this.currentBranch?.delivery_distance_threshold_2) ||
+                parseFloat(this.setting.site_delivery_distance_threshold_2) ||
+                null;
+
+            const cost1 =
+                parseFloat(this.currentBranch?.delivery_cost_1) ||
+                parseFloat(this.setting.site_delivery_cost_1) ||
+                0;
+            const cost2Raw =
+                parseFloat(this.currentBranch?.delivery_cost_2) ||
+                parseFloat(this.setting.site_delivery_cost_2) ||
+                null;
+            const cost3Raw =
+                parseFloat(this.currentBranch?.delivery_cost_3) ||
+                parseFloat(this.setting.site_delivery_cost_3) ||
+                null;
+
+            const cost2 = (cost2Raw !== null && !isNaN(cost2Raw)) ? cost2Raw : null;
+            const cost3 = (cost3Raw !== null && !isNaN(cost3Raw)) ? cost3Raw : null;
             
             // If threshold2 is not set (empty), then cost3 = cost2 = cost1
             if (!threshold2 || isNaN(threshold2)) {
@@ -537,7 +558,9 @@ export default {
             
             // Set pickup option type
             // If subtotal >= threshold, it's free delivery regardless of selected option
-            const freeDeliveryThreshold = parseFloat(this.setting.site_free_delivery_threshold || 80);
+            const freeDeliveryThreshold =
+                parseFloat(this.currentBranch?.free_delivery_threshold) ||
+                parseFloat(this.setting.site_free_delivery_threshold || 80);
             if (this.subtotal >= freeDeliveryThreshold) {
                 this.checkoutProps.form.pickup_option = 'free_delivery';
             } else {

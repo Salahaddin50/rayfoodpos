@@ -111,6 +111,86 @@
                         </div>
 
                         <div class="form-col-12">
+                            <h4 class="db-field-title mb-3">{{ $t("label.delivery_cost_by_distance") }}</h4>
+                        </div>
+
+                        <div class="form-col-12 sm:form-col-6">
+                            <label for="free_delivery_threshold" class="db-field-title">
+                                {{ $t("label.free_delivery_threshold") }}
+                            </label>
+                            <input v-on:keypress="floatNumber($event)" v-model="props.form.free_delivery_threshold"
+                                v-bind:class="errors.free_delivery_threshold ? 'invalid' : ''" type="text"
+                                id="free_delivery_threshold" class="db-field-control" />
+                            <small class="db-field-alert" v-if="errors.free_delivery_threshold">{{
+                                errors.free_delivery_threshold[0]
+                            }}</small>
+                        </div>
+
+                        <div class="form-col-12 sm:form-col-6">
+                            <label for="delivery_distance_threshold_1" class="db-field-title">
+                                {{ $t("label.delivery_distance_threshold_1") }} (km)
+                            </label>
+                            <input v-on:keypress="floatNumber($event)" v-model="props.form.delivery_distance_threshold_1"
+                                v-bind:class="errors.delivery_distance_threshold_1 ? 'invalid' : ''" type="text"
+                                id="delivery_distance_threshold_1" class="db-field-control" />
+                            <small class="db-field-alert" v-if="errors.delivery_distance_threshold_1">{{
+                                errors.delivery_distance_threshold_1[0]
+                            }}</small>
+                            <small class="text-xs text-gray-500 mt-1 block">{{ $t("label.distance_less_than_threshold_1") }}</small>
+                        </div>
+
+                        <div class="form-col-12 sm:form-col-6">
+                            <label for="delivery_cost_1" class="db-field-title">
+                                {{ $t("label.delivery_cost_1") }}
+                            </label>
+                            <input v-on:keypress="floatNumber($event)" v-model="props.form.delivery_cost_1"
+                                v-bind:class="errors.delivery_cost_1 ? 'invalid' : ''" type="text"
+                                id="delivery_cost_1" class="db-field-control" />
+                            <small class="db-field-alert" v-if="errors.delivery_cost_1">{{
+                                errors.delivery_cost_1[0]
+                            }}</small>
+                        </div>
+
+                        <div class="form-col-12 sm:form-col-6">
+                            <label for="delivery_distance_threshold_2" class="db-field-title">
+                                {{ $t("label.delivery_distance_threshold_2") }} (km)
+                            </label>
+                            <input v-on:keypress="floatNumber($event)" v-model="props.form.delivery_distance_threshold_2"
+                                v-bind:class="errors.delivery_distance_threshold_2 ? 'invalid' : ''" type="text"
+                                id="delivery_distance_threshold_2" class="db-field-control" />
+                            <small class="db-field-alert" v-if="errors.delivery_distance_threshold_2">{{
+                                errors.delivery_distance_threshold_2[0]
+                            }}</small>
+                            <small class="text-xs text-gray-500 mt-1 block">{{ $t("label.distance_between_thresholds") }}</small>
+                        </div>
+
+                        <div class="form-col-12 sm:form-col-6">
+                            <label for="delivery_cost_2" class="db-field-title">
+                                {{ $t("label.delivery_cost_2") }}
+                            </label>
+                            <input v-on:keypress="floatNumber($event)" v-model="props.form.delivery_cost_2"
+                                v-bind:class="errors.delivery_cost_2 ? 'invalid' : ''" type="text"
+                                id="delivery_cost_2" class="db-field-control" />
+                            <small class="db-field-alert" v-if="errors.delivery_cost_2">{{
+                                errors.delivery_cost_2[0]
+                            }}</small>
+                            <small class="text-xs text-gray-500 mt-1 block">{{ $t("label.if_empty_uses_cost_1") }}</small>
+                        </div>
+
+                        <div class="form-col-12 sm:form-col-6">
+                            <label for="delivery_cost_3" class="db-field-title">
+                                {{ $t("label.delivery_cost_3") }}
+                            </label>
+                            <input v-on:keypress="floatNumber($event)" v-model="props.form.delivery_cost_3"
+                                v-bind:class="errors.delivery_cost_3 ? 'invalid' : ''" type="text"
+                                id="delivery_cost_3" class="db-field-control" />
+                            <small class="db-field-alert" v-if="errors.delivery_cost_3">{{
+                                errors.delivery_cost_3[0]
+                            }}</small>
+                            <small class="text-xs text-gray-500 mt-1 block">{{ $t("label.if_empty_uses_cost_2_or_cost_1") }}</small>
+                        </div>
+
+                        <div class="form-col-12">
                             <label for="address" class="db-field-title required">{{ $t("label.address") }}</label>
                             <textarea v-model="props.form.address" v-bind:class="errors.address ? 'invalid' : ''"
                                 id="address" class="db-field-control"></textarea>
@@ -197,6 +277,9 @@ export default {
         },
     },
     methods: {
+        floatNumber: function (e) {
+            return appService.floatNumber(e);
+        },
         add: function () {
             appService.modalShow('#branchMap');
         },
@@ -224,6 +307,12 @@ export default {
                 zip_code: "",
                 address: "",
                 status: statusEnum.ACTIVE,
+                free_delivery_threshold: "",
+                delivery_distance_threshold_1: "",
+                delivery_distance_threshold_2: "",
+                delivery_cost_1: "",
+                delivery_cost_2: "",
+                delivery_cost_3: "",
             };
         },
         mapReset: function () {
@@ -254,6 +343,12 @@ export default {
                         zip_code: "",
                         address: "",
                         status: statusEnum.ACTIVE,
+                        free_delivery_threshold: "",
+                        delivery_distance_threshold_1: "",
+                        delivery_distance_threshold_2: "",
+                        delivery_cost_1: "",
+                        delivery_cost_2: "",
+                        delivery_cost_3: "",
                     };
                     this.errors = {};
                 }).catch((err) => {
