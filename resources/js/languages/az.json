@@ -843,6 +843,7 @@
         "location_required": "Məkan tələb olunur. Zəhmət olmasa çatdırılma yerini əlavə edin.",
         "location_required_hint": "Çatdırılma üçün məkan tələb olunur",
         "delivery_free_over_75": "75 AZN və yuxarı üçün çatdırılma pulsuzdur",
+        "delivery_free_threshold_within_distance": "{distance} km daxilində {threshold} və yuxarı sifarişlər üçün çatdırılma pulsuzdur",
         "whatsapp_optional_hint": "Sifariş yeniləmələri üçün WhatsApp nömrənizi paylaşın (ixtiyari)",
         "enter_order_id": "Sifariş ID-ni və ya seriya nömrəsini daxil edin:",
         "pwa_install_instructions": "Bu proqramı quraşdırmaq üçün brauzerinizin menyusundan (adətən ünvan sətrində) \"Quraşdır\" və ya \"Ana Ekrana Əlavə Et\" seçimini edin.",

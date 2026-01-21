@@ -860,6 +860,7 @@
         "location_required": "Location is required. Please add your delivery location.",
         "location_required_hint": "Location is required for delivery",
         "delivery_free_over_75": "Delivery is free for 75 AZN and above",
+        "delivery_free_threshold_within_distance": "Delivery is free for {threshold} and above within {distance} km",
         "something_went_wrong": "Something went wrong. Please try again.",
         "driver_added": "Driver Added Successfully.",
         "no_orders_found": "No orders found for this WhatsApp number in the last 2 hours."

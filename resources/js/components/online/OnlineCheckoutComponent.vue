@@ -43,7 +43,7 @@
                         <h3 class="capitalize font-medium p-4 border-b border-gray-100">{{ $t('label.pickup_cost') }}</h3>
                         <div class="p-4">
                             <div v-if="isDeliveryFree" class="text-sm text-heading">
-                                {{ $t('message.delivery_free_over_75') }}
+                                {{ freeDeliveryMessage }}
                             </div>
                             <ul v-else-if="!isDeliveryFree" class="flex flex-col gap-4">
                                 <li class="flex items-center gap-1.5">
@@ -355,24 +355,10 @@ export default {
             } else if (this.pickupOption === 'pay_to_driver') {
                 return 0;
             } else if (this.pickupOption === 'pay_for_pickup_cost_now') {
-                // First check: If distance is within free_delivery_distance, delivery is free
-                const freeDeliveryDistance = parseFloat(this.currentBranch?.free_delivery_distance);
-                if (freeDeliveryDistance && this.distanceFromBranch) {
-                    const distanceInKm = this.getDistanceInKm();
-                    if (distanceInKm !== null && distanceInKm <= freeDeliveryDistance) {
-                        return 0; // Free delivery within distance threshold
-                    }
-                }
-                
-                // Second check: If order subtotal is above free_delivery_threshold, delivery is free
-                const freeDeliveryThreshold =
-                    parseFloat(this.currentBranch?.free_delivery_threshold) ||
-                    80;
-                
-                if (this.subtotal >= freeDeliveryThreshold) {
+                // If delivery is free (threshold + within distance), cost is 0
+                if (this.isDeliveryFree) {
                     return 0;
                 }
-                
                 // Otherwise, calculate cost based on distance tiers
                 return this.calculateDeliveryCostByDistance();
             }
@@ -391,25 +377,48 @@ export default {
             return this.branches.find(branch => branch.id === parseInt(this.$route.params.branchId));
         },
         isDeliveryFree: function () {
-            // First check: If distance is within free_delivery_distance, delivery is free
-            const freeDeliveryDistance = parseFloat(this.currentBranch?.free_delivery_distance);
-            if (freeDeliveryDistance && this.distanceFromBranch) {
-                const distanceInKm = this.getDistanceInKm();
-                if (distanceInKm !== null && distanceInKm <= freeDeliveryDistance) {
-                    return true; // Free delivery within distance threshold
-                }
+            // Default: show pickup options until location is filled and distance is calculated
+            if (!this.locationUrl || !this.distanceFromBranch) {
+                return false;
             }
-            
-            // Second check: If order subtotal is above free_delivery_threshold, delivery is free
+
+            const distanceInKm = this.getDistanceInKm();
+            if (distanceInKm === null) {
+                return false;
+            }
+
+            // Free delivery is ONLY for orders within free_delivery_distance (km)
+            const freeDeliveryDistance = parseFloat(this.currentBranch?.free_delivery_distance);
+            if (!freeDeliveryDistance || isNaN(freeDeliveryDistance)) {
+                return false;
+            }
+
+            // Also requires subtotal >= free_delivery_threshold
             const freeDeliveryThreshold =
                 parseFloat(this.currentBranch?.free_delivery_threshold) ||
                 80;
-            
-            if (this.subtotal >= freeDeliveryThreshold) {
-                return true;
-            }
-            
-            return false;
+
+            return (this.subtotal >= freeDeliveryThreshold) && (distanceInKm <= freeDeliveryDistance);
+        },
+        freeDeliveryMessage: function () {
+            const threshold =
+                parseFloat(this.currentBranch?.free_delivery_threshold) ||
+                80;
+            const distance = parseFloat(this.currentBranch?.free_delivery_distance);
+
+            const thresholdFormatted = this.currencyFormat(
+                threshold,
+                this.setting.site_digit_after_decimal_point,
+                this.setting.site_default_currency_symbol,
+                this.setting.site_currency_position
+            );
+
+            const distanceFormatted = (distance && !isNaN(distance)) ? Number(distance).toFixed(2) : '';
+
+            return this.$t('message.delivery_free_threshold_within_distance', {
+                threshold: thresholdFormatted,
+                distance: distanceFormatted
+            });
         },
         distanceFromBranch: function () {
             if (!this.locationUrl || !this.currentBranch) {
