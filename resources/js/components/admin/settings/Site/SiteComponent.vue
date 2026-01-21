@@ -203,86 +203,6 @@
                     </div>
 
                     <div class="form-col-12 sm:form-col-6">
-                        <label for="site_free_delivery_threshold" class="db-field-title">
-                            {{ $t("label.free_delivery_threshold") }}
-                        </label>
-                        <input v-on:keypress="floatNumber($event)" v-model="form.site_free_delivery_threshold"
-                            v-bind:class="errors.site_free_delivery_threshold ? 'invalid' : ''" type="text"
-                            id="site_free_delivery_threshold" class="db-field-control" />
-                        <small class="db-field-alert" v-if="errors.site_free_delivery_threshold">{{
-                            errors.site_free_delivery_threshold[0]
-                        }}</small>
-                    </div>
-
-                    <div class="form-col-12">
-                        <h4 class="db-field-title mb-3">{{ $t("label.delivery_cost_by_distance") }}</h4>
-                    </div>
-                    
-                    <div class="form-col-12 sm:form-col-6">
-                        <label for="site_delivery_distance_threshold_1" class="db-field-title">
-                            {{ $t("label.delivery_distance_threshold_1") }} (km)
-                        </label>
-                        <input v-on:keypress="floatNumber($event)" v-model="form.site_delivery_distance_threshold_1"
-                            v-bind:class="errors.site_delivery_distance_threshold_1 ? 'invalid' : ''" type="text"
-                            id="site_delivery_distance_threshold_1" class="db-field-control" />
-                        <small class="db-field-alert" v-if="errors.site_delivery_distance_threshold_1">{{
-                            errors.site_delivery_distance_threshold_1[0]
-                        }}</small>
-                        <small class="text-xs text-gray-500 mt-1 block">{{ $t("label.distance_less_than_threshold_1") }}</small>
-                    </div>
-
-                    <div class="form-col-12 sm:form-col-6">
-                        <label for="site_delivery_cost_1" class="db-field-title">
-                            {{ $t("label.delivery_cost_1") }}
-                        </label>
-                        <input v-on:keypress="floatNumber($event)" v-model="form.site_delivery_cost_1"
-                            v-bind:class="errors.site_delivery_cost_1 ? 'invalid' : ''" type="text"
-                            id="site_delivery_cost_1" class="db-field-control" />
-                        <small class="db-field-alert" v-if="errors.site_delivery_cost_1">{{
-                            errors.site_delivery_cost_1[0]
-                        }}</small>
-                    </div>
-
-                    <div class="form-col-12 sm:form-col-6">
-                        <label for="site_delivery_distance_threshold_2" class="db-field-title">
-                            {{ $t("label.delivery_distance_threshold_2") }} (km)
-                        </label>
-                        <input v-on:keypress="floatNumber($event)" v-model="form.site_delivery_distance_threshold_2"
-                            v-bind:class="errors.site_delivery_distance_threshold_2 ? 'invalid' : ''" type="text"
-                            id="site_delivery_distance_threshold_2" class="db-field-control" />
-                        <small class="db-field-alert" v-if="errors.site_delivery_distance_threshold_2">{{
-                            errors.site_delivery_distance_threshold_2[0]
-                        }}</small>
-                        <small class="text-xs text-gray-500 mt-1 block">{{ $t("label.distance_between_thresholds") }}</small>
-                    </div>
-
-                    <div class="form-col-12 sm:form-col-6">
-                        <label for="site_delivery_cost_2" class="db-field-title">
-                            {{ $t("label.delivery_cost_2") }}
-                        </label>
-                        <input v-on:keypress="floatNumber($event)" v-model="form.site_delivery_cost_2"
-                            v-bind:class="errors.site_delivery_cost_2 ? 'invalid' : ''" type="text"
-                            id="site_delivery_cost_2" class="db-field-control" />
-                        <small class="db-field-alert" v-if="errors.site_delivery_cost_2">{{
-                            errors.site_delivery_cost_2[0]
-                        }}</small>
-                        <small class="text-xs text-gray-500 mt-1 block">{{ $t("label.if_empty_uses_cost_1") }}</small>
-                    </div>
-
-                    <div class="form-col-12 sm:form-col-6">
-                        <label for="site_delivery_cost_3" class="db-field-title">
-                            {{ $t("label.delivery_cost_3") }}
-                        </label>
-                        <input v-on:keypress="floatNumber($event)" v-model="form.site_delivery_cost_3"
-                            v-bind:class="errors.site_delivery_cost_3 ? 'invalid' : ''" type="text"
-                            id="site_delivery_cost_3" class="db-field-control" />
-                        <small class="db-field-alert" v-if="errors.site_delivery_cost_3">{{
-                            errors.site_delivery_cost_3[0]
-                        }}</small>
-                        <small class="text-xs text-gray-500 mt-1 block">{{ $t("label.if_empty_uses_cost_2_or_cost_1") }}</small>
-                    </div>
-
-                    <div class="form-col-12 sm:form-col-6">
                         <label class="db-field-title required" for="enable">
                             {{ $t("label.currency_position") }}
                         </label>
@@ -513,12 +433,6 @@ export default {
                 site_online_payment_gateway: null,
                 site_default_sms_gateway: null,
                 site_food_preparation_time: null,
-                site_free_delivery_threshold: null,
-                site_delivery_distance_threshold_1: null,
-                site_delivery_distance_threshold_2: null,
-                site_delivery_cost_1: null,
-                site_delivery_cost_2: null,
-                site_delivery_cost_3: null,
             },
             enums: {
                 dateFormatEnum: dateFormatEnum,
@@ -608,13 +522,6 @@ export default {
                     site_online_payment_gateway: res.data.data.site_online_payment_gateway,
                     site_default_sms_gateway: res.data.data.site_default_sms_gateway === 0 ? null : res.data.data.site_default_sms_gateway,
                     site_food_preparation_time: res.data.data.site_food_preparation_time,
-                    // Preserve current values if API response is missing these keys
-                    site_free_delivery_threshold: res.data.data.site_free_delivery_threshold ?? this.form.site_free_delivery_threshold ?? '80',
-                    site_delivery_distance_threshold_1: res.data.data.site_delivery_distance_threshold_1 ?? this.form.site_delivery_distance_threshold_1 ?? '5',
-                    site_delivery_distance_threshold_2: res.data.data.site_delivery_distance_threshold_2 ?? this.form.site_delivery_distance_threshold_2 ?? '10',
-                    site_delivery_cost_1: res.data.data.site_delivery_cost_1 ?? this.form.site_delivery_cost_1 ?? '5',
-                    site_delivery_cost_2: res.data.data.site_delivery_cost_2 ?? this.form.site_delivery_cost_2 ?? '8',
-                    site_delivery_cost_3: res.data.data.site_delivery_cost_3 ?? this.form.site_delivery_cost_3 ?? '12',
                 }
                 this.loading.isActive = false;
             }).catch((err) => {
@@ -641,12 +548,6 @@ export default {
                             site_instagram_link: (server.site_instagram_link ?? this.form.site_instagram_link) || '',
                             site_tiktok_link: (server.site_tiktok_link ?? this.form.site_tiktok_link) || '',
                             site_default_sms_gateway: (server.site_default_sms_gateway ?? this.form.site_default_sms_gateway) === 0 ? null : (server.site_default_sms_gateway ?? this.form.site_default_sms_gateway),
-                            site_free_delivery_threshold: server.site_free_delivery_threshold ?? this.form.site_free_delivery_threshold ?? '80',
-                            site_delivery_distance_threshold_1: server.site_delivery_distance_threshold_1 ?? this.form.site_delivery_distance_threshold_1 ?? '5',
-                            site_delivery_distance_threshold_2: server.site_delivery_distance_threshold_2 ?? this.form.site_delivery_distance_threshold_2 ?? '10',
-                            site_delivery_cost_1: server.site_delivery_cost_1 ?? this.form.site_delivery_cost_1 ?? '5',
-                            site_delivery_cost_2: server.site_delivery_cost_2 ?? this.form.site_delivery_cost_2 ?? '8',
-                            site_delivery_cost_3: server.site_delivery_cost_3 ?? this.form.site_delivery_cost_3 ?? '12',
                         };
                     } else {
                         // Fallback to reload if response structure is different

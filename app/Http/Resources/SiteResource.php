@@ -48,12 +48,6 @@ class SiteResource extends JsonResource
             "site_online_payment_gateway"    => $this->info['site_online_payment_gateway'],
             "site_default_sms_gateway"       => $this->info['site_default_sms_gateway'],
             "site_food_preparation_time"     => $this->info['site_food_preparation_time'],
-            "site_free_delivery_threshold"    => $this->info['site_free_delivery_threshold'] ?? '80',
-            "site_delivery_distance_threshold_1" => $this->info['site_delivery_distance_threshold_1'] ?? null,
-            "site_delivery_distance_threshold_2" => $this->info['site_delivery_distance_threshold_2'] ?? null,
-            "site_delivery_cost_1"           => $this->info['site_delivery_cost_1'] ?? null,
-            "site_delivery_cost_2"           => $this->info['site_delivery_cost_2'] ?? null,
-            "site_delivery_cost_3"           => $this->info['site_delivery_cost_3'] ?? null
         ];
     }
 }

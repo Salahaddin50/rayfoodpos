@@ -484,7 +484,7 @@ export default {
             const deliveryCharge = parseFloat(order.delivery_charge || 0);
             const subtotal = parseFloat(order.subtotal || 0);
             
-            if (subtotal >= parseFloat(this.setting.site_free_delivery_threshold || 80)) {
+            if (subtotal >= 80) {
                 return this.$t('message.delivery_free_over_75');
             } else if (deliveryCharge > 0) {
                 return this.$t('label.pay_for_pickup_cost_now');

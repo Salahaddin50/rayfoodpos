@@ -11,13 +11,7 @@ class SettingService
         $array = [];
         $array = array_merge($array, Settings::group('company')->all());
         $siteSettings = Settings::group('site')->all();
-        // Ensure the new fields are always present with defaults if missing
-        if (!isset($siteSettings['site_free_delivery_threshold'])) {
-            $siteSettings['site_free_delivery_threshold'] = '80';
-        }
-        if (!isset($siteSettings['site_pickup_delivery_cost'])) {
-            $siteSettings['site_pickup_delivery_cost'] = '5';
-        }
+        // Delivery rules are branch-specific now; no site-level defaults here.
         $array = array_merge($array, $siteSettings);
         $array = array_merge($array, Settings::group('theme')->all());
         $array = array_merge($array, Settings::group('otp')->all());
