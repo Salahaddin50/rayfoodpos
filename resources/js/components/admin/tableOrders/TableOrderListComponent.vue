@@ -155,7 +155,7 @@
                                 {{ order.order_datetime }}
                             </td>
                             <td class="db-table-body-td">
-                                <span :class="orderStatusClass(order.status)">
+                                <span :class="[orderStatusClass(order.status), { 'ff-blink-pending': order.status === enums.orderStatusEnum.PENDING }]">
                                     {{ enums.orderStatusEnumArray[order.status] }}
                                 </span>
                                 <span :class="orderStatusClass(order.is_advance_order)"
@@ -891,5 +891,27 @@ export default {
     color: #D9DBE9;
     cursor: not-allowed;
     opacity: 0.6;
+}
+
+/* Blink the status badge when order is pending (subtle pulse). */
+.ff-blink-pending {
+    animation: ffPendingBlink 1.1s ease-in-out infinite;
+}
+
+@keyframes ffPendingBlink {
+    0%, 100% {
+        opacity: 1;
+        filter: saturate(1);
+    }
+    50% {
+        opacity: 0.55;
+        filter: saturate(1.2);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ff-blink-pending {
+        animation: none;
+    }
 }
 </style>
