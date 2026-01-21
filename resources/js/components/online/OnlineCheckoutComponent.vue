@@ -102,8 +102,13 @@
                     <div v-if="distanceFromBranch && locationUrl" class="mb-6 rounded-2xl shadow-xs bg-white">
                         <h3 class="capitalize font-medium p-4 border-b border-gray-100">{{ $t('label.pickup_cost') }}</h3>
                         <div class="p-4">
-                            <div v-if="isDeliveryFree" class="text-sm text-heading">
-                                {{ freeDeliveryMessage }}
+                            <div v-if="isDeliveryFree">
+                                <div class="text-sm text-heading">
+                                    {{ yourDeliveryFreeMessage }}
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">
+                                    {{ freeDeliveryMessage }}
+                                </div>
                             </div>
                             <ul v-else class="flex flex-col gap-4">
                                 <li class="flex items-center gap-1.5">
@@ -419,6 +424,18 @@ export default {
             return this.$t('message.delivery_free_threshold_within_distance', {
                 threshold: thresholdFormatted,
                 distance: distanceFormatted
+            });
+        },
+        yourDeliveryFreeMessage: function () {
+            const freeFormatted = this.currencyFormat(
+                0,
+                this.setting.site_digit_after_decimal_point,
+                this.setting.site_default_currency_symbol,
+                this.setting.site_currency_position
+            );
+
+            return this.$t('message.your_delivery_will_be_free', {
+                amount: freeFormatted
             });
         },
         deliveryCostNowAmount: function () {
