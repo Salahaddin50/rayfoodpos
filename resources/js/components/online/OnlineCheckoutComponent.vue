@@ -40,52 +40,6 @@
                     </div>
 
                     <div class="mb-6 rounded-2xl shadow-xs bg-white">
-                        <h3 class="capitalize font-medium p-4 border-b border-gray-100">{{ $t('label.pickup_cost') }}</h3>
-                        <div class="p-4">
-                            <div v-if="isDeliveryFree" class="text-sm text-heading">
-                                {{ freeDeliveryMessage }}
-                            </div>
-                            <ul v-else-if="!isDeliveryFree" class="flex flex-col gap-4">
-                                <li class="flex items-center gap-1.5">
-                                    <div class="custom-radio">
-                                        <input type="radio" id="pickup_myself" v-model="pickupOption" value="pickup_myself"
-                                            class="custom-radio-field">
-                                        <span class="custom-radio-span border-gray-400"></span>
-                                    </div>
-                                    <label for="pickup_myself" class="db-field-label text-heading flex-1">
-                                        {{ $t('label.pickup_myself') }} - 
-                                        <span class="font-semibold">{{ currencyFormat(0, setting.site_digit_after_decimal_point, setting.site_default_currency_symbol, setting.site_currency_position) }}</span>
-                                    </label>
-                                </li>
-                                <li class="flex items-center gap-1.5">
-                                    <div class="custom-radio">
-                                        <input type="radio" id="pay_to_driver" v-model="pickupOption" value="pay_to_driver"
-                                            class="custom-radio-field">
-                                        <span class="custom-radio-span border-gray-400"></span>
-                                    </div>
-                                    <label for="pay_to_driver" class="db-field-label text-heading flex-1">
-                                        {{ $t('label.agree_with_driver') }} - 
-                                        <span class="font-semibold">{{ currencyFormat(0, setting.site_digit_after_decimal_point, setting.site_default_currency_symbol, setting.site_currency_position) }}</span>
-                                        <span class="text-xs text-gray-500 ml-1">{{ $t('label.you_will_pay_him') }}</span>
-                                    </label>
-                                </li>
-                                <li class="flex items-center gap-1.5">
-                                    <div class="custom-radio">
-                                        <input type="radio" id="pay_for_pickup_cost_now" v-model="pickupOption" value="pay_for_pickup_cost_now"
-                                            class="custom-radio-field">
-                                        <span class="custom-radio-span border-gray-400"></span>
-                                    </div>
-                                    <label for="pay_for_pickup_cost_now" class="db-field-label text-heading flex-1">
-                                        {{ $t('label.pay_for_pickup_cost_now') }} - 
-                                        <span class="font-semibold">{{ currencyFormat(pickupCost, setting.site_digit_after_decimal_point, setting.site_default_currency_symbol, setting.site_currency_position) }}</span>
-                                        <span v-if="distanceFromBranch && pickupOption === 'pay_for_pickup_cost_now'" class="text-xs text-gray-500 ml-1">({{ distanceFromBranch }})</span>
-                                    </label>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div class="mb-6 rounded-2xl shadow-xs bg-white">
                         <h3 class="capitalize font-medium p-4 border-b border-gray-100">{{ $t('label.contact_information') }}</h3>
                         <div class="p-4">
                             <label for="whatsapp" class="db-field-label required">{{ $t('label.whatsapp_number') }}</label>
@@ -141,6 +95,53 @@
                                 <i class="lab lab-location text-xs mr-1"></i>
                                 {{ $t('label.distance') }}: {{ distanceFromBranch }}
                             </small>
+                        </div>
+                    </div>
+
+                    <!-- Delivery cost section: show only after distance is calculated -->
+                    <div v-if="distanceFromBranch && locationUrl" class="mb-6 rounded-2xl shadow-xs bg-white">
+                        <h3 class="capitalize font-medium p-4 border-b border-gray-100">{{ $t('label.pickup_cost') }}</h3>
+                        <div class="p-4">
+                            <div v-if="isDeliveryFree" class="text-sm text-heading">
+                                {{ freeDeliveryMessage }}
+                            </div>
+                            <ul v-else class="flex flex-col gap-4">
+                                <li class="flex items-center gap-1.5">
+                                    <div class="custom-radio">
+                                        <input type="radio" id="pickup_myself" v-model="pickupOption" value="pickup_myself"
+                                            class="custom-radio-field">
+                                        <span class="custom-radio-span border-gray-400"></span>
+                                    </div>
+                                    <label for="pickup_myself" class="db-field-label text-heading flex-1">
+                                        {{ $t('label.pickup_myself') }} -
+                                        <span class="font-semibold">{{ currencyFormat(0, setting.site_digit_after_decimal_point, setting.site_default_currency_symbol, setting.site_currency_position) }}</span>
+                                    </label>
+                                </li>
+                                <li class="flex items-center gap-1.5">
+                                    <div class="custom-radio">
+                                        <input type="radio" id="pay_to_driver" v-model="pickupOption" value="pay_to_driver"
+                                            class="custom-radio-field">
+                                        <span class="custom-radio-span border-gray-400"></span>
+                                    </div>
+                                    <label for="pay_to_driver" class="db-field-label text-heading flex-1">
+                                        {{ $t('label.agree_with_driver') }} -
+                                        <span class="font-semibold">{{ currencyFormat(0, setting.site_digit_after_decimal_point, setting.site_default_currency_symbol, setting.site_currency_position) }}</span>
+                                        <span class="text-xs text-gray-500 ml-1">{{ $t('label.you_will_pay_him') }}</span>
+                                    </label>
+                                </li>
+                                <li class="flex items-center gap-1.5">
+                                    <div class="custom-radio">
+                                        <input type="radio" id="pay_for_pickup_cost_now" v-model="pickupOption" value="pay_for_pickup_cost_now"
+                                            class="custom-radio-field">
+                                        <span class="custom-radio-span border-gray-400"></span>
+                                    </div>
+                                    <label for="pay_for_pickup_cost_now" class="db-field-label text-heading flex-1">
+                                        {{ $t('label.pay_for_pickup_cost_now') }} -
+                                        <span class="font-semibold">{{ currencyFormat(pickupCost, setting.site_digit_after_decimal_point, setting.site_default_currency_symbol, setting.site_currency_position) }}</span>
+                                        <span v-if="pickupOption === 'pay_for_pickup_cost_now'" class="text-xs text-gray-500 ml-1">({{ distanceFromBranch }})</span>
+                                    </label>
+                                </li>
+                            </ul>
                         </div>
                     </div>
                 </div>
