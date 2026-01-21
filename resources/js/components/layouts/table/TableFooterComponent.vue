@@ -222,6 +222,9 @@ export default {
             }
             
             return null;
+        },
+        installInstructions: function () {
+            return this.getInstallInstructions();
         }
     },
     methods: {
