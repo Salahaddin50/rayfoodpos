@@ -431,13 +431,21 @@ export default {
                 return parseFloat(this.currentBranch?.delivery_cost_1) || 0;
             }
             
-            // Extract numeric distance (remove "km" or "m")
-            const distanceStr = this.distanceFromBranch.replace(/[^\d.]/g, '');
-            let distance = parseFloat(distanceStr);
-            
-            // Convert meters to km if needed
-            if (this.distanceFromBranch.includes('m')) {
-                distance = distance / 1000;
+            // Parse distance string like "1678.37 km" or "850 m" safely.
+            // NOTE: we must not treat "km" as meters (it contains letter "m").
+            let distance = 0;
+            const trimmed = String(this.distanceFromBranch).trim();
+            const unitMatch = trimmed.match(/([\d.]+)\s*(km|m)\s*$/i);
+            if (unitMatch) {
+                distance = parseFloat(unitMatch[1]);
+                const unit = unitMatch[2].toLowerCase();
+                if (unit === 'm') {
+                    distance = distance / 1000;
+                }
+            } else {
+                // Fallback: best-effort numeric extraction
+                const distanceStr = trimmed.replace(/[^\d.]/g, '');
+                distance = parseFloat(distanceStr);
             }
             
             // Get thresholds and costs (branch-specific)
