@@ -439,21 +439,33 @@ export default {
             }
             
             // Get thresholds and costs
-            const threshold1 = parseFloat(this.setting.site_delivery_distance_threshold_1 || 5);
-            const threshold2 = parseFloat(this.setting.site_delivery_distance_threshold_2 || 10);
-            const cost1 = parseFloat(this.setting.site_delivery_cost_1 || 5);
-            const cost2 = parseFloat(this.setting.site_delivery_cost_2 || 8);
-            const cost3 = parseFloat(this.setting.site_delivery_cost_3 || 12);
+            const threshold1 = parseFloat(this.setting.site_delivery_distance_threshold_1) || 0;
+            const threshold2 = parseFloat(this.setting.site_delivery_distance_threshold_2) || null;
+            const cost1 = parseFloat(this.setting.site_delivery_cost_1) || 0;
+            const cost2 = parseFloat(this.setting.site_delivery_cost_2) || null;
+            const cost3 = parseFloat(this.setting.site_delivery_cost_3) || null;
+            
+            // If threshold2 is not set (empty), then cost3 = cost2 = cost1
+            if (!threshold2 || isNaN(threshold2)) {
+                return cost1;
+            }
             
             // Calculate cost based on distance
             if (distance < threshold1) {
+                // Distance < threshold1: use Cost 1
                 return cost1;
             } else if (distance < threshold2) {
-                // Use cost2 if set, otherwise cost1
-                return cost2 || cost1;
+                // Distance between threshold1 and threshold2: use Cost 2 (or Cost 1 if Cost 2 is empty)
+                return (cost2 !== null && !isNaN(cost2)) ? cost2 : cost1;
             } else {
-                // Use cost3 if set, otherwise cost2, otherwise cost1
-                return cost3 || cost2 || cost1;
+                // Distance >= threshold2: use Cost 3 (or Cost 2, or Cost 1 if empty)
+                if (cost3 !== null && !isNaN(cost3)) {
+                    return cost3;
+                } else if (cost2 !== null && !isNaN(cost2)) {
+                    return cost2;
+                } else {
+                    return cost1;
+                }
             }
         },
         calculateDistance: function (lat1, lon1, lat2, lon2) {
