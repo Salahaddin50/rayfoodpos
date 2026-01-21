@@ -228,6 +228,10 @@ export default {
         }
     },
     methods: {
+        getDeferredPrompt: function () {
+            // Prefer local, fallback to global (captured early during app boot).
+            return this.deferredPrompt || window.__deferredPwaPrompt || null;
+        },
         isIOSDevice: function () {
             // iOS Safari does not support the native beforeinstallprompt flow.
             // (Chrome on iOS is also Safari under the hood.)
@@ -350,12 +354,15 @@ export default {
             }
         },
         installApp: function () {
-            if (this.deferredPrompt) {
+            const promptEvent = this.getDeferredPrompt();
+            if (promptEvent) {
+                // Keep a local reference too (useful if component logic relies on it)
+                this.deferredPrompt = promptEvent;
                 // Show the install prompt - this starts the installation process
-                this.deferredPrompt.prompt();
+                promptEvent.prompt();
                 
                 // Wait for the user to respond to the prompt
-                this.deferredPrompt.userChoice.then((choiceResult) => {
+                promptEvent.userChoice.then((choiceResult) => {
                     if (choiceResult.outcome === 'accepted') {
                         console.log('User accepted the install prompt');
                     } else {
@@ -363,9 +370,11 @@ export default {
                     }
                     // Clear the deferred prompt so it can only be used once
                     this.deferredPrompt = null;
+                    window.__deferredPwaPrompt = null;
                 }).catch((error) => {
                     console.error('Error showing install prompt:', error);
                     this.deferredPrompt = null;
+                    window.__deferredPwaPrompt = null;
                 });
             } else {
                 // Fallback for mobile browsers (notably iOS) where beforeinstallprompt never fires.
@@ -387,19 +396,13 @@ export default {
             this.loading.isActive = false;
         });
 
-        // Listen for the beforeinstallprompt event (PWA install prompt)
-        window.addEventListener('beforeinstallprompt', (e) => {
-            // Prevent the mini-infobar from appearing on mobile
-            e.preventDefault();
-            // Stash the event so it can be triggered later
-            this.deferredPrompt = e;
-            // Show the install button
-            this.showInstallButton = true;
-        });
+        // Sync from global prompt if it was captured before this component mounted.
+        this.deferredPrompt = window.__deferredPwaPrompt || null;
 
         // Listen for app installed event
         window.addEventListener('appinstalled', () => {
             this.deferredPrompt = null;
+            window.__deferredPwaPrompt = null;
             this.showInstallButton = false;
             console.log('PWA was installed');
         });

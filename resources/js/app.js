@@ -17,6 +17,18 @@ import 'vue-next-select/dist/index.css';
 import ENV from './config/env';
 import 'sweetalert2/dist/sweetalert2.min.css';
 
+// PWA install prompt handling (Android/Chrome)
+// Store the install prompt event globally so it doesn't get lost across route/layout changes.
+window.__deferredPwaPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent the mini-infobar from appearing on mobile
+    e.preventDefault();
+    window.__deferredPwaPrompt = e;
+});
+window.addEventListener('appinstalled', () => {
+    window.__deferredPwaPrompt = null;
+});
+
 /* Start tooltip alert code */
 const options = {
     timeout: 2000,
