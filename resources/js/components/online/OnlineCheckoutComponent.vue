@@ -368,40 +368,6 @@ export default {
             }
             return 0;
         },
-        calculateDeliveryCostByDistance: function () {
-            // Get distance in km
-            if (!this.distanceFromBranch) {
-                // If no distance, use cost 1 as default
-                return parseFloat(this.setting.site_delivery_cost_1 || 5);
-            }
-            
-            // Extract numeric distance (remove "km" or "m")
-            const distanceStr = this.distanceFromBranch.replace(/[^\d.]/g, '');
-            let distance = parseFloat(distanceStr);
-            
-            // Convert meters to km if needed
-            if (this.distanceFromBranch.includes('m')) {
-                distance = distance / 1000;
-            }
-            
-            // Get thresholds and costs
-            const threshold1 = parseFloat(this.setting.site_delivery_distance_threshold_1 || 5);
-            const threshold2 = parseFloat(this.setting.site_delivery_distance_threshold_2 || 10);
-            const cost1 = parseFloat(this.setting.site_delivery_cost_1 || 5);
-            const cost2 = parseFloat(this.setting.site_delivery_cost_2 || 8);
-            const cost3 = parseFloat(this.setting.site_delivery_cost_3 || 12);
-            
-            // Calculate cost based on distance
-            if (distance < threshold1) {
-                return cost1;
-            } else if (distance < threshold2) {
-                // Use cost2 if set, otherwise cost1
-                return cost2 || cost1;
-            } else {
-                // Use cost3 if set, otherwise cost2, otherwise cost1
-                return cost3 || cost2 || cost1;
-            }
-        },
         total: function () {
             return parseFloat(this.subtotal) + parseFloat(this.pickupCost);
         },
@@ -455,6 +421,40 @@ export default {
             this.phoneNumber = this.phoneNumber.replace(/[^\d]/g, '');
             // Combine country code with phone number
             this.checkoutProps.form.whatsapp_number = this.countryCode + this.phoneNumber;
+        },
+        calculateDeliveryCostByDistance: function () {
+            // Get distance in km
+            if (!this.distanceFromBranch) {
+                // If no distance, use cost 1 as default
+                return parseFloat(this.setting.site_delivery_cost_1 || 5);
+            }
+            
+            // Extract numeric distance (remove "km" or "m")
+            const distanceStr = this.distanceFromBranch.replace(/[^\d.]/g, '');
+            let distance = parseFloat(distanceStr);
+            
+            // Convert meters to km if needed
+            if (this.distanceFromBranch.includes('m')) {
+                distance = distance / 1000;
+            }
+            
+            // Get thresholds and costs
+            const threshold1 = parseFloat(this.setting.site_delivery_distance_threshold_1 || 5);
+            const threshold2 = parseFloat(this.setting.site_delivery_distance_threshold_2 || 10);
+            const cost1 = parseFloat(this.setting.site_delivery_cost_1 || 5);
+            const cost2 = parseFloat(this.setting.site_delivery_cost_2 || 8);
+            const cost3 = parseFloat(this.setting.site_delivery_cost_3 || 12);
+            
+            // Calculate cost based on distance
+            if (distance < threshold1) {
+                return cost1;
+            } else if (distance < threshold2) {
+                // Use cost2 if set, otherwise cost1
+                return cost2 || cost1;
+            } else {
+                // Use cost3 if set, otherwise cost2, otherwise cost1
+                return cost3 || cost2 || cost1;
+            }
         },
         calculateDistance: function (lat1, lon1, lat2, lon2) {
             // Haversine formula to calculate distance between two coordinates
