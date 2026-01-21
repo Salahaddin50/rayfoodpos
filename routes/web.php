@@ -33,6 +33,7 @@ Route::prefix('install')->name('installer.')->middleware(['web'])->group(functio
 });
 
 
+Route::get('/manifest.json', [RootController::class, 'manifest'])->name('manifest');
 Route::get('/', [RootController::class, 'index'])->middleware(['installed'])->name('home');
 Route::prefix('payment')->name('payment.')->middleware(['installed'])->group(function () {
     Route::get('/{order}/pay', [PaymentController::class, 'index'])->name('index');
