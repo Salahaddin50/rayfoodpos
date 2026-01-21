@@ -137,8 +137,8 @@
                                     </div>
                                     <label for="pay_for_pickup_cost_now" class="db-field-label text-heading flex-1">
                                         {{ $t('label.pay_for_pickup_cost_now') }} -
-                                        <span class="font-semibold">{{ currencyFormat(pickupCost, setting.site_digit_after_decimal_point, setting.site_default_currency_symbol, setting.site_currency_position) }}</span>
-                                        <span v-if="pickupOption === 'pay_for_pickup_cost_now'" class="text-xs text-gray-500 ml-1">({{ distanceFromBranch }})</span>
+                                        <span class="font-semibold">{{ currencyFormat(deliveryCostNowAmount, setting.site_digit_after_decimal_point, setting.site_default_currency_symbol, setting.site_currency_position) }}</span>
+                                        <span class="text-xs text-gray-500 ml-1">({{ distanceFromBranch }})</span>
                                     </label>
                                 </li>
                             </ul>
@@ -420,6 +420,16 @@ export default {
                 threshold: thresholdFormatted,
                 distance: distanceFormatted
             });
+        },
+        deliveryCostNowAmount: function () {
+            // Preview amount for the "pay now" option (independent of selected pickupOption)
+            if (!this.locationUrl || !this.distanceFromBranch) {
+                return 0;
+            }
+            if (this.isDeliveryFree) {
+                return 0;
+            }
+            return this.calculateDeliveryCostByDistance();
         },
         distanceFromBranch: function () {
             if (!this.locationUrl || !this.currentBranch) {
