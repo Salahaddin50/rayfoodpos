@@ -474,6 +474,15 @@ class OrderService
 
                 $this->order->order_serial_no = date('dmy') . $this->order->id;
                 $this->order->total_tax       = $totalTax;
+                
+                // Calculate and save distance if location_url and branch_id are present
+                if ($this->order->location_url && $this->order->branch_id) {
+                    $distance = $this->calculateDistanceFromLocation($this->order->location_url, $this->order->branch_id);
+                    if ($distance !== null) {
+                        $this->order->distance = $distance;
+                    }
+                }
+                
                 $currentTime = Carbon::now();
                 $endTime = $currentTime->copy()->addMinutes((int) Settings::group('site')->get('site_food_preparation_time'));
                 $start = $currentTime->format('H:i');
@@ -724,6 +733,52 @@ class OrderService
         } catch (Exception $exception) {
             Log::info($exception->getMessage());
             throw new Exception(QueryExceptionLibrary::message($exception), 422);
+        }
+    }
+
+    /**
+     * Calculate distance from location URL to branch using Haversine formula
+     * 
+     * @param string $locationUrl Google Maps URL format: https://www.google.com/maps?q=lat,lng
+     * @param int $branchId Branch ID
+     * @return float|null Distance in kilometers, or null if calculation fails
+     */
+    protected function calculateDistanceFromLocation(string $locationUrl, int $branchId): ?float
+    {
+        try {
+            // Extract coordinates from location URL
+            if (!preg_match('/q=([\d.-]+),([\d.-]+)/', $locationUrl, $matches)) {
+                return null;
+            }
+
+            $deliveryLat = (float) $matches[1];
+            $deliveryLng = (float) $matches[2];
+
+            // Get branch coordinates
+            $branch = \App\Models\Branch::find($branchId);
+            if (!$branch || !$branch->latitude || !$branch->longitude) {
+                return null;
+            }
+
+            $branchLat = (float) $branch->latitude;
+            $branchLng = (float) $branch->longitude;
+
+            // Haversine formula
+            $R = 6371; // Earth radius in kilometers
+            $dLat = deg2rad($deliveryLat - $branchLat);
+            $dLng = deg2rad($deliveryLng - $branchLng);
+            
+            $a = sin($dLat / 2) * sin($dLat / 2) +
+                 cos(deg2rad($branchLat)) * cos(deg2rad($deliveryLat)) *
+                 sin($dLng / 2) * sin($dLng / 2);
+            
+            $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+            $distance = $R * $c;
+
+            return round($distance, 2);
+        } catch (\Exception $e) {
+            \Log::warning('Distance calculation failed: ' . $e->getMessage());
+            return null;
         }
     }
 }

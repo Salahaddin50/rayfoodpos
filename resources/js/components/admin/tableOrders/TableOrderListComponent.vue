@@ -128,13 +128,17 @@
                                 <span v-if="order.token"> / #{{ order.token }}</span>
                             </td>
                             <td class="db-table-body-td">
-                                <a v-if="order.whatsapp_number && order.location_url" 
-                                   :href="order.location_url" 
-                                   target="_blank"
-                                   class="text-green-600 hover:text-green-800 flex items-center gap-1">
-                                    <i class="lab lab-location lab-font-size-16"></i>
-                                    <span class="underline">{{ $t('label.view_map') }}</span>
-                                </a>
+                                <div v-if="order.whatsapp_number && order.location_url" class="flex flex-col gap-1">
+                                    <a :href="order.location_url" 
+                                       target="_blank"
+                                       class="text-green-600 hover:text-green-800 flex items-center gap-1">
+                                        <i class="lab lab-location lab-font-size-16"></i>
+                                        <span class="underline">{{ $t('label.view_map') }}</span>
+                                    </a>
+                                    <span v-if="order.distance" class="text-xs text-gray-600">
+                                        {{ formatDistance(order.distance) }}
+                                    </span>
+                                </div>
                                 <span v-else class="text-gray-400">-</span>
                             </td>
                             <td class="db-table-body-td" style="display: none;">
@@ -861,6 +865,22 @@ export default {
             
             // Create WhatsApp link with empty message
             return `https://wa.me/${formattedNumber}`;
+        },
+        formatDistance: function (distance) {
+            if (!distance || distance === null || distance === undefined) {
+                return '';
+            }
+            
+            const dist = parseFloat(distance);
+            if (isNaN(dist)) {
+                return '';
+            }
+            
+            if (dist < 1) {
+                return (dist * 1000).toFixed(0) + ' m';
+            } else {
+                return dist.toFixed(2) + ' km';
+            }
         },
     },
 };

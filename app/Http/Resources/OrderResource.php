@@ -45,6 +45,7 @@ class OrderResource extends JsonResource
             'table_name'                     => $this->diningTable?->name,
             'whatsapp_number'                => $this->whatsapp_number,
             'location_url'                   => $this->location_url,
+            'distance'                       => $this->distance,
             'pickup_option'                  => $this->pickup_option,
             'delivery_charge'                => $this->delivery_charge,
             'customer'                       => new OrderUserResource($this->user->load('roles', 'media')),
