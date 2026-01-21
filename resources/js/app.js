@@ -76,7 +76,7 @@ axios.interceptors.response.use(
             
             // Redirect to login page (only if not already there)
             const currentPath = window.location.pathname;
-            if (currentPath !== '/admin/login' && currentPath !== '/login') {
+            if (currentPath !== '/admin/login') {
                 isRedirecting = true;
                 window.location.href = '/admin/login';
             }

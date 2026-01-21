@@ -35,7 +35,7 @@ import driverRoutes from "./modules/driverRoutes";
 const baseRoutes = [
     {
         path: "/",
-        redirect: { name: "auth.login" },
+        redirect: { name: "online.menu" },
         name: "root"
     },
     {

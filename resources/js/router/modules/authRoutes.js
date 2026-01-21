@@ -5,7 +5,7 @@ import ResetPasswordComponent from "../../components/frontend/auth/ResetPassword
 
 export default [
     {
-        path: '/login',
+        path: '/admin/login',
         component: LoginComponent,
         name: 'auth.login',
         meta: {
