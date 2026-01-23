@@ -941,7 +941,6 @@ export default {
                 this.checkoutProps.form.branch_id = branch.branch_id;
                 
                 // Set order details - ensure all required fields are set
-                this.checkoutProps.form.customer_id = parseInt(order.user_id);
                 this.checkoutProps.form.token = order.token ? String(order.token).replace(/\D/g, '') : '';
                 this.checkoutProps.form.pos_note = order.pos_note || '';
                 this.checkoutProps.form.discount = parseFloat(order.discount || 0);
@@ -960,6 +959,20 @@ export default {
                     // Generate a new token if missing
                     this.generateToken();
                 }
+                
+                // Set customer_id after customers list is loaded and use $nextTick to ensure vue-select updates
+                this.$nextTick(() => {
+                    const customerId = parseInt(order.user_id);
+                    this.checkoutProps.form.customer_id = customerId;
+                    
+                    // Force vue-select to update by checking if customer exists in list
+                    const customerExists = this.customers && this.customers.some(c => c.id === customerId);
+                    if (!customerExists && this.customers && this.customers.length > 0) {
+                        // If customer not found, use first available customer as fallback
+                        console.warn('Customer ID ' + customerId + ' not found in customer list, using first available');
+                        this.checkoutProps.form.customer_id = this.customers[0].id;
+                    }
+                });
                 
                 // Set order type UI
                 if (order.order_type === orderTypeEnum.DINING_TABLE) {
