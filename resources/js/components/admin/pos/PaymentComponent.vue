@@ -204,6 +204,10 @@ export default {
         },
         confirmOrder: function () {
             try {
+                // Normalize pickup_cost to avoid 422 (Laravel numeric + nullable fails on "")
+                const pc = Number.parseFloat(this.$props.props.form.pickup_cost || 0);
+                this.$props.props.form.pickup_cost = Number.isFinite(pc) ? pc : 0;
+
                 if (this.$props.props.form.pos_payment_method === this.posPaymentMethodEnum.CASH && this.$refs.cashInput.value) {
                     this.$props.props.form.pos_received_amount = this.$refs.cashInput.value;
                 } else {

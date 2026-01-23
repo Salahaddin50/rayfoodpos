@@ -788,7 +788,9 @@ export default {
         orderSubmit: function () {
             this.loading.isActive = true;
             this.checkoutProps.form.subtotal = this.subtotal;
-            const pickupCost = parseFloat(this.checkoutProps.form.pickup_cost || 0);
+            // Normalize pickup_cost so backend numeric validation never receives "" (empty string)
+            const pickupCost = Number.parseFloat(this.checkoutProps.form.pickup_cost || 0);
+            this.checkoutProps.form.pickup_cost = Number.isFinite(pickupCost) ? pickupCost : 0;
             this.checkoutProps.form.total = parseFloat(this.subtotal - this.checkoutProps.form.discount + pickupCost).toFixed(this.setting.site_digit_after_decimal_point);
             this.checkoutProps.form.items = [];
             this.checkoutProps.form.pos_payment_note = this.checkoutProps.form.pos_payment_method === posPaymentMethodEnum.CASH ?
