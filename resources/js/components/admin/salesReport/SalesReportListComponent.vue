@@ -153,8 +153,10 @@
                         <tr class="db-table-head-tr">
                             <th class="db-table-head-th">{{ $t('label.order_id') }}</th>
                             <th class="db-table-head-th">{{ $t('label.date') }}</th>
-                            <th class="db-table-head-th">{{ $t('label.total') }}</th>
+                            <th class="db-table-head-th">{{ $t('label.subtotal') }}</th>
+                            <th class="db-table-head-th">{{ $t('label.pickup_cost') }}</th>
                             <th class="db-table-head-th">{{ $t('label.discount') }}</th>
+                            <th class="db-table-head-th">{{ $t('label.total') }}</th>
                             <th class="db-table-head-th">{{ $t('label.payment_type') }}</th>
                             <th class="db-table-head-th">{{ $t('label.payment_status') }}</th>
                         </tr>
@@ -163,8 +165,10 @@
                         <tr class="db-table-body-tr" v-for="salesReport in salesReports" :key="salesReport">
                             <td class="db-table-body-td">{{ salesReport.order_serial_no }}</td>
                             <td class="db-table-body-td">{{ salesReport.order_datetime }}</td>
+                            <td class="db-table-body-td">{{ salesReport.subtotal_currency_price }}</td>
+                            <td class="db-table-body-td">{{ salesReport.delivery_charge_currency_price }}</td>
+                            <td class="db-table-body-td">{{ salesReport.discount_currency_price }}</td>
                             <td class="db-table-body-td">{{ salesReport.total_amount_price }}</td>
-                            <td class="db-table-body-td">{{ salesReport.discount_amount_price }}</td>
                             <td class="db-table-body-td">
                                 <span v-if="salesReport.transaction">
                                     {{ salesReport.transaction }}
@@ -187,7 +191,7 @@
                     </tbody>
                     <tbody class="db-table-body" v-else>
                         <tr class="db-table-body-tr">
-                            <td class="db-table-body-td text-center" colspan="7">
+                            <td class="db-table-body-td text-center" colspan="8">
                                 <div class="p-4">
                                     <div class="max-w-[300px] mx-auto mt-2">
                                         <img class="w-full h-full" :src="ENV.API_URL + '/images/default/not-found.png'"

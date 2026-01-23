@@ -30,8 +30,10 @@ class SalesReportExport implements FromCollection, WithHeadings
             $salesReportArray[] = [
                 $order->order_serial_no,
                 AppLibrary::datetime($order->order_datetime),
-                AppLibrary::flatAmountFormat($order->total),
+                AppLibrary::flatAmountFormat($order->subtotal),
+                AppLibrary::flatAmountFormat($order->delivery_charge),
                 AppLibrary::flatAmountFormat($order->discount),
+                AppLibrary::flatAmountFormat($order->total),
                 $order->transaction ? strtoupper($order->transaction->payment_method)
                     : $this->getPaymentMethod($order),
                 trans('payment_status.' . $order->payment_status)
@@ -45,8 +47,10 @@ class SalesReportExport implements FromCollection, WithHeadings
         return [
             trans('all.label.order_serial_no'),
             trans('all.label.date'),
-            trans('all.label.total'),
+            trans('all.label.subtotal'),
+            trans('all.label.pickup_cost'),
             trans('all.label.discount'),
+            trans('all.label.total'),
             trans('all.label.payment_type'),
             trans('all.label.payment_status')
         ];

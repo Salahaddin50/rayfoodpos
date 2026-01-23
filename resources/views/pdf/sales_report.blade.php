@@ -90,6 +90,8 @@
 <body>
     @php 
          $total = 0;
+         $total_subtotal = 0;
+         $total_delivery_charge = 0;
          $total_discount = 0;
         function getPaymentMethod($order) {
             return trans('pos_payment_method.' . $order->pos_payment_method) != "pos_payment_method."
@@ -108,31 +110,40 @@
                     <tr>
                         <th>{{ trans('all.label.order_serial_no', [], 'en') }}</th>
                         <th>{{ trans('all.label.date', [], 'en') }}</th>
-                        <th>{{ trans('all.label.payment_type', [], 'en') }}</th>
-                        <th>{{ trans('all.label.payment_status', [], 'en') }}</th>
+                        <th>{{ trans('all.label.subtotal', [], 'en') }}</th>
+                        <th>{{ trans('all.label.pickup_cost', [], 'en') }}</th>
                         <th>{{ trans('all.label.discount', [], 'en') }}</th>
                         <th>{{ trans('all.label.total', [], 'en') }}</th>
+                        <th>{{ trans('all.label.payment_type', [], 'en') }}</th>
+                        <th>{{ trans('all.label.payment_status', [], 'en') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach ($orders as $order)
                         @php
                             $total+= $order->total;
+                            $total_subtotal += $order->subtotal;
+                            $total_delivery_charge += $order->delivery_charge;
                             $total_discount += $order->discount;
                          @endphp
                         <tr>
                             <td>{{$order->order_serial_no}}</td>
                             <td>{{ App\Libraries\AppLibrary::datetime($order->order_datetime) }}</td>
-                            <td>{{ $order->transaction ? strtoupper($order->transaction->payment_method) : getPaymentMethod($order) }}</td>
-                            <td>{{ trans('payment_status.'. $order->payment_status, [], 'en') }}</td>
+                            <td>{{ App\Libraries\AppLibrary::reportCurrencyAmountFormat($order->subtotal) }}</td>
+                            <td>{{ App\Libraries\AppLibrary::reportCurrencyAmountFormat($order->delivery_charge) }}</td>
                             <td>{{ App\Libraries\AppLibrary::reportCurrencyAmountFormat($order->discount) }}</td>
                             <td>{{ App\Libraries\AppLibrary::reportCurrencyAmountFormat($order->total) }}</td>
+                            <td>{{ $order->transaction ? strtoupper($order->transaction->payment_method) : getPaymentMethod($order) }}</td>
+                            <td>{{ trans('payment_status.'. $order->payment_status, [], 'en') }}</td>
                         </tr>
                     @endforeach
                     <tr class="total">
-                        <td colspan="4">{{ trans('all.label.total', [], 'en') }}</td>
+                        <td colspan="2">{{ trans('all.label.total', [], 'en') }}</td>
+                        <td>{{ App\Libraries\AppLibrary::reportCurrencyAmountFormat($total_subtotal) }}</td>
+                        <td>{{ App\Libraries\AppLibrary::reportCurrencyAmountFormat($total_delivery_charge) }}</td>
                         <td>{{ App\Libraries\AppLibrary::reportCurrencyAmountFormat($total_discount) }}</td>
                         <td>{{ App\Libraries\AppLibrary::reportCurrencyAmountFormat($total) }}</td>
+                        <td colspan="2"></td>
                     </tr>
                 </tbody>
             </table>
