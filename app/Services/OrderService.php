@@ -73,8 +73,12 @@ class OrderService
             $orderColumn = $request->get('order_column') ?? 'id';
             $orderType   = $request->get('order_by') ?? 'desc';
 
+            // Get the selected branch for strict filtering
+            $selectedBranchId = $this->branch();
+            Log::info('SalesReport list - Selected Branch ID: ' . $selectedBranchId . ', User ID: ' . Auth::id());
+            
             return Order::withoutGlobalScope(\App\Models\Scopes\BranchScope::class)
-                ->strictBranch()
+                ->where('branch_id', '=', $selectedBranchId)
                 ->with('transaction', 'orderItems', 'branch', 'user', 'diningTable', 'takeawayType', 'driver')
                 ->where(function ($query) use ($requests) {
                 if (isset($requests['from_date']) && isset($requests['to_date'])) {
@@ -686,8 +690,12 @@ class OrderService
             $orderColumn = $request->get('order_column') ?? 'id';
             $orderType   = $request->get('order_by') ?? 'desc';
 
+            // Get the selected branch for strict filtering
+            $selectedBranchId = $this->branch();
+            Log::info('SalesReport overview - Selected Branch ID: ' . $selectedBranchId . ', User ID: ' . Auth::id());
+            
             $orders = Order::withoutGlobalScope(\App\Models\Scopes\BranchScope::class)
-                ->strictBranch()
+                ->where('branch_id', '=', $selectedBranchId)
                 ->with('transaction', 'orderItems')
                 ->where(function ($query) use ($requests) {
                 if (isset($requests['from_date']) && isset($requests['to_date'])) {
