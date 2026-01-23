@@ -285,7 +285,15 @@ export default {
                             appService.modalShow('#receiptModal');
                             setTimeout(() => {
                                 appService.modalHide('#receiptModal');
-                                this.$router.push({ name: 'admin.pos.orders.show', params: { id: orderId } });
+                                // Use router if available, otherwise use window.location
+                                if (this.$router) {
+                                    this.$router.push({ name: 'admin.pos.orders.show', params: { id: orderId } }).catch(() => {
+                                        // Fallback to window.location if router push fails
+                                        window.location.href = `/admin/pos-orders/show/${orderId}`;
+                                    });
+                                } else {
+                                    window.location.href = `/admin/pos-orders/show/${orderId}`;
+                                }
                             }, 2000);
                         } else {
                             // For new orders, show receipt normally
