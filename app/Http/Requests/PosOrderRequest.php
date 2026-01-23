@@ -26,9 +26,9 @@ class PosOrderRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
-        // Convert empty string to null for pickup_cost to avoid numeric validation failure
-        if ($this->has('pickup_cost') && $this->pickup_cost === '') {
-            $this->merge(['pickup_cost' => null]);
+        // Convert empty string to null for delivery_charge to avoid numeric validation failure
+        if ($this->has('delivery_charge') && $this->delivery_charge === '') {
+            $this->merge(['delivery_charge' => null]);
         }
     }
 
@@ -45,7 +45,7 @@ class PosOrderRequest extends FormRequest
             'branch_id'           => ['required', 'numeric'],
             'subtotal'            => ['required', 'numeric'],
             'discount'            => ['nullable', 'numeric'],
-            'pickup_cost'         => ['nullable', 'numeric'],
+            'delivery_charge'      => ['nullable', 'numeric'],
             'dining_table_id' => request('order_type') === OrderType::DINING_TABLE ? [
                 'required',
                 'numeric'

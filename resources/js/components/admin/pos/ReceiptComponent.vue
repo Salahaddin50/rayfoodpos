@@ -241,10 +241,10 @@ export default {
             return appService.currencyFormat(amount, decimal, currency, position);
         },
         pickupCostValue: function () {
-            const direct = Number(this.order?.pickup_cost || 0);
+            const direct = Number(this.order?.delivery_charge || 0);
             if (direct > 0) return direct;
 
-            // Fallback: some older payloads may not include pickup_cost even though total includes it.
+            // Fallback: some older payloads may not include delivery_charge even though total includes it.
             // For takeaway orders, we can derive it from totals.
             if (Number(this.order?.order_type) === Number(this.orderTypeEnum?.TAKEAWAY)) {
                 const total = Number(this.order?.total || 0);
@@ -256,8 +256,8 @@ export default {
             return 0;
         },
         pickupCostCurrencyPrice: function () {
-            if (this.order?.pickup_cost_currency_price && this.pickupCostValue() === Number(this.order?.pickup_cost || 0)) {
-                return this.order.pickup_cost_currency_price;
+            if (this.order?.delivery_charge_currency_price && this.pickupCostValue() === Number(this.order?.delivery_charge || 0)) {
+                return this.order.delivery_charge_currency_price;
             }
             return this.currencyFormat(
                 this.pickupCostValue(),

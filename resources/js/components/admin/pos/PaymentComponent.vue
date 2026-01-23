@@ -204,13 +204,13 @@ export default {
         },
         confirmOrder: function () {
             try {
-                // Normalize pickup_cost to avoid 422 (Laravel numeric + nullable fails on "")
+                // Normalize delivery_charge to avoid 422 (Laravel numeric + nullable fails on "")
                 // Convert empty string, null, undefined, or invalid values to 0
-                const pickupCostValue = this.$props.props.form.pickup_cost;
-                const pc = (pickupCostValue === '' || pickupCostValue === null || pickupCostValue === undefined) 
+                const deliveryChargeValue = this.$props.props.form.delivery_charge;
+                const dc = (deliveryChargeValue === '' || deliveryChargeValue === null || deliveryChargeValue === undefined) 
                     ? 0 
-                    : Number.parseFloat(pickupCostValue) || 0;
-                this.$props.props.form.pickup_cost = Number.isFinite(pc) ? pc : 0;
+                    : Number.parseFloat(deliveryChargeValue) || 0;
+                this.$props.props.form.delivery_charge = Number.isFinite(dc) ? dc : 0;
 
                 if (this.$props.props.form.pos_payment_method === this.posPaymentMethodEnum.CASH && this.$refs.cashInput.value) {
                     this.$props.props.form.pos_received_amount = this.$refs.cashInput.value;
@@ -245,7 +245,7 @@ export default {
                         this.$props.props.form.discount = 0;
                         this.$props.props.form.delivery_time = null;
                         this.$props.props.form.delivery_charge = null;
-                        this.$props.props.form.pickup_cost = 0;
+                        this.$props.props.form.delivery_charge = 0;
                         this.$props.props.form.total = 0;
                         this.$props.props.form.order_type = orderTypeEnum.DINING_TABLE;
                         this.$props.props.form.is_advance_order = isAdvanceOrderEnum.NO;
