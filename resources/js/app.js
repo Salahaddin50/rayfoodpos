@@ -85,6 +85,13 @@ axios.interceptors.response.use(
                     localStorage.setItem('vuex', JSON.stringify(vuex));
                 }
             }
+
+            // Also clear in-memory Vuex state so router guards react immediately
+            try {
+                store.commit('authLogout');
+            } catch (e) {
+                // ignore
+            }
             
             // Redirect to login page (only if not already there)
             const currentPath = window.location.pathname;

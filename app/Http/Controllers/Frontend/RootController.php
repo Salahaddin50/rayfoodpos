@@ -35,9 +35,7 @@ class RootController extends Controller
             'name' => $companyName,
             'short_name' => $companyName,
             'description' => 'Restaurant POS System',
-            'id' => '/',
             'start_url' => '/',
-            'scope' => '/',
             'display' => 'standalone',
             'background_color' => '#ffffff',
             'theme_color' => '#696cff',
@@ -52,25 +50,13 @@ class RootController extends Controller
                     'src' => $iconBase,
                     'sizes' => '192x192',
                     'type' => 'image/png',
-                    'purpose' => 'any'
+                    'purpose' => 'any maskable'
                 ],
                 [
                     'src' => $iconBase,
                     'sizes' => '512x512',
                     'type' => 'image/png',
-                    'purpose' => 'any'
-                ],
-                [
-                    'src' => $iconBase,
-                    'sizes' => '192x192',
-                    'type' => 'image/png',
-                    'purpose' => 'maskable'
-                ],
-                [
-                    'src' => $iconBase,
-                    'sizes' => '512x512',
-                    'type' => 'image/png',
-                    'purpose' => 'maskable'
+                    'purpose' => 'any maskable'
                 ]
             ]
         ]);

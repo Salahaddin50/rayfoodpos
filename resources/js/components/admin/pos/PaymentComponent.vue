@@ -223,11 +223,21 @@ export default {
                 this.$store.dispatch("defaultAccess/show").then((res) => {
                     this.$props.props.form.branch_id = res.data.data.branch_id;
                     this.$store.dispatch('posOrder/save', this.$props.props.form).then(orderResponse => {
+                        const savedOrder = orderResponse?.data?.data;
+                        if (savedOrder) {
+                            // Use the save response immediately for the receipt (avoids extra fetch + avoids 401 issues)
+                            this.order = savedOrder;
+                            this.$store.commit('posOrder/orderItems', savedOrder.order_items || []);
+                            this.$store.commit('posOrder/orderBranch', savedOrder.branch || {});
+                            this.$store.commit('posOrder/orderUser', savedOrder.user || {});
+                        }
+
                         this.$props.props.form.token = "";
                         this.$props.props.form.subtotal = null;
                         this.$props.props.form.discount = 0;
                         this.$props.props.form.delivery_time = null;
                         this.$props.props.form.delivery_charge = null;
+                        this.$props.props.form.pickup_cost = 0;
                         this.$props.props.form.total = 0;
                         this.$props.props.form.order_type = orderTypeEnum.DINING_TABLE;
                         this.$props.props.form.is_advance_order = isAdvanceOrderEnum.NO;
@@ -244,13 +254,15 @@ export default {
                         this.$store.dispatch('posCart/resetCart').then(res => {
                             this.loading.isActive = false;
                         }).catch();
-                        this.$store.dispatch('posOrder/show', orderResponse.data.data.id).then(res => {
-                            this.order = res.data.data;
-                            this.loading.isActive = false;
-                        }).catch((error) => {
-                            this.loading.isActive = false;
-                            alertService.error(error.response.data.message);
-                        });
+
+                        // Best-effort refresh from server (keeps receipt consistent with latest backend formatting).
+                        // Do not block showing the receipt.
+                        if (savedOrder?.id) {
+                            this.$store.dispatch('posOrder/show', savedOrder.id).then(res => {
+                                this.order = res.data.data;
+                            }).catch(() => {});
+                        }
+
                         this.reset();
                         appService.modalShow('#receiptModal');
                     }).catch((err) => {

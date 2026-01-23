@@ -137,7 +137,7 @@
                                     {{ enums.orderStatusEnumArray[order.status] }}
                                 </span>
                             </td>
-                            <td class="db-table-body-td">
+                            <td class="db-table-body-td" style="width: 200px; min-width: 200px;">
                                 <template v-if="isDriverApplicable(order)">
                                     <vue-select
                                         class="db-field-control f-b-custom-select"
@@ -150,7 +150,7 @@
                                         placeholder="--"
                                         :modelValue="order.driver_id"
                                         @update:modelValue="assignDriver(order, $event)"
-                                        :disabled="order.status !== enums.orderStatusEnum.DELIVERED && order.status !== enums.orderStatusEnum.PREPARED"
+                                        :disabled="order.status !== enums.orderStatusEnum.DELIVERED && order.status !== enums.orderStatusEnum.PREPARED && order.status !== enums.orderStatusEnum.PREPARING"
                                     />
                                 </template>
                                 <template v-else>

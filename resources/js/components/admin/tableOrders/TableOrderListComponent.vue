@@ -180,7 +180,7 @@
                                         placeholder="--"
                                         :modelValue="order.driver_id"
                                         @update:modelValue="assignDriver(order, $event)"
-                                        :disabled="order.status !== enums.orderStatusEnum.DELIVERED && order.status !== enums.orderStatusEnum.PREPARED"
+                                        :disabled="order.status !== enums.orderStatusEnum.DELIVERED && order.status !== enums.orderStatusEnum.PREPARED && order.status !== enums.orderStatusEnum.PREPARING"
                                     />
                                 </template>
                                 <template v-else>

@@ -102,6 +102,12 @@
                                     order.subtotal_without_tax_currency_price
                                     }}</td>
                             </tr>
+                            <tr v-if="pickupCostValue() > 0">
+                                <td class="text-xs text-left py-0.5 uppercase text-heading">{{ $t('label.pickup_cost') }}:
+                                </td>
+                                <td class="text-xs text-right py-0.5 text-heading">{{ pickupCostCurrencyPrice() }}
+                                </td>
+                            </tr>
                             <tr>
                                 <td class="text-xs text-left py-0.5 uppercase text-heading">
                                     {{ $t('label.total_tax') }}:
@@ -220,6 +226,9 @@ export default {
         direction: function () {
             return this.$store.getters['frontendLanguage/show'].display_mode === displayModeEnum.RTL ? 'rtl' : 'ltr';
         },
+        setting: function () {
+            return this.$store.getters['frontendSetting/lists'];
+        },
     },
     mounted() {
         this.$store.dispatch("company/lists").then().catch();
@@ -227,6 +236,35 @@ export default {
     methods: {
         reset: function () {
             appService.modalHide();
+        },
+        currencyFormat: function (amount, decimal, currency, position) {
+            return appService.currencyFormat(amount, decimal, currency, position);
+        },
+        pickupCostValue: function () {
+            const direct = Number(this.order?.pickup_cost || 0);
+            if (direct > 0) return direct;
+
+            // Fallback: some older payloads may not include pickup_cost even though total includes it.
+            // For takeaway orders, we can derive it from totals.
+            if (Number(this.order?.order_type) === Number(this.orderTypeEnum?.TAKEAWAY)) {
+                const total = Number(this.order?.total || 0);
+                const subtotal = Number(this.order?.subtotal || 0);
+                const discount = Number(this.order?.discount || 0);
+                const derived = total - (subtotal - discount);
+                return derived > 0 ? derived : 0;
+            }
+            return 0;
+        },
+        pickupCostCurrencyPrice: function () {
+            if (this.order?.pickup_cost_currency_price && this.pickupCostValue() === Number(this.order?.pickup_cost || 0)) {
+                return this.order.pickup_cost_currency_price;
+            }
+            return this.currencyFormat(
+                this.pickupCostValue(),
+                this.setting.site_digit_after_decimal_point,
+                this.setting.site_default_currency_symbol,
+                this.setting.site_currency_position
+            );
         },
     },
     directives: {

@@ -125,6 +125,16 @@
                             {{ $t('label.takeaway') }}
                         </h3>
                     </label>
+                    <div v-if="checkoutProps.form.order_type === orderTypeEnums.takeAway" class="flex items-center gap-2 ml-2">
+                        <input 
+                            type="number" 
+                            step="0.01" 
+                            min="0"
+                            v-model="checkoutProps.form.pickup_cost"
+                            :placeholder="$t('label.pickup_cost')"
+                            class="db-field-control text-sm rounded-lg w-12 h-9 text-heading border-[#D9DBE9] focus:border-primary focus:ring-primary"
+                        />
+                    </div>
                 </div>
                 <div ref="dineInDiv" id="dine" class="h-auto hidden transition">
                     <div class="mt-3">
@@ -274,6 +284,14 @@
                         }}
                     </span>
                 </li>
+                <li v-if="checkoutProps.form.order_type === orderTypeEnums.takeAway && parseFloat(checkoutProps.form.pickup_cost || 0) > 0" class="flex items-center justify-between">
+                    <span class="text-sm font-rubik capitalize leading-6">{{ $t("label.pickup_cost") }}</span>
+                    <span class="text-sm font-rubik capitalize leading-6">{{
+                        currencyFormat(parseFloat(checkoutProps.form.pickup_cost || 0),
+                            setting.site_digit_after_decimal_point, setting.site_default_currency_symbol,
+                            setting.site_currency_position)
+                    }}</span>
+                </li>
                 <li class="flex items-center justify-between">
                     <span class="text-sm font-rubik capitalize leading-6">{{ $t("label.discount") }}</span>
                     <span class="text-sm font-rubik capitalize leading-6">{{
@@ -288,7 +306,7 @@
                     </span>
                     <span class="text-sm font-medium font-rubik capitalize leading-6 text-[#2E2F38]">
                         {{
-                            currencyFormat(subtotal - posDiscount,
+                            currencyFormat(subtotal - posDiscount + parseFloat(checkoutProps.form.pickup_cost || 0),
                                 setting.site_digit_after_decimal_point, setting.site_default_currency_symbol,
                                 setting.site_currency_position)
                         }}
@@ -311,9 +329,9 @@
     <button @click="openPosCart('pos-cart')" type="button"
         class="db-pos-cartBtn fixed md:hidden bottom-0 z-10 left-0 w-full h-14 py-4 text-center flex items-center justify-center shadow-xl-top gap-3 bg-primary">
         <i class="lab lab-bag-2 lab-font-size-13 text-white"></i>
-        <span class="text-base font-medium font-rubik text-white">
+            <span class="text-base font-medium font-rubik text-white">
             {{ totalItems() }} {{ $t('label.items') }} - {{
-                currencyFormat(subtotal - posDiscount,
+                currencyFormat(subtotal - posDiscount + parseFloat(checkoutProps.form.pickup_cost || 0),
                     setting.site_digit_after_decimal_point, setting.site_default_currency_symbol,
                     setting.site_currency_position)
             }}
@@ -384,6 +402,7 @@ export default {
                     items: [],
                     dining_table_id: null,
                     takeaway_type_id: null,
+                    pickup_cost: 0,
                     pos_received_amount: null,
                 }
             },
@@ -769,7 +788,8 @@ export default {
         orderSubmit: function () {
             this.loading.isActive = true;
             this.checkoutProps.form.subtotal = this.subtotal;
-            this.checkoutProps.form.total = parseFloat(this.subtotal - this.checkoutProps.form.discount).toFixed(this.setting.site_digit_after_decimal_point);
+            const pickupCost = parseFloat(this.checkoutProps.form.pickup_cost || 0);
+            this.checkoutProps.form.total = parseFloat(this.subtotal - this.checkoutProps.form.discount + pickupCost).toFixed(this.setting.site_digit_after_decimal_point);
             this.checkoutProps.form.items = [];
             this.checkoutProps.form.pos_payment_note = this.checkoutProps.form.pos_payment_method === posPaymentMethodEnum.CASH ?
                 null : this.checkoutProps.form.pos_payment_note;
@@ -862,6 +882,7 @@ export default {
             document?.querySelector(".db-main")?.classList?.add("expand");
         },
         dineInOrder: function () {
+            this.checkoutProps.form.pickup_cost = 0;
             this.checkoutProps.form.takeaway_type_id = null;
             this.$refs.dineIn.classList.add('active');
             this.$refs.dineInDiv.classList.add('block');

@@ -112,8 +112,8 @@ class TableOrderController extends AdminController
                 'driver_id' => ['nullable', 'integer', 'exists:drivers,id'],
             ]);
 
-            if ((int) $order->status !== OrderStatus::DELIVERED && (int) $order->status !== OrderStatus::PREPARED) {
-                return response(['status' => false, 'message' => 'Driver can be assigned only when order is prepared or delivered.'], 422);
+            if ((int) $order->status !== OrderStatus::DELIVERED && (int) $order->status !== OrderStatus::PREPARED && (int) $order->status !== OrderStatus::PREPARING) {
+                return response(['status' => false, 'message' => 'Driver can be assigned only when order is preparing, prepared or delivered.'], 422);
             }
 
             // Allow driver only for Takeaway and Online orders.

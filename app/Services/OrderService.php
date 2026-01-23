@@ -289,8 +289,20 @@ class OrderService
     {
         try {
             DB::transaction(function () use ($request) {
+                $validatedData = $request->validated();
+
+                /**
+                 * Ensure pickup_cost is persisted.
+                 *
+                 * In some cases nullable fields may not be present in validated() (depending on request payload),
+                 * so we explicitly carry it from the raw request when the column exists.
+                 */
+                if (Schema::hasColumn('orders', 'pickup_cost')) {
+                    $validatedData['pickup_cost'] = $request->input('pickup_cost');
+                }
+
                 $this->order = Order::create(
-                    $request->validated() + [
+                    $validatedData + [
                         'user_id'          => $request->customer_id,
                         'status'           => OrderStatus::ACCEPT,
                         'token'            => $request->token,
