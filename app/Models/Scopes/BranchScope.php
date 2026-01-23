@@ -28,24 +28,4 @@ class BranchScope implements Scope
             }
         }
     }
-    
-    /**
-     * Extend the query builder with custom macros for strict branch filtering
-     */
-    public function extend(Builder $builder)
-    {
-        $builder->macro('strictBranch', function (Builder $builder) {
-            if (!App::runningInConsole() && Auth::check()) {
-                $tableName = $builder->getModel()->getTable();
-                $field = sprintf('%s.%s', $tableName, 'branch_id');
-                $branchId = (new static)->branch();
-                
-                if ($branchId !== null) {
-                    $builder->where($field, '=', $branchId);
-                }
-            }
-            
-            return $builder;
-        });
-    }
 }

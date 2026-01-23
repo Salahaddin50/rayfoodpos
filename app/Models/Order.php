@@ -153,6 +153,27 @@ class Order extends Model
         return $query->where('status', OrderStatus::REJECTED);
     }
 
+    public function scopeStrictBranch($query, $branchId = null)
+    {
+        if ($branchId === null) {
+            // Get branch ID from DefaultAccess
+            $access = \App\Models\DefaultAccess::where(['user_id' => \Illuminate\Support\Facades\Auth::id(), 'name' => 'branch_id'])->first();
+            if ($access) {
+                $branchId = $access->default_id;
+            } elseif (\Illuminate\Support\Facades\Auth::user()->branch_id == 0) {
+                $branchId = \Dipokhalder\Settings\Facades\Settings::group('site')->get('site_default_branch');
+            } else {
+                $branchId = \Illuminate\Support\Facades\Auth::user()->branch_id;
+            }
+        }
+        
+        if ($branchId !== null) {
+            return $query->where('branch_id', '=', $branchId);
+        }
+        
+        return $query;
+    }
+
     public function transaction(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(Transaction::class);

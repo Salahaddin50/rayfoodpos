@@ -36,9 +36,12 @@ use App\Http\Requests\OrderStatusRequest;
 use App\Http\Requests\PaymentStatusRequest;
 use App\Http\Requests\TableOrderTokenRequest;
 use App\Services\OnlineUserService;
+use App\Traits\DefaultAccessModelTrait;
 
 class OrderService
 {
+    use DefaultAccessModelTrait;
+    
     public object $order;
     protected array $orderFilter = [
         'order_serial_no',
