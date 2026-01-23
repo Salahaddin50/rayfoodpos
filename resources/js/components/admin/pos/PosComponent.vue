@@ -918,25 +918,48 @@ export default {
         },
         loadOrderForEdit: function (orderId) {
             this.loading.isActive = true;
-            this.$store.dispatch('posOrder/show', orderId).then((res) => {
-                const order = res.data.data;
-                
+            
+            // First ensure customer list and branch are loaded
+            Promise.all([
+                this.$store.dispatch('user/lists', {
+                    order_column: 'id',
+                    order_type: 'asc',
+                    status: statusEnum.ACTIVE,
+                }),
+                this.$store.dispatch("defaultAccess/show")
+            ]).then(([customerRes, branchRes]) => {
+                // Now load the order
+                return this.$store.dispatch('posOrder/show', orderId).then((orderRes) => {
+                    return { order: orderRes.data.data, branch: branchRes.data.data };
+                });
+            }).then(({ order, branch }) => {
                 // Store order ID for update
                 this.checkoutProps.form.order_id = order.id;
                 this.checkoutProps.form.order_serial_no = order.order_serial_no;
                 
-                // Set order details
-                this.checkoutProps.form.customer_id = order.user_id;
-                this.checkoutProps.form.token = order.token || '';
+                // Set branch_id (required for validation)
+                this.checkoutProps.form.branch_id = branch.branch_id;
+                
+                // Set order details - ensure all required fields are set
+                this.checkoutProps.form.customer_id = parseInt(order.user_id);
+                this.checkoutProps.form.token = order.token ? String(order.token).replace(/\D/g, '') : '';
                 this.checkoutProps.form.pos_note = order.pos_note || '';
                 this.checkoutProps.form.discount = parseFloat(order.discount || 0);
                 this.checkoutProps.form.delivery_charge = parseFloat(order.delivery_charge || 0);
-                this.checkoutProps.form.order_type = order.order_type;
-                this.checkoutProps.form.dining_table_id = order.dining_table_id;
-                this.checkoutProps.form.takeaway_type_id = order.takeaway_type_id;
-                this.checkoutProps.form.pos_payment_method = order.pos_payment_method || 1;
-                this.checkoutProps.form.pos_payment_note = order.pos_payment_note;
-                this.checkoutProps.form.pos_received_amount = order.pos_received_amount;
+                this.checkoutProps.form.order_type = parseInt(order.order_type);
+                this.checkoutProps.form.dining_table_id = order.dining_table_id ? parseInt(order.dining_table_id) : null;
+                this.checkoutProps.form.takeaway_type_id = order.takeaway_type_id ? parseInt(order.takeaway_type_id) : null;
+                this.checkoutProps.form.pos_payment_method = parseInt(order.pos_payment_method || 1);
+                this.checkoutProps.form.pos_payment_note = order.pos_payment_note || null;
+                this.checkoutProps.form.pos_received_amount = order.pos_received_amount ? parseFloat(order.pos_received_amount) : null;
+                this.checkoutProps.form.is_advance_order = parseInt(order.is_advance_order || 0);
+                this.checkoutProps.form.source = parseInt(order.source || 1);
+                
+                // Ensure token is numeric and not empty (required for validation)
+                if (!this.checkoutProps.form.token || this.checkoutProps.form.token === '') {
+                    // Generate a new token if missing
+                    this.generateToken();
+                }
                 
                 // Set order type UI
                 if (order.order_type === orderTypeEnum.DINING_TABLE) {
