@@ -37,6 +37,7 @@ class ItemsReportExport implements FromCollection, WithHeadings
             $totalIncome += $income;
             
             $itemsReportArray[] = [
+                $item->order_numbers ?? '',
                 $item->item_name,
                 $item->category_name ?? '',
                 trans('itemType.' . $item->item_type),
@@ -55,6 +56,7 @@ class ItemsReportExport implements FromCollection, WithHeadings
             '',
             '',
             '',
+            '',
             $totalQuantity,
             AppLibrary::flatAmountFormat($totalIncome)
         ];
@@ -65,6 +67,7 @@ class ItemsReportExport implements FromCollection, WithHeadings
     public function headings() : array
     {
         return [
+            trans('all.label.order_serial_no'),
             trans('all.label.name'),
             trans('all.label.item_category_id'),
             trans('all.label.item_type'),

@@ -100,6 +100,7 @@
             <table>
                 <thead>
                     <tr>
+                        <th>{{ trans('all.label.order_serial_no', [], 'en') }}</th>
                         <th>{{ trans('all.label.name', [], 'en') }}</th>
                         <th>{{ trans('all.label.item_category_id', [], 'en') }}</th>
                         <th>{{ trans('all.label.item_type', [], 'en') }}</th>
@@ -119,6 +120,7 @@
                             $total_income += $income;
                          @endphp
                         <tr>
+                            <td>{{ $item->order_numbers ?? '' }}</td>
                             <td>{{ $item->item_name }}</td>
                             <td>{{ $item->category_name ?? '' }}</td>
                             <td>{{ trans('itemType.' . $item->item_type, [], 'en') }}</td>
@@ -162,7 +164,7 @@
                         </tr>
                     @endforeach
                     <tr class="total">
-                        <td colspan="6">{{ trans('all.label.total', [], 'en') }}</td>
+                        <td colspan="7">{{ trans('all.label.total', [], 'en') }}</td>
                         <td>{{ $total_quantity }}</td>
                         <td>{{ App\Libraries\AppLibrary::flatAmountFormat($total_income) }}</td>
                     </tr>

@@ -422,7 +422,8 @@ class ItemService
                         THEN order_items.total_price 
                         ELSE items.price * order_items.quantity 
                     END) as total_income'),
-                    DB::raw('MIN(orders.order_datetime) as first_order_date')
+                    DB::raw('MIN(orders.order_datetime) as first_order_date'),
+                    DB::raw('GROUP_CONCAT(DISTINCT orders.order_serial_no ORDER BY orders.order_serial_no SEPARATOR \', \') as order_numbers')
                 );
 
             // Apply date filtering

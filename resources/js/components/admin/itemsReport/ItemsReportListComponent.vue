@@ -87,6 +87,7 @@
                 <table class="db-table stripe" id="print" :dir="direction">
                     <thead class="db-table-head">
                         <tr class="db-table-head-tr">
+                            <th class="db-table-head-th">{{ $t('label.order_id') }}</th>
                             <th class="db-table-head-th">{{ $t('label.name') }}</th>
                             <th class="db-table-head-th">{{ $t('label.category') }}</th>
                             <th class="db-table-head-th">{{ $t('label.type') }}</th>
@@ -99,6 +100,7 @@
                     </thead>
                     <tbody class="db-table-body" v-if="itemsReports.length > 0">
                         <tr class="db-table-body-tr" v-for="itemsReport in itemsReports" :key="itemsReport">
+                            <td class="db-table-body-td">{{ itemsReport.order_numbers || '-' }}</td>
                             <td class="db-table-body-td">{{ itemsReport.name }}</td>
                             <td class="db-table-body-td">{{ itemsReport.category_name }}</td>
                             <td class="db-table-body-td">
@@ -115,7 +117,7 @@
                     </tbody>
                     <tbody class="db-table-body" v-else>
                         <tr class="db-table-body-tr">
-                            <td class="db-table-body-td text-center" colspan="7">
+                            <td class="db-table-body-td text-center" colspan="9">
                                 <div class="p-4">
                                     <div class="max-w-[300px] mx-auto mt-2">
                                         <img class="w-full h-full" :src="ENV.API_URL + '/images/default/not-found.png'"
@@ -130,6 +132,7 @@
                     <tfoot class="db-table-foot border-t" v-if="itemsReports.length > 0">
                         <tr>
                             <td class="db-table-body-td">{{ $t('label.total') }}</td>
+                            <td></td>
                             <td></td>
                             <td></td>
                             <td></td>
