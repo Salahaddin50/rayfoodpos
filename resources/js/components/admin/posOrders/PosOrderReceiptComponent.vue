@@ -105,9 +105,9 @@
                                 </td>
                             </tr>
 
-                            <tr v-if="order.order_type === orderTypeEnum.DELIVERY">
+                            <tr v-if="Number(order.delivery_charge) > 0">
                                 <td class="text-xs text-left py-0.5 uppercase text-heading">{{
-                                    $t('label.delivery_charge') }}:</td>
+                                    $t('label.pickup_cost') }}:</td>
                                 <td class="text-xs text-right py-0.5 text-heading">{{
                                     order.delivery_charge_currency_price }}</td>
                             </tr>

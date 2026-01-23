@@ -180,6 +180,10 @@
                             <span class="text-sm leading-6 capitalize">{{ $t('label.discount') }}</span>
                             <span class="text-sm leading-6 capitalize">{{ order.discount_currency_price }}</span>
                         </li>
+                        <li v-if="Number(order.delivery_charge) > 0" class="flex items-center justify-between text-heading">
+                            <span class="text-sm leading-6 capitalize">{{ $t('label.pickup_cost') }}</span>
+                            <span class="text-sm leading-6 capitalize">{{ order.delivery_charge_currency_price }}</span>
+                        </li>
                     </ul>
                     <div class="flex items-center justify-between p-3">
                         <h4 class="text-sm leading-6 font-bold capitalize">{{ $t('label.total') }}</h4>
