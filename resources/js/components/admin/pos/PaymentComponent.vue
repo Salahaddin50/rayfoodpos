@@ -232,6 +232,9 @@ export default {
                     this.$props.props.form.branch_id = res.data.data.branch_id;
                     this.$store.dispatch('posOrder/save', this.$props.props.form).then(orderResponse => {
                         const savedOrder = orderResponse?.data?.data;
+                        const isEditMode = !!this.$props.props.form.order_id;
+                        const orderId = savedOrder?.id || this.$props.props.form.order_id;
+                        
                         if (savedOrder) {
                             // Use the save response immediately for the receipt (avoids extra fetch + avoids 401 issues)
                             this.order = savedOrder;
@@ -275,7 +278,19 @@ export default {
                         }
 
                         this.reset();
-                        appService.modalShow('#receiptModal');
+                        
+                        // If editing, redirect to order details page after showing receipt
+                        if (isEditMode && orderId) {
+                            // Show receipt briefly, then redirect
+                            appService.modalShow('#receiptModal');
+                            setTimeout(() => {
+                                appService.modalHide('#receiptModal');
+                                this.$router.push({ name: 'admin.pos.orders.show', params: { id: orderId } });
+                            }, 2000);
+                        } else {
+                            // For new orders, show receipt normally
+                            appService.modalShow('#receiptModal');
+                        }
                     }).catch((err) => {
                         this.loading.isActive = false;
                         if (typeof err.response.data.errors === 'object') {

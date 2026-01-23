@@ -75,6 +75,11 @@ export const posCart = {
                     } else {
                         isNew = true;
                         _.forEach(state.lists, (list, listKey) => {
+                            // Skip if list is invalid
+                            if (!list || !list.item_id) {
+                                return;
+                            }
+                            
                             if (list.item_id === pay.item_id) {
                                 // Ensure list has item_variations and item_extras
                                 if (!list.item_variations) {
@@ -98,6 +103,11 @@ export const posCart = {
 
                                 if (pay.item_extras.extras && pay.item_extras.extras.length !== 0 && list.item_extras.extras && list.item_extras.extras.length !== 0) {
                                     _.forEach(pay.item_extras.extras, (payExtra) => {
+                                        // Skip if payExtra is invalid
+                                        if (payExtra === null || payExtra === undefined) {
+                                            variationAndExtraChecker.push(false);
+                                            return;
+                                        }
                                         if (list.item_extras.extras.includes(payExtra) && list.item_extras.extras.length === pay.item_extras.extras.length) {
                                             variationAndExtraChecker.push(true);
                                         } else {
