@@ -789,7 +789,11 @@ export default {
             this.loading.isActive = true;
             this.checkoutProps.form.subtotal = this.subtotal;
             // Normalize pickup_cost so backend numeric validation never receives "" (empty string)
-            const pickupCost = Number.parseFloat(this.checkoutProps.form.pickup_cost || 0);
+            // Convert empty string, null, undefined, or invalid values to 0
+            const pickupCostValue = this.checkoutProps.form.pickup_cost;
+            const pickupCost = (pickupCostValue === '' || pickupCostValue === null || pickupCostValue === undefined) 
+                ? 0 
+                : Number.parseFloat(pickupCostValue) || 0;
             this.checkoutProps.form.pickup_cost = Number.isFinite(pickupCost) ? pickupCost : 0;
             this.checkoutProps.form.total = parseFloat(this.subtotal - this.checkoutProps.form.discount + pickupCost).toFixed(this.setting.site_digit_after_decimal_point);
             this.checkoutProps.form.items = [];

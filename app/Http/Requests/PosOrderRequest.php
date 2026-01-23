@@ -22,6 +22,17 @@ class PosOrderRequest extends FormRequest
     }
 
     /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        // Convert empty string to null for pickup_cost to avoid numeric validation failure
+        if ($this->has('pickup_cost') && $this->pickup_cost === '') {
+            $this->merge(['pickup_cost' => null]);
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array
