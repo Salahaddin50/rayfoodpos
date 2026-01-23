@@ -120,14 +120,12 @@
     <div class="col-12 sm:col-6">
             <div class="db-card">
                 <div class="db-card-header">
-                    <div class="flex items-center justify-between">
-                        <h3 class="db-card-title">{{ $t('label.order_details') }}</h3>
-                        <button type="button" @click="editOrder" 
-                            class="flex items-center gap-2 px-4 h-[38px] rounded shadow-db-card bg-primary hover:bg-primary-dark transition">
-                            <i class="lab lab-edit-2 lab-font-size-16 text-white"></i>
-                            <span class="text-sm capitalize text-white">{{ $t('button.edit') }}</span>
-                        </button>
-                    </div>
+                    <h3 class="db-card-title">{{ $t('label.order_details') }}</h3>
+                    <button type="button" @click="editOrder" 
+                        class="flex items-center gap-2 px-3 h-[32px] rounded bg-primary hover:bg-primary-dark transition">
+                        <i class="lab lab-edit-2 lab-font-size-14 text-white"></i>
+                        <span class="text-xs capitalize text-white">{{ $t('button.edit') }}</span>
+                    </button>
                 </div>
             <div class="db-card-body">
                 <div class="pl-3">
