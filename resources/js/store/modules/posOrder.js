@@ -66,11 +66,20 @@ export const posOrder = {
         },
         save: function (context, payload) {
             return new Promise((resolve, reject) => {
-                axios.post("admin/pos", payload).then((res) => {
-                    resolve(res);
-                }).catch((err) => {
-                    reject(err);
-                });
+                // If order_id exists, update existing order; otherwise create new
+                if (payload.order_id) {
+                    axios.put(`admin/pos/${payload.order_id}`, payload).then((res) => {
+                        resolve(res);
+                    }).catch((err) => {
+                        reject(err);
+                    });
+                } else {
+                    axios.post("admin/pos", payload).then((res) => {
+                        resolve(res);
+                    }).catch((err) => {
+                        reject(err);
+                    });
+                }
             });
         },
         show: function (context, payload) {

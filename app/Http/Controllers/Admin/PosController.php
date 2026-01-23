@@ -27,7 +27,7 @@ class PosController extends AdminController
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:pos_create', only: ['store', 'storeCustomer']),
+            new Middleware('permission:pos_create', only: ['store', 'update', 'storeCustomer']),
         ];
     }
 
@@ -35,6 +35,15 @@ class PosController extends AdminController
     {
         try {
             return new OrderDetailsResource($this->orderService->posOrderStore($request));
+        } catch (Exception $exception) {
+            return response(['status' => false, 'message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function update(PosOrderRequest $request, \App\Models\Order $order): \Illuminate\Http\Response | OrderDetailsResource | \Illuminate\Contracts\Foundation\Application | \Illuminate\Contracts\Routing\ResponseFactory
+    {
+        try {
+            return new OrderDetailsResource($this->orderService->posOrderUpdate($request, $order));
         } catch (Exception $exception) {
             return response(['status' => false, 'message' => $exception->getMessage()], 422);
         }

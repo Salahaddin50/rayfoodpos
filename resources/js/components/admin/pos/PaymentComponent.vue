@@ -258,6 +258,9 @@ export default {
                         this.$props.props.form.pos_payment_method = this.posPaymentMethodEnum.CASH;
                         this.$props.props.form.pos_payment_note = null;
                         this.$props.props.form.pos_received_amount = null;
+                        // Clear order_id and order_serial_no after saving (for new orders)
+                        this.$props.props.form.order_id = null;
+                        this.$props.props.form.order_serial_no = null;
                         appService.modalHide('#orderpayment');
                         this.$store.dispatch('posCart/resetCart').then(res => {
                             this.loading.isActive = false;

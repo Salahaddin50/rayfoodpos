@@ -583,6 +583,12 @@ export default {
             this.$store.dispatch("defaultAccess/show").then((res) => {
                 this.checkoutProps.form.branch_id = res.data.data.branch_id;
                 this.itemList();
+                
+                // Check if we're editing an existing order
+                const editOrderId = this.$route.query.edit_order_id;
+                if (editOrderId) {
+                    this.loadOrderForEdit(editOrderId);
+                }
             }).catch((err) => {
                 this.loading.isActive = false;
             });
@@ -905,6 +911,97 @@ export default {
             this.$refs.dineIn.classList.remove('active');
             this.$refs.dineInDiv.classList.add('hidden');
             this.$refs.dineInDiv.classList.remove('block');
+        },
+        loadOrderForEdit: function (orderId) {
+            this.loading.isActive = true;
+            this.$store.dispatch('posOrder/show', orderId).then((res) => {
+                const order = res.data.data;
+                
+                // Store order ID for update
+                this.checkoutProps.form.order_id = order.id;
+                this.checkoutProps.form.order_serial_no = order.order_serial_no;
+                
+                // Set order details
+                this.checkoutProps.form.customer_id = order.user_id;
+                this.checkoutProps.form.token = order.token || '';
+                this.checkoutProps.form.pos_note = order.pos_note || '';
+                this.checkoutProps.form.discount = parseFloat(order.discount || 0);
+                this.checkoutProps.form.delivery_charge = parseFloat(order.delivery_charge || 0);
+                this.checkoutProps.form.order_type = order.order_type;
+                this.checkoutProps.form.dining_table_id = order.dining_table_id;
+                this.checkoutProps.form.takeaway_type_id = order.takeaway_type_id;
+                this.checkoutProps.form.pos_payment_method = order.pos_payment_method;
+                this.checkoutProps.form.pos_payment_note = order.pos_payment_note;
+                this.checkoutProps.form.pos_received_amount = order.pos_received_amount;
+                
+                // Set order type UI
+                if (order.order_type === orderTypeEnum.DINING_TABLE) {
+                    this.$refs.dineIn.click();
+                } else {
+                    this.$refs.takeAway.click();
+                }
+                
+                // Clear cart first
+                this.$store.dispatch('posCart/resetCart').then(() => {
+                    // Load order items into cart
+                    if (order.order_items && order.order_items.length > 0) {
+                        order.order_items.forEach((orderItem) => {
+                            // Convert order item to cart format
+                            const cartItem = {
+                                item_id: orderItem.item_id,
+                                item_name: orderItem.item_name,
+                                item_image: orderItem.item_image,
+                                item_price: parseFloat(orderItem.item_price || 0),
+                                convert_price: parseFloat(orderItem.item_price || 0),
+                                quantity: parseInt(orderItem.quantity || 1),
+                                discount: parseFloat(orderItem.discount || 0),
+                                total: parseFloat(orderItem.total_price || 0),
+                                item_variation_total: parseFloat(orderItem.item_variation_total || 0),
+                                item_extra_total: parseFloat(orderItem.item_extra_total || 0),
+                                instruction: orderItem.instruction || '',
+                                item_variations: {
+                                    variations: {},
+                                    names: {}
+                                },
+                                item_extras: {
+                                    extras: [],
+                                    names: []
+                                }
+                            };
+                            
+                            // Load variations
+                            if (orderItem.item_variations && orderItem.item_variations.length > 0) {
+                                orderItem.item_variations.forEach((variation) => {
+                                    if (variation.item_attribute_id) {
+                                        cartItem.item_variations.variations[variation.variation_name] = variation.id;
+                                        cartItem.item_variations.names[variation.variation_name] = variation.name;
+                                    }
+                                });
+                            }
+                            
+                            // Load extras
+                            if (orderItem.item_extras && orderItem.item_extras.length > 0) {
+                                orderItem.item_extras.forEach((extra) => {
+                                    cartItem.item_extras.extras.push(extra.id);
+                                    cartItem.item_extras.names.push(extra.name);
+                                });
+                            }
+                            
+                            // Add to cart
+                            this.$store.dispatch('posCart/addCartItem', cartItem).then().catch();
+                        });
+                    }
+                    
+                    this.loading.isActive = false;
+                    alertService.success(this.$t('message.order_loaded_for_editing'));
+                }).catch((err) => {
+                    this.loading.isActive = false;
+                    alertService.error(err.response?.data?.message || 'Failed to load order');
+                });
+            }).catch((err) => {
+                this.loading.isActive = false;
+                alertService.error(err.response?.data?.message || 'Failed to load order');
+            });
         },
     },
     watch: {

@@ -118,10 +118,17 @@
         </div>
     </div>
     <div class="col-12 sm:col-6">
-        <div class="db-card">
-            <div class="db-card-header">
-                <h3 class="db-card-title">{{ $t('label.order_details') }}</h3>
-            </div>
+            <div class="db-card">
+                <div class="db-card-header">
+                    <div class="flex items-center justify-between">
+                        <h3 class="db-card-title">{{ $t('label.order_details') }}</h3>
+                        <button type="button" @click="editOrder" 
+                            class="flex items-center gap-2 px-4 h-[38px] rounded shadow-db-card bg-primary hover:bg-primary-dark transition">
+                            <i class="lab lab-edit-2 lab-font-size-16 text-white"></i>
+                            <span class="text-sm capitalize text-white">{{ $t('button.edit') }}</span>
+                        </button>
+                    </div>
+                </div>
             <div class="db-card-body">
                 <div class="pl-3">
                     <div class="mb-3 pb-3 border-b last:mb-0 last:pb-0 last:border-b-0 border-gray-2"
@@ -387,6 +394,13 @@ export default {
                 this.loading.isActive = false;
                 alertService.error(err.response.data.message);
             }
+        },
+        editOrder: function () {
+            // Navigate to POS page with order ID as query parameter
+            this.$router.push({
+                name: 'admin.pos',
+                query: { edit_order_id: this.$route.params.id }
+            });
         },
     },
 }

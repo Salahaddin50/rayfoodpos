@@ -407,6 +407,7 @@ Route::prefix('admin')->name('admin.')->middleware(['installed', 'apiKey', 'auth
 
     Route::prefix('pos')->name('pos.')->group(function () {
         Route::post('/', [PosController::class, 'store']);
+        Route::put('/{order}', [PosController::class, 'update']);
         Route::post('/customer', [PosController::class, 'storeCustomer']);
     });
 

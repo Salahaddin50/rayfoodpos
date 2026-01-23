@@ -295,6 +295,89 @@ class OrderService
     /**
      * @throws Exception
      */
+    public function posOrderUpdate(PosOrderRequest $request, Order $order): object
+    {
+        try {
+            DB::transaction(function () use ($request, $order) {
+                $validatedData = $request->validated();
+                
+                // Keep the original order_serial_no
+                $orderSerialNo = $order->order_serial_no;
+                
+                // Update order
+                $order->update(
+                    $validatedData + [
+                        'user_id'          => $request->customer_id,
+                        'token'            => $request->token,
+                        'order_datetime'   => date('Y-m-d H:i:s'),
+                    ]
+                );
+                
+                // Restore order_serial_no (in case it was changed)
+                $order->order_serial_no = $orderSerialNo;
+                
+                // Delete old order items
+                OrderItem::where('order_id', $order->id)->delete();
+                
+                $i            = 0;
+                $totalTax     = 0;
+                $itemsArray   = [];
+                $requestItems = json_decode($request->items);
+                $items        = Item::get()->pluck('tax_id', 'id');
+                $taxes        = AppLibrary::pluck(Tax::get(), 'obj', 'id');
+
+                if (!blank($requestItems)) {
+                    foreach ($requestItems as $item) {
+                        $taxId          = isset($items[$item->item_id]) ? $items[$item->item_id] : 0;
+                        $taxName        = isset($taxes[$taxId]) ? $taxes[$taxId]->name : null;
+                        $taxRate        = isset($taxes[$taxId]) ? $taxes[$taxId]->tax_rate : 0;
+                        $taxType        = isset($taxes[$taxId]) ? $taxes[$taxId]->type : TaxType::FIXED;
+                        $taxPrice       = $taxType === TaxType::FIXED ? $taxRate : ($item->total_price * $taxRate) / 100;
+                        $itemsArray[$i] = [
+                            'order_id'             => $order->id,
+                            'branch_id'            => $item->branch_id,
+                            'item_id'              => $item->item_id,
+                            'quantity'             => $item->quantity,
+                            'discount'             => (float)$item->discount,
+                            'tax_name'             => $taxName,
+                            'tax_rate'             => $taxRate,
+                            'tax_type'             => $taxType,
+                            'tax_amount'           => $taxPrice,
+                            'price'                => $item->item_price,
+                            'item_variations'      => json_encode($item->item_variations),
+                            'item_extras'          => json_encode($item->item_extras),
+                            'instruction'          => $item->instruction,
+                            'item_variation_total' => $item->item_variation_total,
+                            'item_extra_total'     => $item->item_extra_total,
+                            'total_price'          => $item->total_price,
+                        ];
+                        $totalTax       = $totalTax + $taxPrice;
+                        $i++;
+                    }
+                }
+
+                if (!blank($itemsArray)) {
+                    OrderItem::insert($itemsArray);
+                }
+
+                $order->total_tax = $totalTax;
+                $currentTime = Carbon::now();
+                $endTime = $currentTime->copy()->addMinutes((int) Settings::group('site')->get('site_food_preparation_time'));
+                $start = $currentTime->format('H:i');
+                $end = $endTime->format('H:i');
+                $order->delivery_time = "$start - $end";
+                $order->save();
+                
+                $this->order = $order;
+            });
+            return $this->order;
+        } catch (Exception $exception) {
+            DB::rollBack();
+            Log::info($exception->getMessage());
+            throw new Exception(QueryExceptionLibrary::message($exception), 422);
+        }
+    }
+
     public function posOrderStore(PosOrderRequest $request): object
     {
         try {
