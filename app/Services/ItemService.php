@@ -15,9 +15,13 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Requests\PaginateRequest;
 use App\Libraries\QueryExceptionLibrary;
 use App\Http\Requests\ChangeImageRequest;
+use App\Traits\DefaultAccessModelTrait;
+use Illuminate\Support\Facades\Auth;
 
 class ItemService
 {
+    use DefaultAccessModelTrait;
+    
     public $item;
     protected $itemFilter = [
         'name',
@@ -426,6 +430,13 @@ class ItemService
                     DB::raw('GROUP_CONCAT(DISTINCT orders.order_serial_no ORDER BY orders.order_serial_no SEPARATOR \', \') as order_numbers')
                 );
 
+            // Apply branch filtering - only show orders from the selected branch
+            $selectedBranchId = $this->branch();
+            if ($selectedBranchId !== null) {
+                $query->where('orders.branch_id', '=', $selectedBranchId);
+                Log::info('ItemsReport - Filtering by branch_id: ' . $selectedBranchId . ', User ID: ' . Auth::id());
+            }
+            
             // Apply date filtering
             if (isset($requests['from_date']) && !empty($requests['from_date']) && 
                 isset($requests['to_date']) && !empty($requests['to_date'])) {
