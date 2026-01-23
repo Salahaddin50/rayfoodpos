@@ -36,9 +36,12 @@ use App\Http\Requests\OrderStatusRequest;
 use App\Http\Requests\PaymentStatusRequest;
 use App\Http\Requests\TableOrderTokenRequest;
 use App\Services\OnlineUserService;
+use App\Traits\DefaultAccessModelTrait;
 
 class OrderService
 {
+    use DefaultAccessModelTrait;
+    
     public object $order;
     protected array $orderFilter = [
         'order_serial_no',
@@ -70,7 +73,15 @@ class OrderService
             $orderColumn = $request->get('order_column') ?? 'id';
             $orderType   = $request->get('order_by') ?? 'desc';
 
-            return Order::with('transaction', 'orderItems', 'branch', 'user', 'diningTable', 'takeawayType', 'driver')->where(function ($query) use ($requests) {
+            // Get the selected branch ID
+            $selectedBranchId = $this->branch();
+            
+            return Order::with('transaction', 'orderItems', 'branch', 'user', 'diningTable', 'takeawayType', 'driver')->where(function ($query) use ($requests, $selectedBranchId) {
+                // Explicitly filter by selected branch (exclude branch_id = 0)
+                if ($selectedBranchId !== null) {
+                    $query->where('branch_id', '=', $selectedBranchId);
+                }
+                
                 if (isset($requests['from_date']) && isset($requests['to_date'])) {
                     $first_date = Date('Y-m-d', strtotime($requests['from_date']));
                     $last_date  = Date('Y-m-d', strtotime($requests['to_date']));
@@ -680,7 +691,15 @@ class OrderService
             $orderColumn = $request->get('order_column') ?? 'id';
             $orderType   = $request->get('order_by') ?? 'desc';
 
-            $orders = Order::with('transaction', 'orderItems')->where(function ($query) use ($requests) {
+            // Get the selected branch ID
+            $selectedBranchId = $this->branch();
+            
+            $orders = Order::with('transaction', 'orderItems')->where(function ($query) use ($requests, $selectedBranchId) {
+                // Explicitly filter by selected branch (exclude branch_id = 0)
+                if ($selectedBranchId !== null) {
+                    $query->where('branch_id', '=', $selectedBranchId);
+                }
+                
                 if (isset($requests['from_date']) && isset($requests['to_date'])) {
                     $first_date = Date('Y-m-d', strtotime($requests['from_date']));
                     $last_date  = Date('Y-m-d', strtotime($requests['to_date']));
