@@ -717,7 +717,11 @@ export default {
                 order_type: 'asc',
                 status: statusEnum.ACTIVE,
             }).then((res) => {
-                this.checkoutProps.form.customer_id = id === null ? res.data.data[1].id : id;
+                if (id === null && res.data.data && res.data.data.length > 1 && res.data.data[1]) {
+                    this.checkoutProps.form.customer_id = res.data.data[1].id;
+                } else if (id !== null) {
+                    this.checkoutProps.form.customer_id = id;
+                }
                 this.loading.isActive = false;
             }).catch((err) => {
                 this.loading.isActive = false;
@@ -1038,7 +1042,7 @@ export default {
                     this.$nextTick(() => {
                         if (this.$refs.dineIn) {
                             this.$refs.dineIn.click();
-                            if (this.customers.length > 1) {
+                            if (this.customers && this.customers.length > 1 && this.customers[1]) {
                                 this.checkoutProps.form.customer_id = this.customers[1].id;
                             }
 
