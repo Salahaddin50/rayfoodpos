@@ -945,18 +945,33 @@ export default {
                 this.$store.dispatch('posCart/resetCart');
                 
                 // Load order items into cart
-                if (order.order_items && order.order_items.length > 0) {
+                if (order.order_items && Array.isArray(order.order_items) && order.order_items.length > 0) {
                     const cartItems = [];
                     order.order_items.forEach((orderItem) => {
+                        // Skip if orderItem is null/undefined or missing required fields
+                        if (!orderItem || !orderItem.item_id) {
+                            console.warn('Skipping invalid order item:', orderItem);
+                            return;
+                        }
+                        
+                        // Parse price from currency string if needed
+                        let itemPrice = 0;
+                        if (orderItem.price) {
+                            // Remove currency symbols and parse
+                            itemPrice = parseFloat(String(orderItem.price).replace(/[^\d.-]/g, '')) || 0;
+                        } else if (orderItem.item_price) {
+                            itemPrice = parseFloat(orderItem.item_price) || 0;
+                        }
+                        
                         // Convert order item to cart format - matching posCart store structure
                         const cartItem = {
                             item_id: orderItem.item_id,
-                            name: orderItem.item_name,
-                            image: orderItem.item_image,
+                            name: orderItem.item_name || '',
+                            image: orderItem.item_image || '',
                             currency_price: orderItem.total_currency_price || '',
-                            convert_price: parseFloat(orderItem.item_price || 0),
+                            convert_price: itemPrice,
                             quantity: parseInt(orderItem.quantity || 1),
-                            discount: parseFloat(orderItem.discount || 0),
+                            discount: parseFloat(String(orderItem.discount || 0).replace(/[^\d.-]/g, '')) || 0,
                             item_variation_total: parseFloat(orderItem.item_variation_total || 0),
                             item_extra_total: parseFloat(orderItem.item_extra_total || 0),
                             instruction: orderItem.instruction || '',
@@ -970,21 +985,23 @@ export default {
                             }
                         };
                         
-                        // Load variations
-                        if (orderItem.item_variations && orderItem.item_variations.length > 0) {
+                        // Load variations - handle null/undefined and ensure array
+                        if (orderItem.item_variations && Array.isArray(orderItem.item_variations) && orderItem.item_variations.length > 0) {
                             orderItem.item_variations.forEach((variation) => {
-                                if (variation.variation_name) {
+                                if (variation && variation.variation_name && variation.id) {
                                     cartItem.item_variations.variations[variation.variation_name] = variation.id;
-                                    cartItem.item_variations.names[variation.variation_name] = variation.name;
+                                    cartItem.item_variations.names[variation.variation_name] = variation.name || '';
                                 }
                             });
                         }
                         
-                        // Load extras
-                        if (orderItem.item_extras && orderItem.item_extras.length > 0) {
+                        // Load extras - handle null/undefined and ensure array
+                        if (orderItem.item_extras && Array.isArray(orderItem.item_extras) && orderItem.item_extras.length > 0) {
                             orderItem.item_extras.forEach((extra) => {
-                                cartItem.item_extras.extras.push(extra.id);
-                                cartItem.item_extras.names.push(extra.name);
+                                if (extra && extra.id) {
+                                    cartItem.item_extras.extras.push(extra.id);
+                                    cartItem.item_extras.names.push(extra.name || '');
+                                }
                             });
                         }
                         
