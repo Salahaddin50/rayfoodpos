@@ -1009,7 +1009,16 @@ export default {
                     });
                     
                     // Add all items to cart at once
-                    this.$store.dispatch('posCart/lists', cartItems);
+                    if (cartItems.length > 0) {
+                        try {
+                            this.$store.dispatch('posCart/lists', cartItems);
+                        } catch (cartError) {
+                            console.error('Error adding items to cart:', cartError);
+                            alertService.error('Error loading items into cart. Please try again.');
+                            this.loading.isActive = false;
+                            return;
+                        }
+                    }
                 }
                 
                 this.loading.isActive = false;
