@@ -27,6 +27,8 @@ class SimpleOrderResource extends JsonResource
             "total_amount_price"           => AppLibrary::flatAmountFormat($this->total),
             "discount_amount_price"        => AppLibrary::flatAmountFormat($this->discount),
             "delivery_charge_amount_price" => AppLibrary::flatAmountFormat($this->delivery_charge),
+            "pickup_cost"                  => $this->pickup_cost,
+            "pickup_cost_amount_price"     => AppLibrary::flatAmountFormat($this->pickup_cost),
             'payment_method'               => $this->payment_method,
             'payment_status'               => $this->payment_status,
             'transaction'                  => $this->transaction ? strtoupper($this->transaction?->payment_method) : null,

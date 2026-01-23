@@ -90,6 +90,7 @@
                             <th class="db-table-head-th">{{ $t('label.note') }}</th>
                             <th class="db-table-head-th">{{ $t('label.customer') }}</th>
                             <th class="db-table-head-th">{{ $t('label.amount') }}</th>
+                            <th class="db-table-head-th">{{ $t('label.pickup_cost') }}</th>
                             <th class="db-table-head-th">{{ $t('label.date') }}</th>
                             <th class="db-table-head-th">{{ $t('label.status') }}</th>
                             <th class="db-table-head-th">Driver</th>
@@ -131,6 +132,10 @@
                                 {{ order.customer_name }}
                             </td>
                             <td class="db-table-body-td">{{ order.total_amount_price }}</td>
+                            <td class="db-table-body-td">
+                                <span v-if="Number(order.pickup_cost) > 0">{{ order.pickup_cost_amount_price }}</span>
+                                <span v-else class="text-[#D9DBE9]">-</span>
+                            </td>
                             <td class="db-table-body-td">{{ order.order_datetime }}</td>
                             <td class="db-table-body-td">
                                 <span :class="orderStatusClass(order.status)">
@@ -201,7 +206,7 @@
                     </tbody>
                     <tbody class="db-table-body" v-else>
                         <tr class="db-table-body-tr">
-                            <td class="db-table-body-td text-center" :colspan="permissionChecker('pos_orders_show') || permissionChecker('pos_orders_edit') || permissionChecker('pos_orders_delete') ? 10 : 9">
+                            <td class="db-table-body-td text-center" :colspan="permissionChecker('pos_orders_show') || permissionChecker('pos_orders_edit') || permissionChecker('pos_orders_delete') ? 11 : 10">
                                 <div class="p-4">
                                     <div class="max-w-[300px] mx-auto mt-2">
                                         <img class="w-full h-full" :src="ENV.API_URL + '/images/default/not-found.png'"
