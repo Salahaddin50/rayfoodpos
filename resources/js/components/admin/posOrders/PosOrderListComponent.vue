@@ -133,7 +133,7 @@
                             </td>
                             <td class="db-table-body-td">{{ order.total_amount_price }}</td>
                             <td class="db-table-body-td">
-                                <span v-if="Number(order.pickup_cost) > 0">{{ order.pickup_cost_amount_price }}</span>
+                                <span v-if="Number(order.delivery_charge) > 0">{{ order.delivery_charge_currency_price }}</span>
                                 <span v-else class="text-[#D9DBE9]">-</span>
                             </td>
                             <td class="db-table-body-td">{{ order.order_datetime }}</td>
