@@ -91,7 +91,7 @@ export default {
     },
     computed: {
         tables: function () {
-            return this.$store.getters['diningTable/overview'];
+            return this.$store.getters['diningTable/overview'] || [];
         }
     },
     mounted() {
