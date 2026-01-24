@@ -126,7 +126,7 @@ export default {
             if (order.source === sourceEnum.POS) {
                 this.$router.push({ name: 'admin.pos.orders.show', params: { id: order.id } });
             } else {
-                this.$router.push({ name: 'admin.table.orders.show', params: { id: order.id } });
+                this.$router.push({ name: 'admin.table.order.show', params: { id: order.id } });
             }
         }
     }
