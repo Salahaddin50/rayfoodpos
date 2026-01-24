@@ -24,7 +24,13 @@
 
                 <li class="db-sidebar-nav-item" v-if="menu.children" v-for="children in menu.children"
                     @click.prevent="sidebarActive($event)">
-                    <router-link :to="'/admin/' + children.url" class="db-sidebar-nav-menu">
+                    <router-link
+                        :to="'/admin/' + children.url"
+                        :class="[
+                            'db-sidebar-nav-menu',
+                            (menu?.language === 'dining_tables' && children?.language === 'table_overview') ? 'pl-12' : ''
+                        ]"
+                    >
                         <i class="text-sm" :class="children.icon"></i>
                         <span class="text-base flex-auto">{{ $t('menu.' + children.language) }}</span>
                     </router-link>
