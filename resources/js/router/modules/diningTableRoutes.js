@@ -1,6 +1,7 @@
 import DiningTableListComponent from "../../components/admin/diningTable/DiningTableListComponent";
 import DiningTableComponent from "../../components/admin/diningTable/DiningTableComponent";
 import DiningTableShowComponent from "../../components/admin/diningTable/DiningTableShowComponent";
+import DiningTableOverviewComponent from "../../components/admin/diningTable/DiningTableOverviewComponent";
 
 export default [
     {
@@ -24,6 +25,17 @@ export default [
                     auth: true,
                     permissionUrl: "dining-tables",
                     breadcrumb: "",
+                },
+            },
+            {
+                path: "overview",
+                component: DiningTableOverviewComponent,
+                name: "admin.diningTable.overview",
+                meta: {
+                    isFrontend: false,
+                    auth: true,
+                    permissionUrl: "dining-tables",
+                    breadcrumb: "table_overview",
                 },
             },
             {

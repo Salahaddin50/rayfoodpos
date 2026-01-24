@@ -9,6 +9,7 @@ export const diningTable = {
         page: {},
         pagination: [],
         show: {},
+        overview: [],
         temp: {
             temp_id: null,
             isEditing: false,
@@ -26,6 +27,9 @@ export const diningTable = {
         },
         show: function (state) {
             return state.show;
+        },
+        overview: function (state) {
+            return state.overview;
         },
         temp: function (state) {
             return state.temp;
@@ -90,6 +94,16 @@ export const diningTable = {
                 });
             });
         },
+        overview: function (context) {
+            return new Promise((resolve, reject) => {
+                axios.get('admin/dining-table/overview').then((res) => {
+                    context.commit('overview', res.data.data);
+                    resolve(res);
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
+        },
         reset: function (context) {
             context.commit('reset');
         },
@@ -125,6 +139,9 @@ export const diningTable = {
         },
         show: function (state, payload) {
             state.show = payload;
+        },
+        overview: function (state, payload) {
+            state.overview = payload;
         },
         temp: function (state, payload) {
             state.temp.temp_id = payload;

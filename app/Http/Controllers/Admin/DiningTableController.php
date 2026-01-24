@@ -94,4 +94,17 @@ class DiningTableController extends AdminController
             return response(['status' => false, 'message' => $exception->getMessage()], 422);
         }
     }
+
+    /**
+     * Get dining tables overview with active orders
+     */
+    public function overview(): \Illuminate\Http\Response | \Illuminate\Http\JsonResponse | \Illuminate\Contracts\Foundation\Application | \Illuminate\Contracts\Routing\ResponseFactory
+    {
+        try {
+            $data = $this->diningTableService->overview();
+            return response()->json(['status' => true, 'data' => $data]);
+        } catch (Exception $exception) {
+            return response(['status' => false, 'message' => $exception->getMessage()], 422);
+        }
+    }
 }

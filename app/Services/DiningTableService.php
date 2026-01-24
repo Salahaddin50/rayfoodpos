@@ -170,4 +170,54 @@ class DiningTableService
             throw new Exception(QueryExceptionLibrary::message($exception), 422);
         }
     }
+
+    /**
+     * Get all dining tables with their active (unpaid) orders
+     * @throws Exception
+     */
+    public function overview()
+    {
+        try {
+            $tables = DiningTable::with('branch')
+                ->where('status', \App\Enums\Status::ACTIVE)
+                ->orderBy('name')
+                ->get();
+
+            // Get active (unpaid) orders for each table
+            $tableData = $tables->map(function ($table) {
+                // Get orders linked to this table that are not paid
+                $activeOrders = \App\Models\Order::where('dining_table_id', $table->id)
+                    ->where('payment_status', '!=', \App\Enums\PaymentStatus::PAID)
+                    ->orderBy('created_at', 'desc')
+                    ->get(['id', 'order_serial_no', 'total', 'payment_status', 'status', 'source', 'created_at']);
+
+                return [
+                    'id' => $table->id,
+                    'name' => $table->name,
+                    'size' => $table->size,
+                    'branch_id' => $table->branch_id,
+                    'branch_name' => $table->branch->name ?? '',
+                    'orders' => $activeOrders->map(function ($order) {
+                        return [
+                            'id' => $order->id,
+                            'order_serial_no' => $order->order_serial_no,
+                            'total' => $order->total,
+                            'total_formatted' => \App\Libraries\AppLibrary::currencyAmountFormat($order->total),
+                            'payment_status' => $order->payment_status,
+                            'status' => $order->status,
+                            'source' => $order->source,
+                            'created_at' => $order->created_at->format('H:i'),
+                        ];
+                    }),
+                    'has_orders' => $activeOrders->count() > 0,
+                    'order_count' => $activeOrders->count(),
+                ];
+            });
+
+            return $tableData;
+        } catch (Exception $exception) {
+            Log::info($exception->getMessage());
+            throw new Exception(QueryExceptionLibrary::message($exception), 422);
+        }
+    }
 }
