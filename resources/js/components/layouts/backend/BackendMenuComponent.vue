@@ -145,6 +145,18 @@ export default {
                     children = reorderPosChildren(children);
                 }
 
+                // Add Table Overview as a child of Dining Tables
+                if (language === 'dining_tables') {
+                    children = children || [];
+                    // Add submenu items for dining tables
+                    const hasOverview = children.some(c => c?.url === 'dining-tables/overview');
+                    if (!hasOverview) {
+                        children = [
+                            { url: 'dining-tables/overview', language: 'table_overview', icon: 'lab lab-eye-line', priority: 1 }
+                        ];
+                    }
+                }
+
                 return { ...m, language, icon, children };
             };
 
