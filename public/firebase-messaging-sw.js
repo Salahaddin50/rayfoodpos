@@ -26,22 +26,25 @@ messaging.onBackgroundMessage((payload) => {
 // Handle notification click
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
+    
     const urlToOpen = event.notification.data?.url || '/admin/table-orders';
+    const fullUrl = new URL(urlToOpen, self.location.origin).href;
+    
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
             // Check if there's already a window open with the app
             for (let i = 0; i < clientList.length; i++) {
                 const client = clientList[i];
-                if (client.url.includes(self.location.origin) && 'focus' in client) {
-                    client.focus();
-                    client.postMessage({ type: 'NAVIGATE', url: urlToOpen });
-                    return;
+                const clientOrigin = new URL(client.url).origin;
+                if (clientOrigin === self.location.origin) {
+                    // Focus existing window and navigate
+                    return client.focus().then(() => {
+                        return client.navigate(fullUrl);
+                    });
                 }
             }
             // If no window is open, open a new one
-            if (clients.openWindow) {
-                return clients.openWindow(self.location.origin + urlToOpen);
-            }
+            return clients.openWindow(fullUrl);
         })
     );
 });
