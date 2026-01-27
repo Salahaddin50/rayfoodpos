@@ -7,6 +7,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use Dipokhalder\Settings\Facades\Settings;
 use DateInterval;
@@ -305,18 +306,38 @@ class AppLibrary
 
     public static function fcmDataBind($request)
     {
-        $cdn = public_path("firebase-cdn.txt");
-        $textContent = public_path("firebase-content.txt");
-        $file = public_path("firebase-messaging-sw.js");
-        $content = 'let config = {
+        try {
+            $cdn = public_path("firebase-cdn.txt");
+            $textContent = public_path("firebase-content.txt");
+            $file = public_path("firebase-messaging-sw.js");
+            
+            // Check if source files exist
+            if (!File::exists($cdn) || !File::exists($textContent)) {
+                Log::warning('FCM: Source files (firebase-cdn.txt or firebase-content.txt) not found. Service worker not updated.');
+                return;
+            }
+            
+            $content = 'let config = {
         apiKey: "' . $request->notification_fcm_api_key . '",
         authDomain: "' . $request->notification_fcm_auth_domain . '",
         projectId: "' . $request->notification_fcm_project_id . '",
         storageBucket: "' . $request->notification_fcm_storage_bucket . '",
         messagingSenderId: "' . $request->notification_fcm_messaging_sender_id . '",
         appId: "' . $request->notification_fcm_app_id . '",
-        measurementId: "' . $request->notification_fcm_measurement_id . '",' . "\n" . ' };' . "\n";
-        File::put($file, File::get($cdn) . $content . File::get($textContent));
+        measurementId: "' . ($request->notification_fcm_measurement_id ?? '') . '",' . "\n" . ' };' . "\n";
+            
+            // Try to write file, but don't fail if permission denied
+            try {
+                File::put($file, File::get($cdn) . $content . File::get($textContent));
+                Log::info('FCM: Service worker file updated successfully');
+            } catch (\Exception $e) {
+                Log::warning('FCM: Could not update service worker file. You may need to update it manually. Error: ' . $e->getMessage());
+                // Don't throw - allow settings to be saved even if file write fails
+            }
+        } catch (\Exception $e) {
+            Log::error('FCM: Error in fcmDataBind: ' . $e->getMessage());
+            // Don't throw - allow settings to be saved
+        }
     }
 
     public static function defaultPermission($permissions)
