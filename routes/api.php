@@ -312,6 +312,7 @@ Route::prefix('admin')->name('admin.')->middleware(['installed', 'apiKey', 'auth
         Route::prefix('notification')->name('notification.')->group(function () {
             Route::get('/', [NotificationController::class, 'index']);
             Route::post('/', [NotificationController::class, 'update']);
+            Route::post('/test', [NotificationController::class, 'testPush']);
         });
     });
 

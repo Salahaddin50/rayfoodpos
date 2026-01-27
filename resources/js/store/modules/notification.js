@@ -33,7 +33,16 @@ export const notification = {
                     reject(err);
                 });
             });
-        }
+        },
+        testPush: function () {
+            return new Promise((resolve, reject) => {
+                axios.post(`/admin/setting/notification/test`).then(res => {
+                    resolve(res);
+                }).catch((err) => {
+                    reject(err);
+                });
+            });
+        },
     },
 
     mutations: {

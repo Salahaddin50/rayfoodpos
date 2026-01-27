@@ -114,6 +114,14 @@
                             <i class="lab lab-save"></i>
                             <span>{{ $t("button.save") }}</span>
                         </button>
+
+                        <button
+                            type="button"
+                            @click="sendTestPush"
+                            class="db-btn ltr:ml-3 rtl:mr-3 text-white bg-green-600">
+                            <i class="lab lab-notification"></i>
+                            <span>Send test push</span>
+                        </button>
                     </div>
                 </div>
             </form>
@@ -219,6 +227,17 @@ export default {
                 this.loading.isActive = false;
                 alertService.error(err);
             }
+        },
+        sendTestPush: function () {
+            this.loading.isActive = true;
+            this.$store.dispatch('notification/testPush').then((res) => {
+                this.loading.isActive = false;
+                alertService.success(res.data.message || 'Test notification sent.');
+            }).catch((err) => {
+                this.loading.isActive = false;
+                const msg = err?.response?.data?.message || err?.message || 'Failed to send test notification.';
+                alertService.error(msg);
+            });
         },
     },
 };

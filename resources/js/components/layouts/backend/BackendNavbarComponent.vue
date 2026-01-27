@@ -122,6 +122,15 @@
                             <span class="text-sm leading-6 capitalize">{{ $t('button.change_password') }}</span>
                         </router-link>
 
+                        <button
+                            v-if="webPush.canEnable"
+                            @click="enableWebPush"
+                            type="button"
+                            class="paper-link transition w-full flex items-center gap-3.5 py-3 border-b last:border-none border-[#EFF0F6]">
+                            <i class="lab lab-notification lab-font-size-17"></i>
+                            <span class="text-sm leading-6 capitalize">Enable notifications</span>
+                        </button>
+
                         <button @click="logout()"
                             class="paper-link transition w-full flex items-center gap-3.5 py-3 border-b last:border-none border-[#EFF0F6]">
                             <i class="lab lab-logout lab-font-size-17"></i>
@@ -196,6 +205,14 @@ export default {
                 permission: false,
                 url: ""
             },
+            firebase: {
+                initialized: false,
+                messaging: null,
+            },
+            webPush: {
+                canEnable: false,
+                registering: false,
+            }
         }
     },
     computed: {
@@ -272,31 +289,21 @@ export default {
 
 
         window.setTimeout(() => {
-            if (this.$store.getters.authStatus && this.setting.notification_fcm_api_key && this.setting.notification_fcm_auth_domain && this.setting.notification_fcm_project_id && this.setting.notification_fcm_storage_bucket && this.setting.notification_fcm_messaging_sender_id && this.setting.notification_fcm_app_id && this.setting.notification_fcm_measurement_id) {
-                initializeApp({
-                    apiKey: this.setting.notification_fcm_api_key,
-                    authDomain: this.setting.notification_fcm_auth_domain,
-                    projectId: this.setting.notification_fcm_project_id,
-                    storageBucket: this.setting.notification_fcm_storage_bucket,
-                    messagingSenderId: this.setting.notification_fcm_messaging_sender_id,
-                    appId: this.setting.notification_fcm_app_id,
-                    measurementId: this.setting.notification_fcm_measurement_id
-                });
-                const messaging = getMessaging();
+            // Initialize Firebase messaging, but DO NOT request browser permission automatically.
+            // Many browsers block Notification.requestPermission() unless triggered by a user gesture.
+            if (this.$store.getters.authStatus && this.isWebPushConfigured()) {
+                this.initFirebaseMessaging();
 
-                Notification.requestPermission().then((permission) => {
-                    if (permission === 'granted') {
-                        getToken(messaging, { vapidKey: this.setting.notification_fcm_public_vapid_key }).then((currentToken) => {
-                            if (currentToken) {
-                                axios.post('/frontend/device-token/web', { token: currentToken }).then().catch((error) => {
-                                    if (error.response.data.message === 'Unauthenticated.') {
-                                        this.$store.dispatch('loginDataReset');
-                                    }
-                                });
-                            }
-                        }).catch();
-                    }
-                });
+                // If user already granted permission, register token silently.
+                if (this.getNotificationPermission() === 'granted') {
+                    this.registerWebPushToken();
+                }
+
+                // Show "Enable notifications" button only if permission is not granted.
+                this.webPush.canEnable = this.getNotificationPermission() !== 'granted';
+
+                const messaging = this.firebase.messaging;
+                if (!messaging) return;
 
                 onMessage(messaging, (payload) => {
                     const notificationTitle = payload.notification.title;
@@ -317,6 +324,106 @@ export default {
         }, 5000);
     },
     methods: {
+        getNotificationPermission() {
+            try {
+                if (!('Notification' in window)) return 'unsupported';
+                return Notification.permission;
+            } catch (e) {
+                return 'unsupported';
+            }
+        },
+        isWebPushConfigured() {
+            return !!(
+                this.setting?.notification_fcm_api_key &&
+                this.setting?.notification_fcm_auth_domain &&
+                this.setting?.notification_fcm_project_id &&
+                this.setting?.notification_fcm_storage_bucket &&
+                this.setting?.notification_fcm_messaging_sender_id &&
+                this.setting?.notification_fcm_app_id &&
+                // measurement_id may be empty depending on Firebase config; don't require it
+                this.setting?.notification_fcm_public_vapid_key
+            );
+        },
+        initFirebaseMessaging() {
+            try {
+                if (this.firebase.initialized) return;
+                initializeApp({
+                    apiKey: this.setting.notification_fcm_api_key,
+                    authDomain: this.setting.notification_fcm_auth_domain,
+                    projectId: this.setting.notification_fcm_project_id,
+                    storageBucket: this.setting.notification_fcm_storage_bucket,
+                    messagingSenderId: this.setting.notification_fcm_messaging_sender_id,
+                    appId: this.setting.notification_fcm_app_id,
+                    measurementId: this.setting.notification_fcm_measurement_id || undefined,
+                });
+                this.firebase.messaging = getMessaging();
+                this.firebase.initialized = true;
+            } catch (e) {
+                // keep silent; user can still use admin without push
+                this.firebase.initialized = false;
+                this.firebase.messaging = null;
+            }
+        },
+        enableWebPush() {
+            if (this.webPush.registering) return;
+            if (!this.isWebPushConfigured()) {
+                alertService.error('Push notification settings are not configured yet.');
+                return;
+            }
+            if (this.getNotificationPermission() === 'denied') {
+                alertService.error('Notifications are blocked in your browser. Please allow notifications for this site in browser settings, then try again.');
+                return;
+            }
+
+            this.initFirebaseMessaging();
+            const messaging = this.firebase.messaging;
+            if (!messaging) {
+                alertService.error('Unable to initialize notifications. Please refresh and try again.');
+                return;
+            }
+
+            // Must be user gesture: this method is called by button click.
+            this.webPush.registering = true;
+            Notification.requestPermission().then((permission) => {
+                if (permission !== 'granted') {
+                    this.webPush.registering = false;
+                    this.webPush.canEnable = true;
+                    alertService.error('Notification permission was not granted.');
+                    return;
+                }
+                this.registerWebPushToken().finally(() => {
+                    this.webPush.registering = false;
+                    this.webPush.canEnable = false;
+                });
+            }).catch(() => {
+                this.webPush.registering = false;
+                alertService.error('Notification permission request failed.');
+            });
+        },
+        registerWebPushToken() {
+            const messaging = this.firebase.messaging;
+            if (!messaging) return Promise.resolve();
+
+            return getToken(messaging, { vapidKey: this.setting.notification_fcm_public_vapid_key })
+                .then((currentToken) => {
+                    if (!currentToken) {
+                        alertService.error('Failed to get notification token. Please refresh and try again.');
+                        return;
+                    }
+                    return axios.post('/frontend/device-token/web', { token: currentToken })
+                        .then(() => {
+                            alertService.success('Notifications enabled.');
+                        })
+                        .catch((error) => {
+                            // Don't redirect here; global 401 handler already does correct admin-only behavior.
+                            const msg = error?.response?.data?.message || 'Failed to save notification token.';
+                            alertService.error(msg);
+                        });
+                })
+                .catch(() => {
+                    alertService.error('Failed to get notification token. Please refresh and try again.');
+                });
+        },
         textShortener: function (text, number = 30) {
             return appService.textShortener(text, number);
         },
