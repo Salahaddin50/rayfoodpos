@@ -191,8 +191,15 @@ class FirebaseService
 
     function getAccessToken()
     {
+        $setting = NotificationSetting::where(['key' => 'notification_fcm_json_file'])->first();
+        if (!$setting) {
+            throw new Exception('FCM service account setting (notification_fcm_json_file) not found.');
+        }
 
-        $keyFilePath = NotificationSetting::where(['key' => 'notification_fcm_json_file'])->first()->file;
+        $keyFilePath = $setting->file;
+        if (!$keyFilePath) {
+            throw new Exception('FCM service account file is not uploaded yet.');
+        }
         $parsed_url = parse_url($keyFilePath);
 
         if (isset($parsed_url['path'])) {

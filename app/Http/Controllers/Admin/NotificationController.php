@@ -74,7 +74,14 @@ class NotificationController extends AdminController
             'image' => null,
         ];
 
-        $this->firebaseService->sendNotification($data, $tokens, 'test-notification');
+        try {
+            $this->firebaseService->sendNotification($data, $tokens, 'test-notification');
+        } catch (\Throwable $e) {
+            return new JsonResponse([
+                'status' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
 
         return new JsonResponse([
             'status' => true,
