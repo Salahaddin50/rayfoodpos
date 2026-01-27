@@ -313,6 +313,28 @@ export default {
                         audio.play();
                     }
                 });
+
+                // Handle token refresh - when FCM token expires/changes
+                messaging.onTokenRefresh(() => {
+                    getToken(messaging, { vapidKey: this.setting.notification_fcm_public_vapid_key })
+                        .then((refreshedToken) => {
+                            if (refreshedToken) {
+                                console.log('Token refreshed:', refreshedToken);
+                                // Update token in backend
+                                axios.post('/frontend/device-token/web', { token: refreshedToken })
+                                    .then(() => console.log('Refreshed token saved successfully'))
+                                    .catch((error) => {
+                                        console.error('Failed to save refreshed token:', error);
+                                        if (error.response?.data?.message === 'Unauthenticated.') {
+                                            this.$store.dispatch('loginDataReset');
+                                        }
+                                    });
+                            }
+                        })
+                        .catch((err) => {
+                            console.error('Unable to retrieve refreshed token:', err);
+                        });
+                });
             }
         }, 5000);
     },
