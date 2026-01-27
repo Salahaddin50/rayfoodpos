@@ -309,15 +309,36 @@ export default {
                     const notificationTitle = payload.notification.title;
                     const notificationOptions = {
                         body: payload.notification.body,
-                        icon: '/images/default/firebase-logo.png'
+                        icon: '/images/default/firebase-logo.png',
+                        data: {
+                            url: payload.data?.url || '/admin/table-orders'
+                        }
                     };
-                    new Notification(notificationTitle, notificationOptions);
+                    const notification = new Notification(notificationTitle, notificationOptions);
+                    
+                    // Handle foreground notification click
+                    notification.onclick = () => {
+                        const targetUrl = payload.data?.url || '/admin/table-orders';
+                        this.$router.push(targetUrl).catch(() => {
+                            window.location.href = targetUrl;
+                        });
+                        notification.close();
+                    };
 
                     if (payload.data.topicName === 'new-order-found' && this.orderNotification.permission) {
                         this.orderNotificationStatus = true;
                         this.orderNotificationMessage = payload.notification.body;
                         const audio = new Audio(this.setting.notification_audio);
                         audio.play();
+                    }
+                });
+                
+                // Listen for navigation messages from service worker
+                navigator.serviceWorker.addEventListener('message', (event) => {
+                    if (event.data.type === 'NAVIGATE' && event.data.url) {
+                        this.$router.push(event.data.url).catch(() => {
+                            window.location.href = event.data.url;
+                        });
                     }
                 });
             }
