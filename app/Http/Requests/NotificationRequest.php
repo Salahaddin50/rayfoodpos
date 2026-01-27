@@ -32,7 +32,7 @@ class NotificationRequest extends FormRequest
             'notification_fcm_storage_bucket'      => ['required', 'string', 'max:500'],
             'notification_fcm_messaging_sender_id' => ['required', 'string', 'max:500'],
             'notification_fcm_app_id'              => ['required', 'string', 'max:500'],
-            'notification_fcm_measurement_id'      => ['required', 'string', 'max:500'],
+            'notification_fcm_measurement_id'      => ['nullable', 'string', 'max:500'],
             'notification_fcm_json_file'           => ['nullable', 'file', 'mimes:json', 'max:2048']
         ];
     }
