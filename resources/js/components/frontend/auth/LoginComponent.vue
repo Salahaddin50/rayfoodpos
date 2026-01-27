@@ -29,6 +29,10 @@
                         id="formPassword">
                     <small class="db-field-alert" v-if="errors.password">{{ errors.password[0] }}</small>
                 </div>
+
+                <div v-if="turnstile.enabled" class="mb-4">
+                    <div ref="turnstileEl"></div>
+                </div>
                 <div class="flex items-center justify-between mb-6">
                     <div class="db-field-checkbox p-0">
                         <div class="custom-checkbox w-3 h-3">
@@ -99,12 +103,23 @@ export default {
             },
             form: {
                 email: "",
-                password: ""
+                password: "",
+                cf_turnstile_response: ""
             },
             errors: {},
             permissions: {},
             firstMenu: null,
-            demo: ENV.DEMO
+            demo: ENV.DEMO,
+            turnstile: {
+                enabled: ENV.TURNSTILE_ENABLED === 'true' || ENV.TURNSTILE_ENABLED === 'TRUE' || ENV.TURNSTILE_ENABLED === '1' || ENV.TURNSTILE_ENABLED === 1,
+                siteKey: ENV.TURNSTILE_SITE_KEY || '',
+            },
+            turnstileWidgetId: null,
+        }
+    },
+    mounted() {
+        if (this.turnstile.enabled && this.turnstile.siteKey) {
+            this.initTurnstile();
         }
     },
     computed: {
@@ -113,8 +128,61 @@ export default {
         }
     },
     methods: {
+        loadTurnstileScript() {
+            return new Promise((resolve, reject) => {
+                if (window.turnstile) {
+                    resolve();
+                    return;
+                }
+
+                const existing = document.querySelector('script[data-cf-turnstile]');
+                if (existing) {
+                    existing.addEventListener('load', resolve, { once: true });
+                    existing.addEventListener('error', reject, { once: true });
+                    return;
+                }
+
+                const s = document.createElement('script');
+                s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+                s.async = true;
+                s.defer = true;
+                s.setAttribute('data-cf-turnstile', '1');
+                s.onload = () => resolve();
+                s.onerror = (e) => reject(e);
+                document.head.appendChild(s);
+            });
+        },
+        initTurnstile() {
+            this.loadTurnstileScript().then(() => {
+                if (!this.$refs.turnstileEl || !window.turnstile) return;
+
+                // Render once
+                if (this.turnstileWidgetId !== null) return;
+
+                this.turnstileWidgetId = window.turnstile.render(this.$refs.turnstileEl, {
+                    sitekey: this.turnstile.siteKey,
+                    callback: (token) => {
+                        this.form.cf_turnstile_response = token;
+                    },
+                    'expired-callback': () => {
+                        this.form.cf_turnstile_response = '';
+                    },
+                    'error-callback': () => {
+                        this.form.cf_turnstile_response = '';
+                    },
+                });
+            }).catch(() => {
+                // If Turnstile script can't load, fail open (let backend enforce if enabled)
+                this.turnstileWidgetId = null;
+            });
+        },
         login: function () {
             try {
+                if (this.turnstile.enabled && this.turnstile.siteKey && !this.form.cf_turnstile_response) {
+                    this.errors = { validation: 'Please complete the captcha.' };
+                    return;
+                }
+
                 this.loading.isActive = true;
                 this.$store.dispatch('login', this.form).then((res) => {
                     this.loading.isActive = false;
@@ -131,6 +199,16 @@ export default {
                     const fallbackMessage = data?.message || err?.message || this.$t('message.something_wrong');
                     // Always keep errors as an object so template bindings like `errors.validation` never crash
                     this.errors = data?.errors ? data.errors : { validation: fallbackMessage };
+
+                    // Reset captcha on failed attempts
+                    if (this.turnstileWidgetId !== null && window.turnstile) {
+                        try {
+                            window.turnstile.reset(this.turnstileWidgetId);
+                        } catch (e) {
+                            // ignore
+                        }
+                        this.form.cf_turnstile_response = '';
+                    }
                 })
             } catch (err) {
                 this.loading.isActive = false;

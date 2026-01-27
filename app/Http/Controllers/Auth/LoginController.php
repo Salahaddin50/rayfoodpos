@@ -15,6 +15,7 @@ use App\Services\MenuService;
 use App\Services\PermissionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Dipokhalder\Settings\Facades\Settings;
@@ -50,6 +51,24 @@ class LoginController extends Controller
             return new JsonResponse([
                 'errors' => $validator->errors()
             ], 422);
+        }
+
+        if (config('services.turnstile.enabled')) {
+            $turnstileToken = $request->input('cf_turnstile_response')
+                ?? $request->input('cf-turnstile-response')
+                ?? $request->input('turnstile_token');
+
+            if (!$turnstileToken) {
+                return new JsonResponse([
+                    'errors' => ['validation' => 'Captcha is required.']
+                ], 422);
+            }
+
+            if (!$this->verifyTurnstile($turnstileToken, $request->ip())) {
+                return new JsonResponse([
+                    'errors' => ['validation' => 'Captcha verification failed. Please try again.']
+                ], 422);
+            }
         }
 
         $request->merge(['status' => Status::ACTIVE]);
@@ -88,6 +107,38 @@ class LoginController extends Controller
             'defaultPermission' => $defaultPermission,
             'defaultMenu' => $defaultMenu
         ], 201);
+    }
+
+    private function verifyTurnstile(string $token, ?string $ip = null): bool
+    {
+        $secret = config('services.turnstile.secret_key');
+        if (!$secret) {
+            return false;
+        }
+
+        $payload = [
+            'secret'   => $secret,
+            'response' => $token,
+        ];
+
+        if ($ip) {
+            $payload['remoteip'] = $ip;
+        }
+
+        try {
+            $res = Http::asForm()
+                ->timeout(8)
+                ->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', $payload);
+
+            if (!$res->ok()) {
+                return false;
+            }
+
+            $data = $res->json();
+            return (bool)($data['success'] ?? false);
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
     public function logout(Request $request): JsonResponse

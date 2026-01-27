@@ -77,7 +77,20 @@ export default {
     },
     computed: {
         permissions: function () {
-            return this.$store.getters['permission/lists'];
+            const list = this.$store.getters['permission/lists'] || [];
+            // UI-only: hide Online Orders row from Role & Permissions table
+            return list.filter((p) => {
+                const name = String(p?.name ?? '').toLowerCase();
+                const title = String(p?.title ?? '').toLowerCase();
+                const url = String(p?.url ?? '').toLowerCase();
+
+                // Match both exact and "contains" forms to survive minor data variations
+                if (name === 'online-orders' || name === 'online_orders') return false;
+                if (title === 'online orders' || title.includes('online orders')) return false;
+                if (url === 'online-orders' || url.includes('online-orders')) return false;
+
+                return true;
+            });
         },
         role: function () {
             return this.$store.getters['role/show'];
