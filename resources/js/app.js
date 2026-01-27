@@ -72,32 +72,38 @@ axios.interceptors.response.use(
     response => response,
     error => {
         if (error.response && error.response.status === 401) {
-            // Prevent multiple redirects
-            if (isRedirecting) {
-                return Promise.reject(error);
-            }
-            
-            // Clear auth token
-            if (localStorage.getItem('vuex')) {
-                const vuex = JSON.parse(localStorage.getItem('vuex'));
-                if (vuex.auth) {
-                    vuex.auth.authToken = null;
-                    localStorage.setItem('vuex', JSON.stringify(vuex));
-                }
-            }
-
-            // Also clear in-memory Vuex state so router guards react immediately
-            try {
-                store.commit('authLogout');
-            } catch (e) {
-                // ignore
-            }
-            
-            // Redirect to login page (only if not already there)
             const currentPath = window.location.pathname;
-            if (currentPath !== '/admin/login') {
-                isRedirecting = true;
-                window.location.href = '/admin/login';
+            const isAdminArea = currentPath.startsWith('/admin');
+
+            // Only force redirect to admin login for admin area pages.
+            // Public pages (e.g., /online/*, /table-order/*) should NOT be redirected to /admin/login.
+            if (isAdminArea) {
+                // Prevent multiple redirects
+                if (isRedirecting) {
+                    return Promise.reject(error);
+                }
+
+                // Clear auth token
+                if (localStorage.getItem('vuex')) {
+                    const vuex = JSON.parse(localStorage.getItem('vuex'));
+                    if (vuex.auth) {
+                        vuex.auth.authToken = null;
+                        localStorage.setItem('vuex', JSON.stringify(vuex));
+                    }
+                }
+
+                // Also clear in-memory Vuex state so router guards react immediately
+                try {
+                    store.commit('authLogout');
+                } catch (e) {
+                    // ignore
+                }
+
+                // Redirect to login page (only if not already there)
+                if (currentPath !== '/admin/login') {
+                    isRedirecting = true;
+                    window.location.href = '/admin/login';
+                }
             }
         }
         return Promise.reject(error);
