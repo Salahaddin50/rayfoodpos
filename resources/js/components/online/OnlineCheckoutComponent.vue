@@ -73,10 +73,13 @@
                                     type="text" 
                                     id="location" 
                                     v-model="locationUrl"
-                                    :placeholder="$t('label.paste_google_maps_link')"
-                                    class="db-field-control flex-1"
+                                    :placeholder="$t('label.click_add_location_button')"
+                                    class="db-field-control flex-1 cursor-not-allowed"
                                     :class="errors.location_url ? 'invalid' : ''"
                                     readonly
+                                    @paste.prevent
+                                    @drop.prevent
+                                    @keydown.prevent
                                 >
                                 <button 
                                     type="button"
