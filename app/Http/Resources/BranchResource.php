@@ -36,6 +36,7 @@ class BranchResource extends JsonResource
             "delivery_cost_1"               => $this->delivery_cost_1,
             "delivery_cost_2"               => $this->delivery_cost_2,
             "delivery_cost_3"               => $this->delivery_cost_3,
+            "max_delivery_radius"           => $this->max_delivery_radius,
 
         ];
     }
