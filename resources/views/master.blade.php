@@ -22,6 +22,9 @@
     <!-- PWA MANIFEST -->
     <link rel="manifest" href="{{ route('manifest') }}">
 
+    <!-- FONT PRELOADS (prevents slow network intervention) -->
+    <link rel="preload" href="{{ asset('themes/default/fonts/lab/lab.woff2') }}" as="font" type="font/woff2" crossorigin>
+    
     <!-- FONTS -->
     <link rel="stylesheet" href="{{ asset('themes/default/fonts/fontawesome/fontawesome.css') }}">
     <link rel="stylesheet" href="{{ asset('themes/default/fonts/lab/lab.css') }}">
