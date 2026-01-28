@@ -581,9 +581,15 @@ export default {
             if (!this.distanceFromBranch) {
                 return null;
             }
+            return this.parseDistance(this.distanceFromBranch);
+        },
+        parseDistance: function (distanceStr) {
+            if (!distanceStr) {
+                return null;
+            }
             
             // Parse distance string like "1678.37 km" or "850 m" safely
-            const trimmed = String(this.distanceFromBranch).trim();
+            const trimmed = String(distanceStr).trim();
             const unitMatch = trimmed.match(/([\d.]+)\s*(km|m)\s*$/i);
             if (unitMatch) {
                 let distance = parseFloat(unitMatch[1]);
@@ -595,8 +601,8 @@ export default {
             }
             
             // Fallback: best-effort numeric extraction
-            const distanceStr = trimmed.replace(/[^\d.]/g, '');
-            const distance = parseFloat(distanceStr);
+            const numericStr = trimmed.replace(/[^\d.]/g, '');
+            const distance = parseFloat(numericStr);
             return isNaN(distance) ? null : distance;
         },
         getLocation: function () {
