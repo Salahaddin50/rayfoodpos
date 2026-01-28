@@ -49,7 +49,11 @@ return [
         'unit_price'       => 'Unit Price',
         'total_income'     => 'Total Income',
         'options'          => 'Options',
-        'min'              => 'min'
+        'min'              => 'min',
+        'max'              => 'Max',
+        'max_delivery_radius' => 'Max Delivery Radius',
+        'maximum_distance_for_delivery' => 'Maximum distance for delivery (leave empty for unlimited)',
+        'click_add_location_button' => 'Click "Add Location" button to set your location',
     ],
     'message' => [
         'validation_error'            => 'Validation Error.',
@@ -91,6 +95,7 @@ return [
         'time_slot_exist'             => 'Time slots already exist.',
         'resource_already_used'       => 'Cannot remove this resource permanently. It is related with another resource.',
         'database_error_message'      => 'A database error occurred.',
-        'transaction_failed'          => 'Transaction Failed'
+        'transaction_failed'          => 'Transaction Failed',
+        'outside_service_radius'      => 'Your delivery location is outside our service radius',
     ]
 ];

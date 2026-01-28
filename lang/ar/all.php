@@ -46,7 +46,11 @@ return [
         'description'       => 'الوصف',
         'sales_report'      => 'تقرير المبيعات',
         'items_report'      => 'تقرير العناصر',
-        'min'               => 'دقيقة'
+        'min'               => 'دقيقة',
+        'max'               => 'الحد الأقصى',
+        'max_delivery_radius' => 'أقصى نطاق توصيل',
+        'maximum_distance_for_delivery' => 'المسافة القصوى للتوصيل (اتركه فارغًا لغير محدود)',
+        'click_add_location_button' => 'انقر على زر "إضافة الموقع" لتحديد موقعك',
     ],
     'message' => [
         'validation_error'            => 'خطأ في التحقق.',
@@ -88,6 +92,7 @@ return [
         'time_slot_exist'             => 'فترات الوقت موجودة بالفعل.',
         'resource_already_used'       => 'لا يمكن إزالة هذا المورد بشكل دائم. إنه مرتبط بمورد آخر.',
         "only_customer_delete"        => 'يمكن حذف حساب العملاء فقط',
-        'database_error_message'      => 'حدث خطأ في قاعدة البيانات.'
+        'database_error_message'      => 'حدث خطأ في قاعدة البيانات.',
+        'outside_service_radius'      => 'موقع التوصيل خارج نطاق الخدمة',
     ]
 ];
