@@ -648,7 +648,8 @@ Route::prefix('table')->name('table.')->middleware(['installed', 'apiKey', 'loca
 
     Route::prefix('dining-order')->name('dining-order.')->group(function () {
         Route::get('/show/{frontendOrder}', [TableOrderController::class, 'show']);
-        Route::post('/', [TableOrderController::class, 'store']);
+        // Rate limit: 10 orders per minute per IP to prevent spam
+        Route::post('/', [TableOrderController::class, 'store'])->middleware('throttle:10,1');
         Route::get('/track', [\App\Http\Controllers\Table\OrderController::class, 'trackByWhatsApp']);
     });
 });

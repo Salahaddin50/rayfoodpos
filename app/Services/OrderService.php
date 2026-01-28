@@ -462,12 +462,21 @@ class OrderService
     {
         try {
             DB::transaction(function () use ($request) {
+                // Security: Validate customer exists and use fallback
                 $customer = User::find($request->customer_id);
                 if (!$customer) {
                     $customer = User::where('username', 'default-customer')->first();
                 }
                 if (!$customer) {
                     throw new Exception("Default customer not found. Please create/restore a customer user with username 'default-customer' (Walking Customer).", 422);
+                }
+                
+                // Security: Validate branch exists and is active
+                $branch = \App\Models\Branch::where('id', $request->branch_id)
+                    ->where('status', \App\Enums\Status::ACTIVE)
+                    ->first();
+                if (!$branch) {
+                    throw new Exception("Selected branch is not available for orders at this time.", 422);
                 }
 
                 // Debug: Log what's being received
@@ -532,9 +541,39 @@ class OrderService
                 $requestItems = json_decode($request->items);
                 $items        = Item::get()->pluck('tax_id', 'id');
                 $taxes        = AppLibrary::pluck(Tax::get(), 'obj', 'id');
+                
+                // Security: Server-side price validation
+                $calculatedSubtotal = 0;
+                $dbItems = Item::whereIn('id', collect($requestItems)->pluck('item_id'))->get()->keyBy('id');
 
                 if (!blank($requestItems)) {
                     foreach ($requestItems as $item) {
+                        // Security: Validate item exists and get real price from database
+                        if (!isset($dbItems[$item->item_id])) {
+                            throw new Exception("Invalid item in order: Item ID {$item->item_id} does not exist.", 422);
+                        }
+                        $dbItem = $dbItems[$item->item_id];
+                        
+                        // Calculate expected price (base + variations + extras)
+                        $expectedItemPrice = $dbItem->price;
+                        $expectedVariationTotal = $item->item_variation_total ?? 0;
+                        $expectedExtraTotal = $item->item_extra_total ?? 0;
+                        $expectedTotalPrice = ($expectedItemPrice + $expectedVariationTotal + $expectedExtraTotal) * $item->quantity;
+                        
+                        // Allow small tolerance for floating-point rounding (0.02 per item)
+                        $priceTolerance = 0.02 * $item->quantity;
+                        if (abs($expectedTotalPrice - $item->total_price) > $priceTolerance) {
+                            \Log::warning('Price mismatch detected', [
+                                'item_id' => $item->item_id,
+                                'expected' => $expectedTotalPrice,
+                                'received' => $item->total_price,
+                                'diff' => abs($expectedTotalPrice - $item->total_price)
+                            ]);
+                            throw new Exception("Price validation failed for item: {$dbItem->name}. Please refresh and try again.", 422);
+                        }
+                        
+                        $calculatedSubtotal += $item->total_price;
+                        
                         $taxId          = isset($items[$item->item_id]) ? $items[$item->item_id] : 0;
                         $taxName        = isset($taxes[$taxId]) ? $taxes[$taxId]->name : null;
                         $taxRate        = isset($taxes[$taxId]) ? $taxes[$taxId]->tax_rate : 0;
@@ -561,6 +600,17 @@ class OrderService
                         $totalTax       = $totalTax + $taxPrice;
                         $i++;
                     }
+                }
+                
+                // Security: Validate subtotal matches calculated items total
+                $subtotalTolerance = 0.10; // Allow 10 cents tolerance for entire order
+                if (abs($calculatedSubtotal - $request->subtotal) > $subtotalTolerance) {
+                    \Log::warning('Subtotal mismatch detected', [
+                        'calculated' => $calculatedSubtotal,
+                        'received' => $request->subtotal,
+                        'diff' => abs($calculatedSubtotal - $request->subtotal)
+                    ]);
+                    throw new Exception("Order total validation failed. Please refresh and try again.", 422);
                 }
 
                 if (!blank($itemsArray)) {
