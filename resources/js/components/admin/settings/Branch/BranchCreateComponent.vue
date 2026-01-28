@@ -377,6 +377,7 @@ export default {
                         delivery_cost_1: "",
                         delivery_cost_2: "",
                         delivery_cost_3: "",
+                        max_delivery_radius: "",
                     };
                     this.errors = {};
                 }).catch((err) => {

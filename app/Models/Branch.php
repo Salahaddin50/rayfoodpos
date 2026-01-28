@@ -28,6 +28,7 @@ class Branch extends Model
         'delivery_cost_1',
         'delivery_cost_2',
         'delivery_cost_3',
+        'max_delivery_radius',
     ];
     protected $casts = [
         'id'        => 'integer',
@@ -48,5 +49,6 @@ class Branch extends Model
         'delivery_cost_1' => 'decimal:2',
         'delivery_cost_2' => 'decimal:2',
         'delivery_cost_3' => 'decimal:2',
+        'max_delivery_radius' => 'decimal:2',
     ];
 }
