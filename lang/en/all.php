@@ -54,6 +54,7 @@ return [
         'max_delivery_radius' => 'Max Delivery Radius',
         'maximum_distance_for_delivery' => 'Maximum distance for delivery (leave empty for unlimited)',
         'click_add_location_button' => 'Click "Add Location" button to set your location',
+        'unlimited'        => 'Unlimited',
     ],
     'message' => [
         'validation_error'            => 'Validation Error.',

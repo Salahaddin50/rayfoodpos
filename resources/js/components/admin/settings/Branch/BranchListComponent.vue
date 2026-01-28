@@ -131,6 +131,7 @@ export default {
                     delivery_cost_1: "",
                     delivery_cost_2: "",
                     delivery_cost_3: "",
+                    max_delivery_radius: "",
                 },
                 search: {
                     paginate: 1,
@@ -206,6 +207,7 @@ export default {
                 delivery_cost_1: branch.delivery_cost_1 ?? "",
                 delivery_cost_2: branch.delivery_cost_2 ?? "",
                 delivery_cost_3: branch.delivery_cost_3 ?? "",
+                max_delivery_radius: branch.max_delivery_radius ?? "",
             };
             this.loading.isActive = false;
         },

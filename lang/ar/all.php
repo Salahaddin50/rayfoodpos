@@ -51,6 +51,7 @@ return [
         'max_delivery_radius' => 'أقصى نطاق توصيل',
         'maximum_distance_for_delivery' => 'المسافة القصوى للتوصيل (اتركه فارغًا لغير محدود)',
         'click_add_location_button' => 'انقر على زر "إضافة الموقع" لتحديد موقعك',
+        'unlimited'         => 'غير محدود',
     ],
     'message' => [
         'validation_error'            => 'خطأ في التحقق.',

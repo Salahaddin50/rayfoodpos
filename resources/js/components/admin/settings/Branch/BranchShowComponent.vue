@@ -120,6 +120,10 @@
                             <span class="db-list-item-title">{{ $t("label.delivery_cost_3") }}</span>
                             <span class="db-list-item-text">{{ branch.delivery_cost_3 ?? '-' }}</span>
                         </li>
+                        <li class="db-list-item">
+                            <span class="db-list-item-title">{{ $t("label.max_delivery_radius") }} (km)</span>
+                            <span class="db-list-item-text">{{ branch.max_delivery_radius ?? $t('label.unlimited') }}</span>
+                        </li>
                     </ul>
                 </div>
             </div>
