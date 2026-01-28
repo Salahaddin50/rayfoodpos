@@ -203,6 +203,19 @@
                             <small class="text-xs text-gray-500 mt-1 block">{{ $t("label.if_empty_uses_cost_2_or_cost_1") }}</small>
                         </div>
 
+                        <div class="form-col-12 sm:form-col-6">
+                            <label for="max_delivery_radius" class="db-field-title">
+                                {{ $t("label.max_delivery_radius") }} (km)
+                            </label>
+                            <input v-on:keypress="floatNumber($event)" v-model="props.form.max_delivery_radius"
+                                v-bind:class="errors.max_delivery_radius ? 'invalid' : ''" type="text"
+                                id="max_delivery_radius" class="db-field-control" placeholder="Leave empty for unlimited" />
+                            <small class="db-field-alert" v-if="errors.max_delivery_radius">{{
+                                errors.max_delivery_radius[0]
+                            }}</small>
+                            <small class="text-xs text-gray-500 mt-1 block">{{ $t("label.maximum_distance_for_delivery") }}</small>
+                        </div>
+
                         <div class="form-col-12">
                             <label for="address" class="db-field-title required">{{ $t("label.address") }}</label>
                             <textarea v-model="props.form.address" v-bind:class="errors.address ? 'invalid' : ''"

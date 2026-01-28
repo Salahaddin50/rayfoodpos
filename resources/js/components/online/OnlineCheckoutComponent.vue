@@ -639,6 +639,19 @@ export default {
                 return alertService.error(this.$t('message.location_required'));
             }
 
+            // Security: Validate delivery radius if branch has max_delivery_radius set
+            const branch = this.branches.find(b => b.id === parseInt(this.$route.params.branchId));
+            if (branch && branch.max_delivery_radius && this.distanceFromBranch) {
+                const distanceValue = this.parseDistance(this.distanceFromBranch);
+                if (distanceValue && distanceValue > parseFloat(branch.max_delivery_radius)) {
+                    this.errors.location_url = [this.$t('message.outside_service_radius')];
+                    return alertService.error(
+                        this.$t('message.outside_service_radius') + 
+                        ` (${this.$t('label.max')}: ${branch.max_delivery_radius} km)`
+                    );
+                }
+            }
+
             this.loading.isActive = true;
 
             this.checkoutProps.form.branch_id = parseInt(this.$route.params.branchId);

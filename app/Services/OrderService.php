@@ -478,6 +478,17 @@ class OrderService
                 if (!$branch) {
                     throw new Exception("Selected branch is not available for orders at this time.", 422);
                 }
+                
+                // Security: Validate delivery radius if branch has max_delivery_radius set and location_url is provided
+                if ($branch->max_delivery_radius && $request->location_url) {
+                    $distance = $this->calculateDistanceFromLocation($request->location_url, $branch->id);
+                    if ($distance !== null && $distance > $branch->max_delivery_radius) {
+                        throw new Exception(
+                            "Your delivery location is outside our service radius. Maximum delivery distance for this branch is {$branch->max_delivery_radius} km.",
+                            422
+                        );
+                    }
+                }
 
                 // Debug: Log what's being received
                 \Log::info('TableOrderStore - Request data:', [

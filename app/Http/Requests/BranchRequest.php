@@ -50,6 +50,7 @@ class BranchRequest extends FormRequest
             'delivery_cost_1'                => ['nullable', 'numeric'],
             'delivery_cost_2'                => ['nullable', 'numeric'],
             'delivery_cost_3'                => ['nullable', 'numeric'],
+            'max_delivery_radius'            => ['nullable', 'numeric', 'min:0'],
         ];
     }
 }
