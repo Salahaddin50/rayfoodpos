@@ -23,6 +23,13 @@
     <!-- CUSTOM STYLE -->
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <link rel="stylesheet" href="{{ asset('themes/default/css/custom.css') }}">
+    
+    <!-- CLOUDFLARE TURNSTILE PRELOAD (if enabled) -->
+    @if(env('VITE_TURNSTILE_ENABLED') === 'true' || env('VITE_TURNSTILE_ENABLED') === '1')
+    <link rel="dns-prefetch" href="https://challenges.cloudflare.com">
+    <link rel="preconnect" href="https://challenges.cloudflare.com" crossorigin>
+    @endif
+    
     <!-- PAGE TITLE -->
 
     <title>{{ Settings::group('company')->get('company_name') }}</title>

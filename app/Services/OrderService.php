@@ -479,10 +479,13 @@ class OrderService
                     throw new Exception("Selected branch is not available for orders at this time.", 422);
                 }
                 
-                // Security: Validate delivery radius if branch has max_delivery_radius set and location_url is provided
-                if ($branch->max_delivery_radius && $request->location_url) {
-                    $distance = $this->calculateDistanceFromLocation($request->location_url, $branch->id);
-                    if ($distance !== null && $distance > $branch->max_delivery_radius) {
+                // Calculate distance once (reused for both validation and saving)
+                $calculatedDistance = null;
+                if ($request->location_url) {
+                    $calculatedDistance = $this->calculateDistanceFromLocation($request->location_url, $branch->id);
+                    
+                    // Security: Validate delivery radius if branch has max_delivery_radius set
+                    if ($branch->max_delivery_radius && $calculatedDistance !== null && $calculatedDistance > $branch->max_delivery_radius) {
                         throw new Exception(
                             "Your delivery location is outside our service radius. Maximum delivery distance for this branch is {$branch->max_delivery_radius} km.",
                             422
@@ -490,34 +493,13 @@ class OrderService
                     }
                 }
 
-                // Debug: Log what's being received
-                \Log::info('TableOrderStore - Request data:', [
-                    'pickup_option_raw' => $request->input('pickup_option'),
-                    'pickup_option_validated' => $request->validated()['pickup_option'] ?? 'NOT_IN_VALIDATED',
-                    'whatsapp_number' => $request->input('whatsapp_number'),
-                    'delivery_charge' => $request->input('delivery_charge'),
-                    'all_request_data' => $request->all()
-                ]);
-
                 $validatedData = $request->validated();
                 
-                // Debug: Check validated data
-                \Log::info('TableOrderStore - Validated data keys:', [
-                    'keys' => array_keys($validatedData),
-                    'has_pickup_option' => isset($validatedData['pickup_option']),
-                    'pickup_option_value' => $validatedData['pickup_option'] ?? 'NOT_IN_VALIDATED',
-                    'pickup_option_raw' => $request->input('pickup_option'),
-                    'all_request_keys' => array_keys($request->all())
-                ]);
-                
                 // Ensure pickup_option is included if present in request
-                // Laravel's validated() may omit nullable fields if they're not explicitly set
                 $pickupOption = $request->input('pickup_option');
                 if (!empty($pickupOption) && is_string($pickupOption)) {
                     $validatedData['pickup_option'] = $pickupOption;
-                    \Log::info('TableOrderStore - pickup_option explicitly added to validated data:', ['value' => $pickupOption]);
                 } elseif ($pickupOption !== null) {
-                    // Even if it's an empty string, ensure it's in the array
                     $validatedData['pickup_option'] = $pickupOption;
                 }
 
@@ -530,32 +512,28 @@ class OrderService
                     'preparation_time' => Settings::group('site')->get('site_food_preparation_time')
                 ];
                 
-                // Only include pickup_option if column exists
-                if (isset($orderData['pickup_option']) && !Schema::hasColumn('orders', 'pickup_option')) {
+                // Only include pickup_option if column exists (cached check)
+                static $pickupColumnExists = null;
+                if ($pickupColumnExists === null) {
+                    $pickupColumnExists = Schema::hasColumn('orders', 'pickup_option');
+                }
+                if (isset($orderData['pickup_option']) && !$pickupColumnExists) {
                     unset($orderData['pickup_option']);
-                    \Log::warning('TableOrderStore - pickup_option column does not exist, removing from data');
                 }
 
                 $this->order = FrontendOrder::create($orderData);
-
-                // Debug: Log what was saved
-                \Log::info('TableOrderStore - Order created:', [
-                    'order_id' => $this->order->id,
-                    'pickup_option_saved' => $this->order->pickup_option ?? 'NULL (column may not exist)',
-                    'delivery_charge_saved' => $this->order->delivery_charge,
-                    'column_exists' => Schema::hasColumn('orders', 'pickup_option')
-                ]);
 
                 $i            = 0;
                 $totalTax     = 0;
                 $itemsArray   = [];
                 $requestItems = json_decode($request->items);
-                $items        = Item::get()->pluck('tax_id', 'id');
-                $taxes        = AppLibrary::pluck(Tax::get(), 'obj', 'id');
+                $requestItemIds = collect($requestItems)->pluck('item_id')->toArray();
                 
-                // Security: Server-side price validation
+                // Security: Server-side price validation - fetch only needed items
                 $calculatedSubtotal = 0;
-                $dbItems = Item::whereIn('id', collect($requestItems)->pluck('item_id'))->get()->keyBy('id');
+                $dbItems = Item::whereIn('id', $requestItemIds)->get()->keyBy('id');
+                $items = $dbItems->pluck('tax_id', 'id');
+                $taxes = AppLibrary::pluck(Tax::get(), 'obj', 'id');
 
                 if (!blank($requestItems)) {
                     foreach ($requestItems as $item) {
@@ -574,12 +552,6 @@ class OrderService
                         // Allow small tolerance for floating-point rounding (0.02 per item)
                         $priceTolerance = 0.02 * $item->quantity;
                         if (abs($expectedTotalPrice - $item->total_price) > $priceTolerance) {
-                            \Log::warning('Price mismatch detected', [
-                                'item_id' => $item->item_id,
-                                'expected' => $expectedTotalPrice,
-                                'received' => $item->total_price,
-                                'diff' => abs($expectedTotalPrice - $item->total_price)
-                            ]);
                             throw new Exception("Price validation failed for item: {$dbItem->name}. Please refresh and try again.", 422);
                         }
                         
@@ -616,11 +588,6 @@ class OrderService
                 // Security: Validate subtotal matches calculated items total
                 $subtotalTolerance = 0.10; // Allow 10 cents tolerance for entire order
                 if (abs($calculatedSubtotal - $request->subtotal) > $subtotalTolerance) {
-                    \Log::warning('Subtotal mismatch detected', [
-                        'calculated' => $calculatedSubtotal,
-                        'received' => $request->subtotal,
-                        'diff' => abs($calculatedSubtotal - $request->subtotal)
-                    ]);
                     throw new Exception("Order total validation failed. Please refresh and try again.", 422);
                 }
 
@@ -631,12 +598,9 @@ class OrderService
                 $this->order->order_serial_no = date('dmy') . $this->order->id;
                 $this->order->total_tax       = $totalTax;
                 
-                // Calculate and save distance if location_url and branch_id are present
-                if ($this->order->location_url && $this->order->branch_id) {
-                    $distance = $this->calculateDistanceFromLocation($this->order->location_url, $this->order->branch_id);
-                    if ($distance !== null) {
-                        $this->order->distance = $distance;
-                    }
+                // Save pre-calculated distance (calculated during validation)
+                if ($calculatedDistance !== null) {
+                    $this->order->distance = $calculatedDistance;
                 }
                 
                 $currentTime = Carbon::now();

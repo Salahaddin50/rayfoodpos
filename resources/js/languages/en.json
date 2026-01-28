@@ -768,6 +768,7 @@
         "track_order": "Track Order",
         "install_app": "Install App",
         "loading": "Loading...",
+        "loading_captcha": "Loading security check...",
         "get_file_content": "Get File Content",
         "let_me_check": "Let me check",
         "add_dining_table": "Add Tables",

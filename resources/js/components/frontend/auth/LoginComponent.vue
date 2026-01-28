@@ -31,7 +31,10 @@
                 </div>
 
                 <div v-if="turnstile.enabled" class="mb-4">
-                    <div ref="turnstileEl"></div>
+                    <div v-if="turnstileLoading" class="flex items-center justify-center h-[65px] bg-gray-50 rounded border border-gray-200">
+                        <span class="text-sm text-gray-500">{{ $t('label.loading_captcha') || 'Loading security check...' }}</span>
+                    </div>
+                    <div ref="turnstileEl" :class="{ 'hidden': turnstileLoading }"></div>
                 </div>
                 <div class="flex items-center justify-between mb-6">
                     <div class="db-field-checkbox p-0">
@@ -115,6 +118,7 @@ export default {
                 siteKey: ENV.TURNSTILE_SITE_KEY || '',
             },
             turnstileWidgetId: null,
+            turnstileLoading: true,
         }
     },
     mounted() {
@@ -154,7 +158,10 @@ export default {
         },
         initTurnstile() {
             this.loadTurnstileScript().then(() => {
-                if (!this.$refs.turnstileEl || !window.turnstile) return;
+                if (!this.$refs.turnstileEl || !window.turnstile) {
+                    this.turnstileLoading = false;
+                    return;
+                }
 
                 // Render once
                 if (this.turnstileWidgetId !== null) return;
@@ -163,17 +170,28 @@ export default {
                     sitekey: this.turnstile.siteKey,
                     callback: (token) => {
                         this.form.cf_turnstile_response = token;
+                        this.turnstileLoading = false;
                     },
                     'expired-callback': () => {
                         this.form.cf_turnstile_response = '';
                     },
                     'error-callback': () => {
                         this.form.cf_turnstile_response = '';
+                        this.turnstileLoading = false;
+                    },
+                    'after-interactive-callback': () => {
+                        this.turnstileLoading = false;
                     },
                 });
+                
+                // Fallback: hide loading after 3 seconds regardless
+                setTimeout(() => {
+                    this.turnstileLoading = false;
+                }, 3000);
             }).catch(() => {
                 // If Turnstile script can't load, fail open (let backend enforce if enabled)
                 this.turnstileWidgetId = null;
+                this.turnstileLoading = false;
             });
         },
         login: function () {
