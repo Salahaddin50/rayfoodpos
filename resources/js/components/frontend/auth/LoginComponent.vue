@@ -149,11 +149,12 @@ export default {
                 const s = document.createElement('script');
                 s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
                 s.async = true;
-                s.defer = true;
                 s.setAttribute('data-cf-turnstile', '1');
+                s.setAttribute('fetchpriority', 'high');
+                s.setAttribute('crossorigin', 'anonymous');
                 s.onload = () => resolve();
                 s.onerror = (e) => reject(e);
-                document.head.appendChild(s);
+                document.body.appendChild(s); // Append to body for faster execution
             });
         },
         initTurnstile() {

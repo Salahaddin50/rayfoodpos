@@ -12,6 +12,13 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="{{ Settings::group('company')->get('company_name') }}">
 
+    <!-- EARLY PRECONNECTS (helps Edge/slow browsers establish connections faster) -->
+    @if(env('VITE_TURNSTILE_ENABLED') === 'true' || env('VITE_TURNSTILE_ENABLED') === '1')
+    <link rel="dns-prefetch" href="//challenges.cloudflare.com">
+    <link rel="preconnect" href="https://challenges.cloudflare.com" crossorigin>
+    <link rel="preload" href="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" as="script" crossorigin>
+    @endif
+
     <!-- PWA MANIFEST -->
     <link rel="manifest" href="{{ route('manifest') }}">
 
@@ -24,12 +31,6 @@
     <!-- CUSTOM STYLE -->
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <link rel="stylesheet" href="{{ asset('themes/default/css/custom.css') }}">
-    
-    <!-- CLOUDFLARE TURNSTILE PRELOAD (if enabled) -->
-    @if(env('VITE_TURNSTILE_ENABLED') === 'true' || env('VITE_TURNSTILE_ENABLED') === '1')
-    <link rel="dns-prefetch" href="https://challenges.cloudflare.com">
-    <link rel="preconnect" href="https://challenges.cloudflare.com" crossorigin>
-    @endif
     
     <!-- PAGE TITLE -->
 
