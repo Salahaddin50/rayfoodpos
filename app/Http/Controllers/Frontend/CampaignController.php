@@ -127,6 +127,13 @@ class CampaignController extends Controller
     public function progress(Request $request)
     {
         try {
+            // Log incoming request for debugging
+            \Log::info('Campaign progress request', [
+                'phone' => $request->phone,
+                'branch_id' => $request->branch_id,
+                'all' => $request->all()
+            ]);
+
             $request->validate([
                 'phone'     => 'required|string|max:32',
                 'branch_id' => 'required|exists:branches,id',
