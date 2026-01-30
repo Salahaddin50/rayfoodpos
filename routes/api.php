@@ -71,6 +71,8 @@ use App\Http\Controllers\Admin\AdministratorAddressController;
 use App\Http\Controllers\Admin\KitchenDisplaySystemController;
 use App\Http\Controllers\Admin\DriverController;
 use App\Http\Controllers\Admin\OnlineUserController;
+use App\Http\Controllers\Admin\CampaignController;
+use App\Http\Controllers\Admin\CampaignRegistrationController;
 use App\Http\Controllers\Table\OrderController as TableOrderController;
 use App\Http\Controllers\Frontend\ItemController as FrontendItemController;
 use App\Http\Controllers\Frontend\PageController as FrontendPageController;
@@ -373,6 +375,20 @@ Route::prefix('admin')->name('admin.')->middleware(['installed', 'apiKey', 'auth
         Route::get('/item/{offer}', [OfferItemController::class, 'index']);
         Route::post('/item/{offer}', [OfferItemController::class, 'store']);
         Route::delete('/item/{offer}/{offerItem}', [OfferItemController::class, 'destroy']);
+    });
+
+    Route::prefix('campaign')->name('campaign.')->group(function () {
+        Route::get('/', [CampaignController::class, 'index']);
+        Route::get('/show/{campaign}', [CampaignController::class, 'show']);
+        Route::post('/', [CampaignController::class, 'store']);
+        Route::match(['post', 'put', 'patch'], '/{campaign}', [CampaignController::class, 'update']);
+        Route::delete('/{campaign}', [CampaignController::class, 'destroy']);
+
+        Route::get('/registration/{campaign}', [CampaignRegistrationController::class, 'index']);
+        Route::post('/registration/{campaign}', [CampaignRegistrationController::class, 'store']);
+        Route::get('/registration/{campaign}/show/{registration}', [CampaignRegistrationController::class, 'show']);
+        Route::match(['put', 'patch'], '/registration/{campaign}/{registration}', [CampaignRegistrationController::class, 'update']);
+        Route::delete('/registration/{campaign}/{registration}', [CampaignRegistrationController::class, 'destroy']);
     });
 
     Route::prefix('item')->name('item.')->group(function () {
