@@ -20,7 +20,7 @@ class CampaignController extends Controller
     public function index(Request $request)
     {
         try {
-            $campaigns = Campaign::where('status', 5) // Active status
+            $campaigns = Campaign::with(['freeItem:id,name'])->where('status', 5) // Active status
                 ->where(function ($query) {
                     // Only filter by end_date - show upcoming campaigns too
                     $query->whereNull('end_date')
@@ -42,6 +42,11 @@ class CampaignController extends Controller
                         'type'               => $campaign->type,
                         'type_name'          => $campaign->type == CampaignType::PERCENTAGE ? 'percentage' : 'item',
                         'discount_value'     => $discountValue,
+                        'free_item_id'       => $campaign->free_item_id,
+                        'free_item'          => $campaign->freeItem ? [
+                            'id'   => $campaign->freeItem->id,
+                            'name' => $campaign->freeItem->name,
+                        ] : null,
                         'required_purchases' => $campaign->required_purchases,
                         'start_date'         => $campaign->start_date,
                         'end_date'           => $campaign->end_date,

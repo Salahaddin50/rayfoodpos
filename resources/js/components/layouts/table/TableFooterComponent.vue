@@ -205,12 +205,46 @@
                                         <span v-if="!campaign.start_date && !campaign.end_date">{{ $t('label.ongoing') }}</span>
                                     </p>
                                 </div>
-                                <span 
-                                    class="text-xs px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0"
-                                    :class="campaign.type_name === 'percentage' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'"
-                                >
-                                    {{ campaign.type_name === 'percentage' ? campaign.discount_value + '%' : $t('label.buy_x_get_free', { count: campaign.required_purchases }) }}
-                                </span>
+                                <div class="flex items-center gap-2 flex-shrink-0">
+                                    <span 
+                                        class="text-xs px-2 py-0.5 rounded-full whitespace-nowrap"
+                                        :class="campaign.type_name === 'percentage' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'"
+                                    >
+                                        {{ campaign.type_name === 'percentage' ? campaign.discount_value + '%' : $t('label.buy_x_get_free', { count: campaign.required_purchases }) }}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        @click="toggleCampaignInfo(campaign.id)"
+                                        class="text-xs px-2 py-0.5 rounded-full border border-gray-200 text-gray-600 hover:border-primary hover:text-primary transition-colors"
+                                    >
+                                        {{ expandedCampaignId === campaign.id ? $t('button.hide') : $t('button.info') }}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Campaign Info -->
+                            <div v-if="expandedCampaignId === campaign.id" class="mt-3 text-xs text-gray-600 space-y-1">
+                                <div v-if="campaign.description" class="text-gray-700">
+                                    <span class="font-medium">{{ $t('label.description') }}:</span>
+                                    <span class="break-words">{{ campaign.description }}</span>
+                                </div>
+                                <div v-if="campaign.type_name === 'percentage'">
+                                    <span class="font-medium">{{ $t('label.discount') }}:</span>
+                                    {{ campaign.discount_value }}%
+                                </div>
+                                <div v-else>
+                                    <div>
+                                        <span class="font-medium">{{ $t('label.required_purchases') }}:</span>
+                                        {{ campaign.required_purchases }}
+                                    </div>
+                                    <div v-if="campaign.free_item && campaign.free_item.name">
+                                        <span class="font-medium">{{ $t('label.free_item') }}:</span>
+                                        {{ campaign.free_item.name }}
+                                    </div>
+                                    <div v-else class="text-gray-500 italic">
+                                        {{ $t('message.approach_branch') }}
+                                    </div>
+                                </div>
                             </div>
                             <div class="mt-2 flex items-center gap-2">
                                 <span 
@@ -363,6 +397,7 @@ export default {
             showProgressModal: false, // Controls progress modal visibility
             userCampaignId: null, // Campaign the user has joined
             hasSearchedCampaign: false, // Whether user has clicked Search
+            expandedCampaignId: null, // Campaign card info toggle
         }
     },
     computed: {
@@ -480,6 +515,9 @@ export default {
                 month: 'short',
                 year: 'numeric'
             });
+        },
+        toggleCampaignInfo: function (campaignId) {
+            this.expandedCampaignId = (this.expandedCampaignId === campaignId) ? null : campaignId;
         },
         trackOrder: function () {
             // Reset form and results
