@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\Support\WhatsAppNormalizer;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class CampaignController extends Controller
 {
@@ -113,6 +114,12 @@ class CampaignController extends Controller
                     'required_purchases' => $campaign->required_purchases,
                 ],
             ]);
+        } catch (ValidationException $exception) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Validation failed',
+                'errors'  => $exception->errors(),
+            ], 422);
         } catch (Exception $exception) {
             return response()->json([
                 'status'  => false,
@@ -219,6 +226,12 @@ class CampaignController extends Controller
                     'is_complete'        => $progress >= $requiredPurchases,
                 ],
             ]);
+        } catch (ValidationException $exception) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Validation failed',
+                'errors'  => $exception->errors(),
+            ], 422);
         } catch (Exception $exception) {
             return response()->json([
                 'status'  => false,

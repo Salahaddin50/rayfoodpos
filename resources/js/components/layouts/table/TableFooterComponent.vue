@@ -703,10 +703,16 @@ export default {
                 }
                 this.hasSearchedCampaign = true;
                 this.campaignLoading.isActive = false;
-            }).catch(() => {
+            }).catch((error) => {
                 this.userCampaignId = null;
-                this.hasSearchedCampaign = true;
+                this.hasSearchedCampaign = false;
                 this.campaignLoading.isActive = false;
+
+                const msg = error?.response?.data?.message
+                    || (error?.response?.data?.errors ? JSON.stringify(error.response.data.errors) : null)
+                    || 'Failed to check campaign status';
+                console.error('Campaign progress error:', error?.response?.data || error);
+                alert(msg);
             });
         },
         viewCampaignStatus: function (campaign) {
@@ -736,6 +742,10 @@ export default {
             }).catch((error) => {
                 console.error('Error loading campaign progress:', error);
                 this.campaignLoading.isActive = false;
+                const msg = error?.response?.data?.message
+                    || (error?.response?.data?.errors ? JSON.stringify(error.response.data.errors) : null)
+                    || 'Failed to load campaign status';
+                alert(msg);
             });
         },
         closeProgressModal: function () {
