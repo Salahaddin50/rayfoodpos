@@ -63,6 +63,8 @@
                             <th class="db-table-head-th">{{ $t("label.name") }}</th>
                             <th class="db-table-head-th">{{ $t("label.type") }}</th>
                             <th class="db-table-head-th">{{ $t("label.discount_value") }}</th>
+                            <th class="db-table-head-th">{{ $t("label.start_date") }}</th>
+                            <th class="db-table-head-th">{{ $t("label.end_date") }}</th>
                             <th class="db-table-head-th">{{ $t("label.status") }}</th>
                             <th class="db-table-head-th hidden-print"
                                 v-if="permissionChecker('campaigns_show') || permissionChecker('campaigns_edit') || permissionChecker('campaigns_delete')">
@@ -82,6 +84,8 @@
                                 <span v-else-if="campaign.type === campaignTypeEnum.ITEM">Buy {{ campaign.required_purchases }} Get 1 Free</span>
                                 <span v-else>-</span>
                             </td>
+                            <td class="db-table-body-td">{{ campaign.convert_start_date || '-' }}</td>
+                            <td class="db-table-body-td">{{ campaign.convert_end_date || '-' }}</td>
                             <td class="db-table-body-td">
                                 <span :class="statusClass(campaign.status)">
                                     {{ enums.statusEnumArray[campaign.status] }}
@@ -102,7 +106,7 @@
                     </tbody>
                     <tbody class="db-table-body" v-else>
                         <tr class="db-table-body-tr">
-                            <td class="db-table-body-td text-center" colspan="5">
+                            <td class="db-table-body-td text-center" colspan="7">
                                 <div class="p-4">
                                     <div class="max-w-[300px] mx-auto mt-2">
                                         <img class="w-full h-full" :src="ENV.API_URL + '/images/default/not-found.png'"

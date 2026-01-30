@@ -5,6 +5,8 @@ namespace App\Http\Resources;
 use App\Libraries\AppLibrary;
 use App\Enums\CampaignType;
 use Illuminate\Http\Resources\Json\JsonResource;
+use App\Http\Resources\SimpleItemResource;
+use App\Http\Resources\CampaignRegistrationResource;
 
 class CampaignResource extends JsonResource
 {
