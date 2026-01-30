@@ -101,6 +101,50 @@
                         </div>
                     </div>
 
+                    <!-- Campaign (auto apply / redeem) -->
+                    <div v-if="campaignStatus" class="mb-6 rounded-2xl shadow-xs bg-white">
+                        <h3 class="capitalize font-medium p-4 border-b border-gray-100">{{ $t('label.campaign') }}</h3>
+                        <div class="p-4">
+                            <div class="text-sm font-medium text-gray-900">
+                                {{ campaignStatus.campaign_name }}
+                            </div>
+
+                            <div v-if="campaignStatus.type === 'percentage'" class="mt-2 text-sm text-gray-700">
+                                <div class="flex items-center justify-between">
+                                    <span>{{ $t('label.discount') }}</span>
+                                    <span class="font-medium">-{{ campaignStatus.discount_value }}%</span>
+                                </div>
+                                <div class="flex items-center justify-between mt-1">
+                                    <span>{{ $t('label.discount') }} ({{ $t('label.amount') }})</span>
+                                    <span class="font-medium">
+                                        -{{ currencyFormat(campaignDiscountPreview, setting.site_digit_after_decimal_point, setting.site_default_currency_symbol, setting.site_currency_position) }}
+                                    </span>
+                                </div>
+                                <div class="text-xs text-gray-500 mt-2">
+                                    {{ $t('message.campaign_auto_applied') }}
+                                </div>
+                            </div>
+
+                            <div v-else-if="campaignStatus.type === 'item'" class="mt-2">
+                                <div class="text-sm text-gray-700">
+                                    {{ $t('label.campaign_progress') }}: {{ campaignStatus.current_progress }} / {{ campaignStatus.required_purchases }}
+                                </div>
+                                <div class="text-sm text-gray-700 mt-1">
+                                    {{ $t('label.rewards_available') }}: {{ campaignStatus.rewards_available }}
+                                </div>
+                                <div v-if="campaignStatus.rewards_available > 0 && campaignStatus.free_item && campaignStatus.free_item.name" class="mt-3">
+                                    <label class="inline-flex items-center gap-2 text-sm text-gray-800">
+                                        <input type="checkbox" v-model="campaignRedeem" class="rounded border-gray-300" />
+                                        {{ $t('message.redeem_free_item_now', { item: campaignStatus.free_item.name }) }}
+                                    </label>
+                                    <div class="text-xs text-gray-500 mt-1">
+                                        {{ $t('message.redeem_will_add_free_item') }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Delivery cost section: show only after distance is calculated -->
                     <div v-if="distanceFromBranch && locationUrl" class="mb-6 rounded-2xl shadow-xs bg-white">
                         <h3 class="capitalize font-medium p-4 border-b border-gray-100">{{ $t('label.pickup_cost') }}</h3>
@@ -240,6 +284,18 @@
                                             }}
                                         </span>
                                     </li>
+                                    <li v-if="campaignStatus && campaignStatus.type === 'percentage' && campaignDiscountPreview > 0"
+                                        class="flex items-center justify-between text-heading">
+                                        <span class="text-sm leading-6 capitalize">
+                                            {{ $t('label.campaign') }} {{ $t('label.discount') }}
+                                        </span>
+                                        <span class="text-sm leading-6 capitalize font-medium text-green-700">
+                                            -{{
+                                                currencyFormat(campaignDiscountPreview, setting.site_digit_after_decimal_point,
+                                                    setting.site_default_currency_symbol, setting.site_currency_position)
+                                            }}
+                                        </span>
+                                    </li>
                                 </ul>
                                 <div class="flex items-center justify-between p-3">
                                     <h4 class="text-sm leading-6 font-semibold capitalize">
@@ -247,7 +303,7 @@
                                     </h4>
                                     <h5 class="text-sm leading-6 font-semibold capitalize">
                                         {{
-                                            currencyFormat(total, setting.site_digit_after_decimal_point,
+                                            currencyFormat(displayTotal, setting.site_digit_after_decimal_point,
                                                 setting.site_default_currency_symbol, setting.site_currency_position)
                                         }}
                                     </h5>
@@ -282,6 +338,7 @@ import OrderTypeEnum from "../../enums/modules/orderTypeEnum";
 import IsAdvanceOrderEnum from "../../enums/modules/isAdvanceOrderEnum";
 import router from "../../router";
 import alertService from "../../services/alertService";
+import axios from "axios";
 
 export default {
     name: "OnlineCheckoutComponent",
@@ -316,6 +373,9 @@ export default {
                 { code: 'CN', dial_code: '+86', flag: '🇨🇳', name: 'China' },
                 { code: 'JP', dial_code: '+81', flag: '🇯🇵', name: 'Japan' },
             ],
+            campaignStatus: null,
+            campaignRedeem: false,
+            campaignFetchTimer: null,
             checkoutProps: {
                 form: {
                     dining_table_id: null,
@@ -333,6 +393,7 @@ export default {
                     whatsapp_number: "",
                     location_url: "",
                     pickup_option: null, // Initialize pickup_option in form
+                    campaign_redeem: false,
                     items: []
                 }
             },
@@ -346,6 +407,9 @@ export default {
         if (!this.branches || this.branches.length === 0) {
             this.$store.dispatch("frontendBranch/lists", { paginate: 0 });
         }
+
+        // If user already typed phone (e.g., browser back), refresh campaign status
+        this.fetchCampaignStatus();
     },
     computed: {
         setting: function () {
@@ -375,6 +439,22 @@ export default {
         },
         total: function () {
             return parseFloat(this.subtotal) + parseFloat(this.pickupCost);
+        },
+        campaignDiscountPreview: function () {
+            if (!this.campaignStatus || this.campaignStatus.type !== 'percentage') return 0;
+            const percent = parseFloat(this.campaignStatus.discount_value || 0);
+            if (!percent) return 0;
+            return parseFloat(this.subtotal) * (percent / 100);
+        },
+        totalAfterCampaign: function () {
+            const t = parseFloat(this.total) - parseFloat(this.campaignDiscountPreview || 0);
+            return t < 0 ? 0 : t;
+        },
+        displayTotal: function () {
+            if (this.campaignStatus && this.campaignStatus.type === 'percentage') {
+                return this.totalAfterCampaign;
+            }
+            return this.total;
         },
         branches: function () {
             return this.$store.getters["frontendBranch/lists"];
@@ -492,6 +572,36 @@ export default {
             this.phoneNumber = this.phoneNumber.replace(/[^\d]/g, '');
             // Combine country code with phone number
             this.checkoutProps.form.whatsapp_number = this.countryCode + this.phoneNumber;
+
+            // Fetch campaign status (debounced)
+            clearTimeout(this.campaignFetchTimer);
+            this.campaignFetchTimer = setTimeout(() => {
+                this.fetchCampaignStatus();
+            }, 350);
+        },
+        fetchCampaignStatus: function () {
+            const phone = this.checkoutProps.form.whatsapp_number;
+            const branchId = parseInt(this.$route.params.branchId);
+            if (!phone || phone.trim() === '' || !branchId) {
+                this.campaignStatus = null;
+                this.campaignRedeem = false;
+                return;
+            }
+
+            axios.post('frontend/campaign/progress', { phone: phone, branch_id: branchId })
+                .then((res) => {
+                    if (res.data && res.data.status) {
+                        this.campaignStatus = res.data.data;
+                        this.campaignRedeem = false;
+                    } else {
+                        this.campaignStatus = null;
+                        this.campaignRedeem = false;
+                    }
+                })
+                .catch(() => {
+                    this.campaignStatus = null;
+                    this.campaignRedeem = false;
+                });
         },
         calculateDeliveryCostByDistance: function () {
             // Get distance in km
@@ -663,7 +773,10 @@ export default {
             this.checkoutProps.form.branch_id = parseInt(this.$route.params.branchId);
             this.checkoutProps.form.subtotal = this.subtotal;
             this.checkoutProps.form.delivery_charge = this.pickupCost; // Store pickup cost in delivery_charge field
-            this.checkoutProps.form.total = parseFloat(this.total).toFixed(this.setting.site_digit_after_decimal_point);
+            // Campaign preview (backend will enforce final totals)
+            this.checkoutProps.form.discount = parseFloat(this.campaignDiscountPreview || 0).toFixed(this.setting.site_digit_after_decimal_point);
+            this.checkoutProps.form.total = parseFloat(this.totalAfterCampaign).toFixed(this.setting.site_digit_after_decimal_point);
+            this.checkoutProps.form.campaign_redeem = !!this.campaignRedeem;
             this.checkoutProps.form.items = [];
             
             // Set location URL (now mandatory)

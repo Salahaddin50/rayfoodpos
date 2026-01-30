@@ -33,6 +33,10 @@ class FrontendOrder extends Model
         'dining_table_id',
         'whatsapp_number',
         'location_url',
+        'campaign_id',
+        'campaign_discount',
+        'campaign_redeem_free_item_id',
+        'campaign_snapshot',
         'pickup_option',
         'source'
     ];
@@ -58,6 +62,10 @@ class FrontendOrder extends Model
         'dining_table_id'  => 'integer',
         'whatsapp_number'  => 'string',
         'location_url'     => 'string',
+        'campaign_id'      => 'integer',
+        'campaign_discount' => 'decimal:6',
+        'campaign_redeem_free_item_id' => 'integer',
+        'campaign_snapshot' => 'array',
         'pickup_option'    => 'string',
         'source'           => 'string'
     ];

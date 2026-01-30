@@ -8,6 +8,9 @@ use App\Models\Tax;
 use App\Models\Item;
 use App\Models\User;
 use App\Models\Order;
+use App\Models\OnlineUser;
+use App\Enums\CampaignType;
+use App\Enums\Status as AppStatus;
 use App\Enums\TaxType;
 use App\Models\Address;
 use App\Enums\OrderType;
@@ -36,6 +39,7 @@ use App\Http\Requests\OrderStatusRequest;
 use App\Http\Requests\PaymentStatusRequest;
 use App\Http\Requests\TableOrderTokenRequest;
 use App\Services\OnlineUserService;
+use App\Support\WhatsAppNormalizer;
 use App\Traits\DefaultAccessModelTrait;
 
 class OrderService
@@ -263,6 +267,31 @@ class OrderService
 
                 if (!blank($itemsArray)) {
                     OrderItem::insert($itemsArray);
+                }
+
+                // If redeem is requested and available, add free item line with 0 price
+                if (!empty($this->order->campaign_redeem_free_item_id)) {
+                    $freeItem = Item::find($this->order->campaign_redeem_free_item_id);
+                    if ($freeItem) {
+                        OrderItem::create([
+                            'order_id'             => $this->order->id,
+                            'branch_id'            => $this->order->branch_id,
+                            'item_id'              => $freeItem->id,
+                            'quantity'             => 1,
+                            'discount'             => 0,
+                            'tax_name'             => null,
+                            'tax_rate'             => 0,
+                            'tax_type'             => TaxType::FIXED,
+                            'tax_amount'           => 0,
+                            'price'                => 0,
+                            'item_variations'      => json_encode([]),
+                            'item_extras'          => json_encode([]),
+                            'instruction'          => 'Campaign free item',
+                            'item_variation_total' => 0,
+                            'item_extra_total'     => 0,
+                            'total_price'          => 0,
+                        ]);
+                    }
                 }
 
                 $this->order->order_serial_no = date('dmy') . $this->order->id;
@@ -494,6 +523,16 @@ class OrderService
                 }
 
                 $validatedData = $request->validated();
+
+                // Normalize whatsapp_number early so we can reliably link OnlineUser + Campaign.
+                $normalizedWhatsApp = null;
+                if (!empty($validatedData['whatsapp_number'])) {
+                    $normalized = WhatsAppNormalizer::normalize($validatedData['whatsapp_number']);
+                    $normalizedWhatsApp = $normalized !== '' ? $normalized : null;
+                    if ($normalizedWhatsApp) {
+                        $validatedData['whatsapp_number'] = $normalizedWhatsApp;
+                    }
+                }
                 
                 // Ensure pickup_option is included if present in request
                 $pickupOption = $request->input('pickup_option');
@@ -511,6 +550,99 @@ class OrderService
                     'order_datetime'   => date('Y-m-d H:i:s'),
                     'preparation_time' => Settings::group('site')->get('site_food_preparation_time')
                 ];
+
+                /**
+                 * Campaign application (online checkout only)
+                 * - One campaign at a time (from online_users.campaign_id)
+                 * - Percentage campaigns auto-apply discount
+                 * - Item campaigns allow user-controlled redeem (campaign_redeem=true)
+                 */
+                $campaignRedeemRequested = (bool) ($request->input('campaign_redeem') ?? false);
+                if ($normalizedWhatsApp) {
+                    $onlineUser = OnlineUser::withoutGlobalScopes()
+                        ->where('branch_id', $request->branch_id)
+                        ->where('whatsapp', $normalizedWhatsApp)
+                        ->whereNotNull('campaign_id')
+                        ->with(['campaign.freeItem'])
+                        ->first();
+
+                    if ($onlineUser && $onlineUser->campaign) {
+                        $campaign = $onlineUser->campaign;
+
+                        // Validate campaign is active + within time window (if set)
+                        $isActive = ((int) $campaign->status === (int) AppStatus::ACTIVE);
+                        $now = now();
+                        $inStart = (!$campaign->start_date) || $campaign->start_date <= $now;
+                        $inEnd = (!$campaign->end_date) || $campaign->end_date >= $now;
+
+                        if ($isActive && $inStart && $inEnd) {
+                            $orderData['campaign_id'] = $campaign->id;
+                            $orderData['campaign_snapshot'] = [
+                                'id' => $campaign->id,
+                                'name' => $campaign->name,
+                                'type' => (int) $campaign->type,
+                                'discount_value' => (float) $campaign->discount_value,
+                                'required_purchases' => (int) ($campaign->required_purchases ?? 0),
+                                'free_item_id' => $campaign->free_item_id,
+                                'start_date' => $campaign->start_date?->toDateTimeString(),
+                                'end_date' => $campaign->end_date?->toDateTimeString(),
+                            ];
+
+                            // Percentage campaign: auto-apply discount on subtotal
+                            if ((int) $campaign->type === (int) CampaignType::PERCENTAGE) {
+                                $percent = (float) $campaign->discount_value;
+                                if ($percent > 0) {
+                                    $campaignDiscount = round(((float) $request->subtotal) * ($percent / 100), 6);
+                                    $campaignDiscount = max(0, min((float) $request->subtotal, $campaignDiscount));
+
+                                    $orderData['campaign_discount'] = $campaignDiscount;
+                                    $orderData['discount'] = ((float) ($orderData['discount'] ?? 0)) + $campaignDiscount;
+                                    $orderData['total'] = max(
+                                        0,
+                                        ((float) $request->subtotal) - ((float) $orderData['discount']) + ((float) ($orderData['delivery_charge'] ?? 0))
+                                    );
+                                }
+                            }
+
+                            // Item campaign: redeem free item if requested and reward is available
+                            if ((int) $campaign->type === (int) CampaignType::ITEM && $campaignRedeemRequested) {
+                                $requiredPurchases = (int) ($campaign->required_purchases ?? 0);
+                                $requiredPurchases = $requiredPurchases > 0 ? $requiredPurchases : 8;
+
+                                // Count completed orders in campaign window
+                                $ordersQuery = Order::withoutGlobalScopes(\App\Models\Scopes\BranchScope::class)
+                                    ->where('branch_id', $request->branch_id)
+                                    ->where('whatsapp_number', $normalizedWhatsApp)
+                                    ->whereIn('status', [OrderStatus::DELIVERED]);
+
+                                if ($campaign->start_date) {
+                                    $ordersQuery->where('created_at', '>=', $campaign->start_date);
+                                }
+                                if ($campaign->end_date) {
+                                    $ordersQuery->where('created_at', '<=', $campaign->end_date);
+                                }
+
+                                $completedCount = (int) $ordersQuery->count();
+                                $earnedRewards = (int) floor($completedCount / $requiredPurchases);
+
+                                // Already redeemed rewards (stored on orders)
+                                $redeemedCount = (int) Order::withoutGlobalScopes(\App\Models\Scopes\BranchScope::class)
+                                    ->where('branch_id', $request->branch_id)
+                                    ->where('campaign_id', $campaign->id)
+                                    ->where('whatsapp_number', $normalizedWhatsApp)
+                                    ->whereNotNull('campaign_redeem_free_item_id')
+                                    ->whereIn('status', [OrderStatus::DELIVERED])
+                                    ->count();
+
+                                $available = max(0, $earnedRewards - $redeemedCount);
+
+                                if ($available > 0 && $campaign->free_item_id) {
+                                    $orderData['campaign_redeem_free_item_id'] = (int) $campaign->free_item_id;
+                                }
+                            }
+                        }
+                    }
+                }
                 
                 // Only include pickup_option if column exists (cached check)
                 static $pickupColumnExists = null;

@@ -11,6 +11,7 @@ use App\Support\WhatsAppNormalizer;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use App\Enums\OrderStatus;
 
 class CampaignController extends Controller
 {
@@ -190,8 +191,10 @@ class CampaignController extends Controller
                 return response()->json([
                     'status' => true,
                     'data'   => [
+                        'campaign_id'   => $campaign->id,
                         'campaign_name' => $campaign->name,
                         'type'          => 'percentage',
+                        'discount_value' => (float) $campaign->discount_value,
                         'message'       => 'Please approach the branch for your discount.',
                     ],
                 ]);
@@ -205,7 +208,7 @@ class CampaignController extends Controller
                     $query->where('whatsapp_number', 'LIKE', '%' . substr($whatsapp, -9))
                         ->orWhere('whatsapp_number', $whatsapp);
                 })
-                ->whereIn('status', [5, 10, 15]); // Completed statuses
+                ->whereIn('status', [OrderStatus::DELIVERED]); // Completed statuses
 
             if ($campaign->start_date) {
                 $ordersQuery->where('created_at', '>=', $campaign->start_date);
@@ -217,7 +220,21 @@ class CampaignController extends Controller
             $orderCount = $ordersQuery->count();
             $requiredPurchases = $campaign->required_purchases ?? 8;
             $progress = min($orderCount, $requiredPurchases);
-            $rewardsAvailable = floor($orderCount / $requiredPurchases);
+
+            // Rewards already redeemed (stored on orders)
+            $redeemedCount = Order::withoutGlobalScopes()
+                ->where('branch_id', $request->branch_id)
+                ->where('campaign_id', $campaign->id)
+                ->whereNotNull('campaign_redeem_free_item_id')
+                ->where(function ($query) use ($whatsapp) {
+                    $query->where('whatsapp_number', 'LIKE', '%' . substr($whatsapp, -9))
+                        ->orWhere('whatsapp_number', $whatsapp);
+                })
+                ->whereIn('status', [OrderStatus::DELIVERED])
+                ->count();
+
+            $earnedRewards = (int) floor($orderCount / $requiredPurchases);
+            $rewardsAvailable = max(0, $earnedRewards - $redeemedCount);
 
             return response()->json([
                 'status' => true,
@@ -229,6 +246,11 @@ class CampaignController extends Controller
                     'current_progress'   => $progress,
                     'total_orders'       => $orderCount,
                     'rewards_available'  => $rewardsAvailable,
+                    'redeemed_count'     => $redeemedCount,
+                    'free_item'          => $campaign->freeItem ? [
+                        'id'   => $campaign->freeItem->id,
+                        'name' => $campaign->freeItem->name,
+                    ] : null,
                     'is_complete'        => $progress >= $requiredPurchases,
                 ],
             ]);
