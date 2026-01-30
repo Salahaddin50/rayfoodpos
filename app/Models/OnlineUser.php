@@ -14,6 +14,7 @@ class OnlineUser extends Model
         'branch_id',
         'whatsapp',
         'location',
+        'campaign_id',
         'last_order_id',
         'last_order_at',
     ];
@@ -21,9 +22,15 @@ class OnlineUser extends Model
     protected $casts = [
         'id'            => 'integer',
         'branch_id'     => 'integer',
+        'campaign_id'   => 'integer',
         'last_order_id' => 'integer',
         'last_order_at' => 'datetime',
     ];
+
+    public function campaign(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Campaign::class, 'campaign_id', 'id');
+    }
 
     protected static function boot(): void
     {

@@ -44,6 +44,7 @@
                         <tr class="db-table-head-tr">
                             <th class="db-table-head-th">{{ $t("label.whatsapp_number") }}</th>
                             <th class="db-table-head-th">{{ $t("label.location") }}</th>
+                            <th class="db-table-head-th">{{ $t("menu.campaigns") }}</th>
                             <th class="db-table-head-th">{{ $t("label.last_order") }}</th>
                             <th class="db-table-head-th hidden-print" v-if="permissionChecker('online_users_edit') || permissionChecker('online_users_delete')">
                                 {{ $t("label.action") }}
@@ -59,6 +60,10 @@
                                 {{ row.location }}
                             </td>
                             <td class="db-table-body-td">
+                                <span v-if="row.campaign_name" class="text-primary font-medium">{{ row.campaign_name }}</span>
+                                <span v-else class="text-gray-400">-</span>
+                            </td>
+                            <td class="db-table-body-td">
                                 {{ row.last_order_at }}
                             </td>
                             <td class="db-table-body-td hidden-print" v-if="permissionChecker('online_users_edit') || permissionChecker('online_users_delete')">
@@ -71,7 +76,7 @@
                     </tbody>
                     <tbody class="db-table-body" v-else>
                         <tr class="db-table-body-tr">
-                            <td class="db-table-body-td text-center" colspan="3">
+                            <td class="db-table-body-td text-center" colspan="5">
                                 <div class="p-4">
                                     {{ $t("message.no_data_available") }}
                                 </div>
@@ -104,6 +109,19 @@
                         <div class="col-12">
                             <label class="db-field-title after:hidden">{{ $t("label.location") }}</label>
                             <input v-model="form.location" type="text" class="db-field-control" />
+                        </div>
+                        <div class="col-12">
+                            <label class="db-field-title after:hidden">{{ $t("menu.campaigns") }}</label>
+                            <vue-select class="db-field-control f-b-custom-select" 
+                                v-model="form.campaign_id" 
+                                :options="campaigns" 
+                                label-by="name" 
+                                value-by="id" 
+                                :closeOnSelect="true" 
+                                :searchable="true" 
+                                :clearOnClose="true" 
+                                placeholder="Select Campaign" 
+                                search-placeholder="Search..." />
                         </div>
                         <div class="col-12">
                             <div class="flex flex-wrap gap-3 mt-4">
@@ -140,6 +158,19 @@
                         <div class="col-12">
                             <label class="db-field-title after:hidden">{{ $t("label.location") }}</label>
                             <input v-model="editForm.location" type="text" class="db-field-control" />
+                        </div>
+                        <div class="col-12">
+                            <label class="db-field-title after:hidden">{{ $t("menu.campaigns") }}</label>
+                            <vue-select class="db-field-control f-b-custom-select" 
+                                v-model="editForm.campaign_id" 
+                                :options="campaigns" 
+                                label-by="name" 
+                                value-by="id" 
+                                :closeOnSelect="true" 
+                                :searchable="true" 
+                                :clearOnClose="true" 
+                                placeholder="Select Campaign" 
+                                search-placeholder="Search..." />
                         </div>
                         <div class="col-12">
                             <div class="flex flex-wrap gap-3 mt-4">
@@ -188,9 +219,10 @@ export default {
         return {
             loading: { isActive: false },
             rows: [],
-            form: { whatsapp: "", location: "" },
+            campaigns: [],
+            form: { whatsapp: "", location: "", campaign_id: null },
             editId: null,
-            editForm: { whatsapp: "", location: "" },
+            editForm: { whatsapp: "", location: "", campaign_id: null },
         };
     },
     computed: {
@@ -213,10 +245,18 @@ export default {
     },
     mounted() {
         this.list();
+        this.loadCampaigns();
     },
     methods: {
         permissionChecker(e) {
             return appService.permissionChecker(e);
+        },
+        loadCampaigns() {
+            this.$store.dispatch("campaign/lists", { paginate: 0, status: 5 }).then((res) => {
+                this.campaigns = res.data.data || [];
+            }).catch(() => {
+                this.campaigns = [];
+            });
         },
         list() {
             this.loading.isActive = true;
@@ -264,7 +304,7 @@ export default {
             });
         },
         openCreate() {
-            this.form = { whatsapp: "", location: "" };
+            this.form = { whatsapp: "", location: "", campaign_id: null };
             appService.modalShow(this.$refs.createModal);
         },
         closeCreate() {
@@ -283,7 +323,7 @@ export default {
         },
         openEdit(row) {
             this.editId = row.id;
-            this.editForm = { whatsapp: row.whatsapp || "", location: row.location || "" };
+            this.editForm = { whatsapp: row.whatsapp || "", location: row.location || "", campaign_id: row.campaign_id || null };
             appService.modalShow(this.$refs.editModal);
         },
         closeEdit() {

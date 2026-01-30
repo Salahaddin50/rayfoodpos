@@ -45,7 +45,7 @@ class OnlineUserController extends Controller implements HasMiddleware
             $this->onlineUserService->ensureSyncedForCurrentBranch();
 
             return OnlineUserResource::collection(
-                OnlineUser::query()
+                OnlineUser::with('campaign')
                     ->orderByDesc('last_order_at')
                     ->get()
             );
@@ -100,11 +100,12 @@ class OnlineUserController extends Controller implements HasMiddleware
             }
 
             $onlineUser = OnlineUser::create([
-                'branch_id' => $branchId,
-                'whatsapp'  => $whatsapp,
-                'location'  => $data['location'] ?? null,
+                'branch_id'   => $branchId,
+                'whatsapp'    => $whatsapp,
+                'location'    => $data['location'] ?? null,
+                'campaign_id' => $data['campaign_id'] ?? null,
             ]);
-            return new OnlineUserResource($onlineUser);
+            return new OnlineUserResource($onlineUser->load('campaign'));
         } catch (\Throwable $exception) {
             return response(['status' => false, 'message' => $exception->getMessage()], 422);
         }
@@ -130,10 +131,11 @@ class OnlineUserController extends Controller implements HasMiddleware
             }
 
             $onlineUser->update([
-                'whatsapp' => $whatsapp,
-                'location' => $data['location'] ?? null,
+                'whatsapp'    => $whatsapp,
+                'location'    => $data['location'] ?? null,
+                'campaign_id' => $data['campaign_id'] ?? null,
             ]);
-            return new OnlineUserResource($onlineUser->fresh());
+            return new OnlineUserResource($onlineUser->fresh()->load('campaign'));
         } catch (\Throwable $exception) {
             return response(['status' => false, 'message' => $exception->getMessage()], 422);
         }

@@ -14,8 +14,9 @@ class OnlineUserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'whatsapp' => ['required', 'string', 'max:32'],
-            'location' => ['nullable', 'string', 'max:5000'],
+            'whatsapp'    => ['required', 'string', 'max:32'],
+            'location'    => ['nullable', 'string', 'max:5000'],
+            'campaign_id' => ['nullable', 'integer', 'exists:campaigns,id'],
         ];
     }
 }
