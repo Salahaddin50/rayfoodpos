@@ -158,8 +158,8 @@
                     {{ $t('button.join_campaign') }}
                 </h3>
 
-                <!-- Phone Number Form (show when no progress loaded) -->
-                <div v-if="!campaignProgress">
+                <!-- Phone Number Form -->
+                <div>
                     <form @submit.prevent="checkUserCampaign" class="space-y-4 mb-6">
                         <div class="space-y-2">
                             <label class="text-sm font-medium text-gray-700">{{ $t('label.whatsapp_number') }}</label>
@@ -184,50 +184,8 @@
                     </form>
                 </div>
 
-                <!-- Progress View (show when progress is loaded) -->
-                <div v-if="campaignProgress" class="mb-6">
-                    <div class="text-center mb-4">
-                        <h4 class="text-base font-semibold text-gray-900">{{ campaignProgress.campaign_name }}</h4>
-                        <p v-if="campaignProgress.type === 'percentage'" class="text-sm text-gray-600 mt-2">
-                            {{ $t('message.approach_branch_for_discount') }}
-                        </p>
-                    </div>
-
-                    <!-- Progress Circles (for item type) -->
-                    <div v-if="campaignProgress.type === 'item'" class="mt-6">
-                        <div class="flex justify-center flex-wrap gap-2 mb-4">
-                            <div 
-                                v-for="n in campaignProgress.required_purchases" 
-                                :key="n"
-                                class="w-10 h-10 rounded-full border-2 flex items-center justify-center text-sm font-medium transition-all"
-                                :class="n <= campaignProgress.current_progress ? 'bg-primary border-primary text-white' : 'border-gray-300 text-gray-400'"
-                            >
-                                <span v-if="n <= campaignProgress.current_progress">✓</span>
-                                <span v-else>{{ n }}</span>
-                            </div>
-                        </div>
-                        <p class="text-center text-sm text-gray-600">
-                            {{ campaignProgress.current_progress }} / {{ campaignProgress.required_purchases }} {{ $t('label.orders') }}
-                        </p>
-                        <p v-if="campaignProgress.is_complete" class="text-center text-sm text-green-600 font-medium mt-2">
-                            🎉 {{ $t('message.campaign_reward_ready') }}
-                        </p>
-                        <p v-if="campaignProgress.rewards_available > 0" class="text-center text-sm text-green-600 mt-1">
-                            {{ $t('label.rewards_available') }}: {{ campaignProgress.rewards_available }}
-                        </p>
-                    </div>
-
-                    <button 
-                        type="button" 
-                        @click="campaignProgress = null" 
-                        class="w-full mt-4 rounded-3xl text-center font-medium leading-6 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                        {{ $t('button.back') }}
-                    </button>
-                </div>
-
                 <!-- Campaigns List -->
-                <div v-if="!campaignProgress">
+                <div>
                     <h4 class="text-sm font-medium text-gray-700 mb-3">{{ $t('label.available_campaigns') }}</h4>
                     <div v-if="campaigns.length > 0" class="space-y-2 max-h-[300px] overflow-y-auto">
                         <div 
@@ -292,6 +250,64 @@
             </div>
         </div>
     </div>
+
+    <!-- Campaign Progress Modal (separate overlay) -->
+    <div v-if="showProgressModal && campaignProgress" class="fixed inset-0 z-[9999] flex items-center justify-center">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/50" @click="closeProgressModal"></div>
+        <!-- Modal Content -->
+        <div class="relative bg-white rounded-lg shadow-xl max-w-[350px] w-full mx-4 p-6">
+            <button 
+                type="button"
+                @click="closeProgressModal"
+                class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-xl"
+            >
+                ✕
+            </button>
+            
+            <div class="text-center mb-4">
+                <h4 class="text-lg font-semibold text-gray-900">{{ $t('label.campaign_progress') }}</h4>
+                <p class="text-sm text-gray-600 mt-1">{{ campaignProgress.campaign_name }}</p>
+            </div>
+
+            <!-- For percentage campaigns -->
+            <p v-if="campaignProgress.type === 'percentage'" class="text-sm text-gray-600 text-center">
+                {{ $t('message.approach_branch_for_discount') }}
+            </p>
+
+            <!-- Progress Circles (for item type) -->
+            <div v-if="campaignProgress.type === 'item'" class="mt-4">
+                <div class="flex justify-center flex-wrap gap-2 mb-4">
+                    <div 
+                        v-for="n in campaignProgress.required_purchases" 
+                        :key="n"
+                        class="w-10 h-10 rounded-full border-2 flex items-center justify-center text-sm font-medium transition-all"
+                        :class="n <= campaignProgress.current_progress ? 'bg-primary border-primary text-white' : 'border-gray-300 text-gray-400'"
+                    >
+                        <span v-if="n <= campaignProgress.current_progress">✓</span>
+                        <span v-else>{{ n }}</span>
+                    </div>
+                </div>
+                <p class="text-center text-sm text-gray-600">
+                    {{ campaignProgress.current_progress }} / {{ campaignProgress.required_purchases }} {{ $t('label.orders') }}
+                </p>
+                <p v-if="campaignProgress.is_complete" class="text-center text-sm text-green-600 font-medium mt-2">
+                    🎉 {{ $t('message.campaign_reward_ready') }}
+                </p>
+                <p v-if="campaignProgress.rewards_available > 0" class="text-center text-sm text-green-600 mt-1">
+                    {{ $t('label.rewards_available') }}: {{ campaignProgress.rewards_available }}
+                </p>
+            </div>
+
+            <button 
+                type="button" 
+                @click="closeProgressModal" 
+                class="w-full mt-6 rounded-3xl text-center font-medium leading-6 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+                {{ $t('button.close') }}
+            </button>
+        </div>
+    </div>
 </template>
 
 
@@ -330,6 +346,7 @@ export default {
                 isActive: false,
             },
             campaignProgress: null,
+            showProgressModal: false, // Controls progress modal visibility
             userCampaignId: null, // Campaign the user has joined
         }
     },
@@ -560,6 +577,7 @@ export default {
                 document.body.style.overflowY = "";
             }
             this.campaignProgress = null;
+            this.showProgressModal = false;
         },
         loadCampaigns: function () {
             this.campaignLoading.isActive = true;
@@ -638,7 +656,32 @@ export default {
             });
         },
         viewCampaignStatus: function (campaign) {
-            this.loadCampaignProgress();
+            const phoneNumber = this.campaignForm.prefix + this.campaignForm.number;
+            let normalizedNumber = phoneNumber;
+            if (normalizedNumber.startsWith('+9940')) {
+                normalizedNumber = '+994' + normalizedNumber.substring(5);
+            }
+
+            const branchId = this.onlineBranchId || (this.branches && this.branches.length > 0 ? this.branches[0].id : null);
+            if (!branchId) return;
+
+            this.campaignLoading.isActive = true;
+            axios.post('frontend/campaign/progress', {
+                phone: normalizedNumber,
+                branch_id: branchId
+            }).then((response) => {
+                if (response.data.status && response.data.data) {
+                    this.campaignProgress = response.data.data;
+                    this.showProgressModal = true;
+                }
+                this.campaignLoading.isActive = false;
+            }).catch((error) => {
+                console.error('Error loading campaign progress:', error);
+                this.campaignLoading.isActive = false;
+            });
+        },
+        closeProgressModal: function () {
+            this.showProgressModal = false;
         },
         joinCampaign: function (campaign) {
             const phoneNumber = this.campaignForm.prefix + this.campaignForm.number;
