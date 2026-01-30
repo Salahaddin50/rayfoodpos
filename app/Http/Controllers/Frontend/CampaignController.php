@@ -31,13 +31,19 @@ class CampaignController extends Controller
                 ->orderBy('name')
                 ->get()
                 ->map(function ($campaign) {
+                    // Format discount value nicely (remove trailing zeros)
+                    $discountValue = $campaign->discount_value;
+                    if ($discountValue == floor($discountValue)) {
+                        $discountValue = (int) $discountValue;
+                    }
+                    
                     return [
                         'id'                 => $campaign->id,
                         'name'               => $campaign->name,
                         'description'        => $campaign->description,
                         'type'               => $campaign->type,
                         'type_name'          => $campaign->type == CampaignType::PERCENTAGE ? 'percentage' : 'item',
-                        'discount_value'     => $campaign->discount_value,
+                        'discount_value'     => $discountValue,
                         'required_purchases' => $campaign->required_purchases,
                         'start_date'         => $campaign->start_date,
                         'end_date'           => $campaign->end_date,

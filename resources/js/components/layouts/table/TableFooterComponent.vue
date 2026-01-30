@@ -150,7 +150,7 @@
 
     <!-- Join Campaign Modal -->
     <div ref="campaignModal" id="campaign-modal" class="modal ff-modal">
-        <div class="modal-dialog max-w-[500px] relative">
+        <div class="modal-dialog max-w-[400px] relative">
             <button class="modal-close fa-regular fa-circle-xmark absolute top-5 right-5"
                 @click.prevent="closeCampaignModal"></button>
             <div class="modal-body">
@@ -229,38 +229,37 @@
                 <!-- Campaigns List -->
                 <div v-if="!campaignProgress">
                     <h4 class="text-sm font-medium text-gray-700 mb-3">{{ $t('label.available_campaigns') }}</h4>
-                    <div v-if="campaigns.length > 0" class="space-y-3 max-h-[300px] overflow-y-auto">
+                    <div v-if="campaigns.length > 0" class="space-y-2 max-h-[300px] overflow-y-auto">
                         <div 
                             v-for="campaign in campaigns" 
                             :key="campaign.id"
-                            class="p-4 rounded-lg border border-gray-200 hover:border-primary transition-colors"
+                            class="p-3 rounded-lg border border-gray-200 hover:border-primary transition-colors"
                         >
-                            <div class="flex items-start justify-between">
-                                <div class="flex-1">
-                                    <h5 class="text-sm font-semibold text-gray-900">{{ campaign.name }}</h5>
-                                    <p v-if="campaign.description" class="text-xs text-gray-500 mt-1">{{ campaign.description }}</p>
+                            <div class="flex items-center justify-between gap-2">
+                                <div class="flex-1 min-w-0">
+                                    <h5 class="text-sm font-semibold text-gray-900 truncate">{{ campaign.name }}</h5>
+                                    <p v-if="campaign.description" class="text-xs text-gray-500 truncate">{{ campaign.description }}</p>
                                 </div>
                                 <span 
-                                    class="text-xs px-2 py-1 rounded-full ml-2"
+                                    class="text-xs px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0"
                                     :class="campaign.type_name === 'percentage' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'"
                                 >
                                     {{ campaign.type_name === 'percentage' ? campaign.discount_value + '%' : $t('label.buy_x_get_free', { count: campaign.required_purchases }) }}
                                 </span>
                             </div>
-                            <div class="mt-3">
-                                <button 
+                            <div class="mt-2">
+                                <span 
                                     v-if="campaign.type_name === 'percentage'"
-                                    type="button"
                                     class="text-xs text-gray-500 italic"
                                 >
                                     {{ $t('message.approach_branch') }}
-                                </button>
+                                </span>
                                 <button 
                                     v-else
                                     type="button"
                                     @click="joinCampaign(campaign)"
                                     :disabled="campaignLoading.isActive || !campaignForm.number"
-                                    class="text-xs px-3 py-1.5 rounded-full bg-primary text-white hover:bg-primary-dark transition-colors disabled:opacity-50"
+                                    class="text-xs px-3 py-1 rounded-full bg-primary text-white hover:bg-primary-dark transition-colors disabled:opacity-50"
                                 >
                                     {{ $t('button.join') }}
                                 </button>
