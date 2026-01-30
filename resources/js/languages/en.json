@@ -886,6 +886,7 @@
         "driver_added": "Driver Added Successfully.",
         "no_orders_found": "No orders found for this WhatsApp number in the last 2 hours.",
         "no_campaigns_available": "No campaigns available at the moment.",
+        "enter_phone_to_join": "Enter phone & search to join",
         "approach_branch": "Please approach the branch to join",
         "approach_branch_for_discount": "Please approach the branch for your discount.",
         "campaign_reward_ready": "Congratulations! Your reward is ready!",

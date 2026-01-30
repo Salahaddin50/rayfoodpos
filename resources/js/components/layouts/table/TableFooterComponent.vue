@@ -213,26 +213,33 @@
                                     {{ $t('message.approach_branch') }}
                                 </span>
                                 <template v-else>
-                                    <!-- Joined badge -->
+                                    <!-- Show message to search first if not searched yet -->
                                     <span 
-                                        v-if="userCampaignId === campaign.id"
+                                        v-if="!hasSearchedCampaign"
+                                        class="text-xs text-gray-400 italic"
+                                    >
+                                        {{ $t('message.enter_phone_to_join') }}
+                                    </span>
+                                    <!-- Joined badge (show after search if joined) -->
+                                    <span 
+                                        v-else-if="userCampaignId === campaign.id"
                                         class="text-xs px-3 py-1 rounded-full bg-green-100 text-green-700 font-medium"
                                     >
                                         ✓ {{ $t('label.joined') }}
                                     </span>
-                                    <!-- Join button -->
+                                    <!-- Join button (show after search if not joined) -->
                                     <button 
                                         v-else
                                         type="button"
                                         @click="joinCampaign(campaign)"
-                                        :disabled="campaignLoading.isActive || !campaignForm.number"
+                                        :disabled="campaignLoading.isActive"
                                         class="text-xs px-3 py-1 rounded-full bg-primary text-white hover:bg-primary-dark transition-colors disabled:opacity-50"
                                     >
                                         {{ $t('button.join') }}
                                     </button>
                                     <!-- Status button (show when joined) -->
                                     <button 
-                                        v-if="userCampaignId === campaign.id"
+                                        v-if="hasSearchedCampaign && userCampaignId === campaign.id"
                                         type="button"
                                         @click="viewCampaignStatus(campaign)"
                                         class="text-xs px-3 py-1 rounded-full border border-primary text-primary hover:bg-primary hover:text-white transition-colors"
@@ -348,6 +355,7 @@ export default {
             campaignProgress: null,
             showProgressModal: false, // Controls progress modal visibility
             userCampaignId: null, // Campaign the user has joined
+            hasSearchedCampaign: false, // Whether user has clicked Search
         }
     },
     computed: {
@@ -562,6 +570,9 @@ export default {
             this.campaignForm.prefix = '+994';
             this.campaignForm.number = '';
             this.campaignProgress = null;
+            this.showProgressModal = false;
+            this.userCampaignId = null;
+            this.hasSearchedCampaign = false;
             this.loadCampaigns();
             
             const modalTarget = this.$refs.campaignModal;
@@ -642,6 +653,7 @@ export default {
             const branchId = this.onlineBranchId || (this.branches && this.branches.length > 0 ? this.branches[0].id : null);
             if (!branchId) return;
 
+            this.campaignLoading.isActive = true;
             axios.post('frontend/campaign/progress', {
                 phone: normalizedNumber,
                 branch_id: branchId
@@ -651,8 +663,12 @@ export default {
                 } else {
                     this.userCampaignId = null;
                 }
+                this.hasSearchedCampaign = true;
+                this.campaignLoading.isActive = false;
             }).catch(() => {
                 this.userCampaignId = null;
+                this.hasSearchedCampaign = true;
+                this.campaignLoading.isActive = false;
             });
         },
         viewCampaignStatus: function (campaign) {
