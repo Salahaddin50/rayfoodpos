@@ -140,6 +140,8 @@ class CampaignController extends Controller
             ]);
 
             $whatsapp = WhatsAppNormalizer::normalize($request->phone);
+            \Log::info('Normalized WhatsApp', ['original' => $request->phone, 'normalized' => $whatsapp]);
+            
             if ($whatsapp === '') {
                 return response()->json([
                     'status'  => false,
@@ -154,6 +156,13 @@ class CampaignController extends Controller
                 ->whereNotNull('campaign_id')
                 ->with('campaign')
                 ->first();
+
+            \Log::info('OnlineUser lookup', [
+                'branch_id' => $request->branch_id,
+                'whatsapp' => $whatsapp,
+                'found' => $onlineUser ? true : false,
+                'campaign_id' => $onlineUser?->campaign_id,
+            ]);
 
             if (!$onlineUser || !$onlineUser->campaign) {
                 return response()->json([
