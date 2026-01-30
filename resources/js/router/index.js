@@ -30,6 +30,7 @@ import chefRoutes from "./modules/chefRoutes";
 import onlineOrderRoutes from "./modules/onlineOrderRoutes";
 import onlineUserRoutes from "./modules/onlineUserRoutes";
 import driverRoutes from "./modules/driverRoutes";
+import campaignRoutes from "./modules/campaignRoutes";
 
 
 const baseRoutes = [
@@ -89,7 +90,8 @@ export const routes = baseRoutes.concat(
     chefRoutes,
     onlineOrderRoutes,
     onlineUserRoutes,
-    driverRoutes
+    driverRoutes,
+    campaignRoutes
 );
 
 const permission = store.getters.authPermission;

@@ -76,6 +76,7 @@ import { token } from './modules/token';
 import { takeawayType } from './modules/takeawayType';
 import { onlineUser } from './modules/onlineUser';
 import { driver } from './modules/driver';
+import { campaign } from './modules/campaign';
 
 
 export default new createStore({
@@ -157,7 +158,8 @@ export default new createStore({
         token,
         takeawayType,
         onlineUser,
-        driver
+        driver,
+        campaign
     },
     plugins: [
         createPersistedState({
