@@ -628,9 +628,11 @@ export default {
                 normalizedNumber = '+994' + normalizedNumber.substring(5);
             }
 
-            const branchId = this.onlineBranchId 
-                || this.$route.params.branchId 
-                || (this.branches && this.branches.length > 0 ? this.branches[0].id : null);
+            const branchId = Number(
+                this.onlineBranchId
+                || this.$route.params.branchId
+                || (this.branches && this.branches.length > 0 ? this.branches[0].id : null)
+            );
             if (!branchId) {
                 console.error('No branch selected');
                 return;
@@ -645,7 +647,7 @@ export default {
                     this.campaignProgress = response.data.data;
                     // Set the user's joined campaign ID
                     if (response.data.data.campaign_id) {
-                        this.userCampaignId = response.data.data.campaign_id;
+                        this.userCampaignId = Number(response.data.data.campaign_id);
                     }
                 } else {
                     this.campaignProgress = null;
@@ -669,9 +671,11 @@ export default {
             }
 
             // Get branch ID from multiple sources
-            const branchId = this.onlineBranchId 
-                || this.$route.params.branchId 
-                || (this.branches && this.branches.length > 0 ? this.branches[0].id : null);
+            const branchId = Number(
+                this.onlineBranchId
+                || this.$route.params.branchId
+                || (this.branches && this.branches.length > 0 ? this.branches[0].id : null)
+            );
             
             if (!branchId) {
                 console.error('No branch ID available');
@@ -684,7 +688,7 @@ export default {
                 branch_id: branchId
             }).then((response) => {
                 if (response.data.status && response.data.data && response.data.data.campaign_id) {
-                    this.userCampaignId = response.data.data.campaign_id;
+                    this.userCampaignId = Number(response.data.data.campaign_id);
                 } else {
                     this.userCampaignId = null;
                 }
@@ -703,9 +707,11 @@ export default {
                 normalizedNumber = '+994' + normalizedNumber.substring(5);
             }
 
-            const branchId = this.onlineBranchId 
-                || this.$route.params.branchId 
-                || (this.branches && this.branches.length > 0 ? this.branches[0].id : null);
+            const branchId = Number(
+                this.onlineBranchId
+                || this.$route.params.branchId
+                || (this.branches && this.branches.length > 0 ? this.branches[0].id : null)
+            );
             if (!branchId) return;
 
             this.campaignLoading.isActive = true;
@@ -738,9 +744,11 @@ export default {
                 return;
             }
 
-            const branchId = this.onlineBranchId 
-                || this.$route.params.branchId 
-                || (this.branches && this.branches.length > 0 ? this.branches[0].id : null);
+            const branchId = Number(
+                this.onlineBranchId
+                || this.$route.params.branchId
+                || (this.branches && this.branches.length > 0 ? this.branches[0].id : null)
+            );
             if (!branchId) {
                 console.error('No branch selected');
                 return;
@@ -754,7 +762,7 @@ export default {
             }).then((response) => {
                 if (response.data.status) {
                     // Set joined campaign ID immediately
-                    this.userCampaignId = campaign.id;
+                    this.userCampaignId = Number(campaign.id);
                     this.campaignLoading.isActive = false;
                 } else {
                     alert(response.data.message || 'Failed to join campaign');
