@@ -675,7 +675,8 @@
         "available_campaigns": "Mövcud Kampaniyalar",
         "buy_x_get_free": "{count} al 1 pulsuz qazan",
         "rewards_available": "Mövcud Mükafatlar",
-        "joined": "Qoşulub"
+        "joined": "Qoşulub",
+        "ongoing": "Davam edir"
     },
     "button": {
         "add": "Əlavə",

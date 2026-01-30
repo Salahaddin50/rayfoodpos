@@ -686,7 +686,8 @@
         "available_campaigns": "Available Campaigns",
         "buy_x_get_free": "Buy {count} Get 1 Free",
         "rewards_available": "Rewards Available",
-        "joined": "Joined"
+        "joined": "Joined",
+        "ongoing": "Ongoing"
     },
     "button": {
         "add": "Add",

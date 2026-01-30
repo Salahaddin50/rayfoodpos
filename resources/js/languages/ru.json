@@ -669,7 +669,8 @@
         "available_campaigns": "Доступные кампании",
         "buy_x_get_free": "Купи {count} получи 1 бесплатно",
         "rewards_available": "Доступные награды",
-        "joined": "Присоединился"
+        "joined": "Присоединился",
+        "ongoing": "Продолжается"
     },
     "button": {
         "add": "Добавить",

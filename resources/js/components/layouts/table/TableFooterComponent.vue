@@ -197,6 +197,13 @@
                                 <div class="flex-1 min-w-0">
                                     <h5 class="text-sm font-semibold text-gray-900 truncate">{{ campaign.name }}</h5>
                                     <p v-if="campaign.description" class="text-xs text-gray-500 truncate">{{ campaign.description }}</p>
+                                    <!-- Campaign dates -->
+                                    <p class="text-xs text-gray-400 mt-1">
+                                        <span v-if="campaign.start_date">{{ formatCampaignDate(campaign.start_date) }}</span>
+                                        <span v-if="campaign.start_date && campaign.end_date"> - </span>
+                                        <span v-if="campaign.end_date">{{ formatCampaignDate(campaign.end_date) }}</span>
+                                        <span v-if="!campaign.start_date && !campaign.end_date">{{ $t('label.ongoing') }}</span>
+                                    </p>
                                 </div>
                                 <span 
                                     class="text-xs px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0"
@@ -464,6 +471,15 @@ export default {
                     pageSlug: pageSlug 
                 } 
             };
+        },
+        formatCampaignDate: function (dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString(this.$i18n.locale || 'en', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            });
         },
         trackOrder: function () {
             // Reset form and results
