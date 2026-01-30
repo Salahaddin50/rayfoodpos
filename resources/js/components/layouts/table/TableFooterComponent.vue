@@ -160,7 +160,7 @@
 
                 <!-- Phone Number Form (show when no progress loaded) -->
                 <div v-if="!campaignProgress">
-                    <form @submit.prevent="loadCampaignProgress" class="space-y-4 mb-6">
+                    <form @submit.prevent="checkUserCampaign" class="space-y-4 mb-6">
                         <div class="space-y-2">
                             <label class="text-sm font-medium text-gray-700">{{ $t('label.whatsapp_number') }}</label>
                             <div class="flex gap-2">
@@ -247,22 +247,41 @@
                                     {{ campaign.type_name === 'percentage' ? campaign.discount_value + '%' : $t('label.buy_x_get_free', { count: campaign.required_purchases }) }}
                                 </span>
                             </div>
-                            <div class="mt-2">
+                            <div class="mt-2 flex items-center gap-2">
                                 <span 
                                     v-if="campaign.type_name === 'percentage'"
                                     class="text-xs text-gray-500 italic"
                                 >
                                     {{ $t('message.approach_branch') }}
                                 </span>
-                                <button 
-                                    v-else
-                                    type="button"
-                                    @click="joinCampaign(campaign)"
-                                    :disabled="campaignLoading.isActive || !campaignForm.number"
-                                    class="text-xs px-3 py-1 rounded-full bg-primary text-white hover:bg-primary-dark transition-colors disabled:opacity-50"
-                                >
-                                    {{ $t('button.join') }}
-                                </button>
+                                <template v-else>
+                                    <!-- Joined badge -->
+                                    <span 
+                                        v-if="userCampaignId === campaign.id"
+                                        class="text-xs px-3 py-1 rounded-full bg-green-100 text-green-700 font-medium"
+                                    >
+                                        ✓ {{ $t('label.joined') }}
+                                    </span>
+                                    <!-- Join button -->
+                                    <button 
+                                        v-else
+                                        type="button"
+                                        @click="joinCampaign(campaign)"
+                                        :disabled="campaignLoading.isActive || !campaignForm.number"
+                                        class="text-xs px-3 py-1 rounded-full bg-primary text-white hover:bg-primary-dark transition-colors disabled:opacity-50"
+                                    >
+                                        {{ $t('button.join') }}
+                                    </button>
+                                    <!-- Status button (show when joined) -->
+                                    <button 
+                                        v-if="userCampaignId === campaign.id"
+                                        type="button"
+                                        @click="viewCampaignStatus(campaign)"
+                                        class="text-xs px-3 py-1 rounded-full border border-primary text-primary hover:bg-primary hover:text-white transition-colors"
+                                    >
+                                        {{ $t('button.status') }}
+                                    </button>
+                                </template>
                             </div>
                         </div>
                     </div>
@@ -311,6 +330,7 @@ export default {
                 isActive: false,
             },
             campaignProgress: null,
+            userCampaignId: null, // Campaign the user has joined
         }
     },
     computed: {
@@ -576,15 +596,49 @@ export default {
             }).then((response) => {
                 if (response.data.status && response.data.data) {
                     this.campaignProgress = response.data.data;
+                    // Set the user's joined campaign ID
+                    if (response.data.data.campaign_id) {
+                        this.userCampaignId = response.data.data.campaign_id;
+                    }
                 } else {
                     this.campaignProgress = null;
+                    this.userCampaignId = null;
                 }
                 this.campaignLoading.isActive = false;
             }).catch((error) => {
                 console.error('Error loading campaign progress:', error);
                 this.campaignProgress = null;
+                this.userCampaignId = null;
                 this.campaignLoading.isActive = false;
             });
+        },
+        checkUserCampaign: function () {
+            const phoneNumber = this.campaignForm.prefix + this.campaignForm.number;
+            if (!phoneNumber || phoneNumber.length < 10) return;
+
+            let normalizedNumber = phoneNumber;
+            if (normalizedNumber.startsWith('+9940')) {
+                normalizedNumber = '+994' + normalizedNumber.substring(5);
+            }
+
+            const branchId = this.onlineBranchId || (this.branches && this.branches.length > 0 ? this.branches[0].id : null);
+            if (!branchId) return;
+
+            axios.post('frontend/campaign/progress', {
+                phone: normalizedNumber,
+                branch_id: branchId
+            }).then((response) => {
+                if (response.data.status && response.data.data && response.data.data.campaign_id) {
+                    this.userCampaignId = response.data.data.campaign_id;
+                } else {
+                    this.userCampaignId = null;
+                }
+            }).catch(() => {
+                this.userCampaignId = null;
+            });
+        },
+        viewCampaignStatus: function (campaign) {
+            this.loadCampaignProgress();
         },
         joinCampaign: function (campaign) {
             const phoneNumber = this.campaignForm.prefix + this.campaignForm.number;
@@ -611,8 +665,9 @@ export default {
                 branch_id: branchId
             }).then((response) => {
                 if (response.data.status) {
-                    // Load progress after joining
-                    this.loadCampaignProgress();
+                    // Set joined campaign ID immediately
+                    this.userCampaignId = campaign.id;
+                    this.campaignLoading.isActive = false;
                 } else {
                     alert(response.data.message || 'Failed to join campaign');
                     this.campaignLoading.isActive = false;

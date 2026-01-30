@@ -674,7 +674,8 @@
         "easypaisa_password": "Easypaisa Şifrəsi",
         "available_campaigns": "Mövcud Kampaniyalar",
         "buy_x_get_free": "{count} al 1 pulsuz qazan",
-        "rewards_available": "Mövcud Mükafatlar"
+        "rewards_available": "Mövcud Mükafatlar",
+        "joined": "Qoşulub"
     },
     "button": {
         "add": "Əlavə",
@@ -763,6 +764,7 @@
         "track_order": "Sifarişi İzlə",
         "join_campaign": "Kampaniyaya Qoşul",
         "join": "Qoşul",
+        "status": "Status",
         "back": "Geri",
         "install_app": "Proqramı Quraşdır",
         "get_file_content": "Fayl Məzmununu Al",

@@ -668,7 +668,8 @@
         "easypaisa_password": "Пароль Easypaisa",
         "available_campaigns": "Доступные кампании",
         "buy_x_get_free": "Купи {count} получи 1 бесплатно",
-        "rewards_available": "Доступные награды"
+        "rewards_available": "Доступные награды",
+        "joined": "Присоединился"
     },
     "button": {
         "add": "Добавить",
@@ -757,6 +758,7 @@
         "track_order": "Отследить заказ",
         "join_campaign": "Присоединиться к кампании",
         "join": "Присоединиться",
+        "status": "Статус",
         "back": "Назад",
         "install_app": "Установить приложение",
         "get_file_content": "Получить содержимое файла",
