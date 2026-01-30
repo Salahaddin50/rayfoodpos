@@ -628,7 +628,9 @@ export default {
                 normalizedNumber = '+994' + normalizedNumber.substring(5);
             }
 
-            const branchId = this.onlineBranchId || (this.branches && this.branches.length > 0 ? this.branches[0].id : null);
+            const branchId = this.onlineBranchId 
+                || this.$route.params.branchId 
+                || (this.branches && this.branches.length > 0 ? this.branches[0].id : null);
             if (!branchId) {
                 console.error('No branch selected');
                 return;
@@ -666,8 +668,15 @@ export default {
                 normalizedNumber = '+994' + normalizedNumber.substring(5);
             }
 
-            const branchId = this.onlineBranchId || (this.branches && this.branches.length > 0 ? this.branches[0].id : null);
-            if (!branchId) return;
+            // Get branch ID from multiple sources
+            const branchId = this.onlineBranchId 
+                || this.$route.params.branchId 
+                || (this.branches && this.branches.length > 0 ? this.branches[0].id : null);
+            
+            if (!branchId) {
+                console.error('No branch ID available');
+                return;
+            }
 
             this.campaignLoading.isActive = true;
             axios.post('frontend/campaign/progress', {
@@ -694,7 +703,9 @@ export default {
                 normalizedNumber = '+994' + normalizedNumber.substring(5);
             }
 
-            const branchId = this.onlineBranchId || (this.branches && this.branches.length > 0 ? this.branches[0].id : null);
+            const branchId = this.onlineBranchId 
+                || this.$route.params.branchId 
+                || (this.branches && this.branches.length > 0 ? this.branches[0].id : null);
             if (!branchId) return;
 
             this.campaignLoading.isActive = true;
@@ -727,7 +738,9 @@ export default {
                 return;
             }
 
-            const branchId = this.onlineBranchId || (this.branches && this.branches.length > 0 ? this.branches[0].id : null);
+            const branchId = this.onlineBranchId 
+                || this.$route.params.branchId 
+                || (this.branches && this.branches.length > 0 ? this.branches[0].id : null);
             if (!branchId) {
                 console.error('No branch selected');
                 return;
