@@ -21,10 +21,7 @@ class CampaignController extends Controller
         try {
             $campaigns = Campaign::where('status', 5) // Active status
                 ->where(function ($query) {
-                    $query->whereNull('start_date')
-                        ->orWhere('start_date', '<=', now());
-                })
-                ->where(function ($query) {
+                    // Only filter by end_date - show upcoming campaigns too
                     $query->whereNull('end_date')
                         ->orWhere('end_date', '>=', now());
                 })
