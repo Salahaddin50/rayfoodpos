@@ -196,8 +196,9 @@ class CampaignController extends Controller
             $ordersQuery = Order::withoutGlobalScopes()
                 ->where('branch_id', $request->branch_id)
                 ->where(function ($query) use ($whatsapp) {
-                    $query->where('phone', 'LIKE', '%' . substr($whatsapp, -9))
-                        ->orWhere('phone', $whatsapp);
+                    // Orders store customer contact as whatsapp_number (not phone)
+                    $query->where('whatsapp_number', 'LIKE', '%' . substr($whatsapp, -9))
+                        ->orWhere('whatsapp_number', $whatsapp);
                 })
                 ->whereIn('status', [5, 10, 15]); // Completed statuses
 
