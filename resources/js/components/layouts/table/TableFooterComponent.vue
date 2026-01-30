@@ -610,7 +610,16 @@ export default {
             this.campaignLoading.isActive = true;
             axios.get('frontend/campaign').then((response) => {
                 if (response.data.status && response.data.data) {
-                    this.campaigns = response.data.data;
+                    // Normalize numeric fields so strict equality checks work reliably
+                    this.campaigns = (response.data.data || []).map((c) => {
+                        return {
+                            ...c,
+                            id: c?.id !== undefined && c?.id !== null ? Number(c.id) : c.id,
+                            required_purchases: c?.required_purchases !== undefined && c?.required_purchases !== null
+                                ? Number(c.required_purchases)
+                                : c.required_purchases,
+                        };
+                    });
                 } else {
                     this.campaigns = [];
                 }
