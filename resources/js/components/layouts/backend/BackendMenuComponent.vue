@@ -69,6 +69,7 @@ export default {
                 online_orders: "lab lab-total-orders",
                 drivers: "lab lab-delivery-boys",
                 online_users: "lab lab-customers",
+                campaigns: "lab lab-offers",
             };
 
             const sortByPriority = (a, b) => {
