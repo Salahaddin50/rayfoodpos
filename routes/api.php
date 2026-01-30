@@ -648,6 +648,12 @@ Route::prefix('frontend')->name('frontend.')->middleware(['installed', 'apiKey',
         Route::post('/web', [TokenStoreController::class, 'webToken']);
         Route::post('/mobile', [TokenStoreController::class, 'deviceToken']);
     });
+
+    Route::prefix('campaign')->name('campaign.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Frontend\CampaignController::class, 'index']);
+        Route::post('/join', [\App\Http\Controllers\Frontend\CampaignController::class, 'join']);
+        Route::post('/progress', [\App\Http\Controllers\Frontend\CampaignController::class, 'progress']);
+    });
 });
 
 Route::prefix('table')->name('table.')->middleware(['installed', 'apiKey', 'localization'])->group(function () {

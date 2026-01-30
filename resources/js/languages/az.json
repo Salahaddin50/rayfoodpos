@@ -671,7 +671,10 @@
         "easypaisa_mode": "Easypaisa rejimi",
         "easypaisa_status": "Easypaisa Statusu",
         "easypaisa_username": "Easypaisa İstifadəçi Adı",
-        "easypaisa_password": "Easypaisa Şifrəsi"
+        "easypaisa_password": "Easypaisa Şifrəsi",
+        "available_campaigns": "Mövcud Kampaniyalar",
+        "buy_x_get_free": "{count} al 1 pulsuz qazan",
+        "rewards_available": "Mövcud Mükafatlar"
     },
     "button": {
         "add": "Əlavə",
@@ -758,6 +761,9 @@
         "delivered_orders": "Çatdırılmış Sifarişlər",
         "go_home": "Əsas Səhifəyə Get",
         "track_order": "Sifarişi İzlə",
+        "join_campaign": "Kampaniyaya Qoşul",
+        "join": "Qoşul",
+        "back": "Geri",
         "install_app": "Proqramı Quraşdır",
         "get_file_content": "Fayl Məzmununu Al",
         "let_me_check": "Gəlin yoxlayaq",
@@ -859,6 +865,11 @@
         "pwa_install_instructions": "Bu proqramı quraşdırmaq üçün brauzerinizin menyusundan (adətən ünvan sətrində) \"Quraşdır\" və ya \"Ana Ekrana Əlavə Et\" seçimini edin.",
         "pwa_install_ios": "iOS-da bu proqramı quraşdırmaq üçün:\n1. Paylaş düyməsinə toxunun\n2. \"Ana Ekrana Əlavə Et\" seçin",
         "pwa_install_android": "Android-də bu proqramı quraşdırmaq üçün:\n1. Menyuyu toxunun (üç nöqtə)\n2. \"Proqramı Quraşdır\" və ya \"Ana Ekrana Əlavə Et\" seçin",
-        "driver_added": "Sürücü Uğurla Əlavə Edildi."
+        "driver_added": "Sürücü Uğurla Əlavə Edildi.",
+        "no_campaigns_available": "Hal-hazırda heç bir kampaniya mövcud deyil.",
+        "approach_branch": "Qoşulmaq üçün filiala yaxınlaşın",
+        "approach_branch_for_discount": "Endiriminiz üçün filiala yaxınlaşın.",
+        "campaign_reward_ready": "Təbrik edirik! Mükafatınız hazırdır!",
+        "enter_phone_first": "Zəhmət olmasa əvvəlcə telefon nömrənizi daxil edin"
     }
 }

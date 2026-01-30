@@ -41,6 +41,9 @@
                         <a href="#" @click.prevent="trackOrder" class="text-sm capitalize text-gray-600 hover:text-primary transition-colors">
                             {{ $t('button.track_order') }}
                         </a>
+                        <a href="#" @click.prevent="openCampaignModal" class="text-sm capitalize text-gray-600 hover:text-primary transition-colors">
+                            {{ $t('button.join_campaign') }}
+                        </a>
                         <a v-if="!isStandalone" href="#" @click.prevent="installApp" class="text-sm capitalize text-gray-600 hover:text-primary transition-colors">
                             {{ $t('button.install_app') }}
                         </a>
@@ -144,6 +147,133 @@
             </div>
         </div>
     </div>
+
+    <!-- Join Campaign Modal -->
+    <div ref="campaignModal" id="campaign-modal" class="modal ff-modal">
+        <div class="modal-dialog max-w-[500px] relative">
+            <button class="modal-close fa-regular fa-circle-xmark absolute top-5 right-5"
+                @click.prevent="closeCampaignModal"></button>
+            <div class="modal-body">
+                <h3 class="capitalize text-lg font-medium text-center mt-2 mb-4">
+                    {{ $t('button.join_campaign') }}
+                </h3>
+
+                <!-- Phone Number Form (show when no progress loaded) -->
+                <div v-if="!campaignProgress">
+                    <form @submit.prevent="loadCampaignProgress" class="space-y-4 mb-6">
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-gray-700">{{ $t('label.whatsapp_number') }}</label>
+                            <div class="flex gap-2">
+                                <select v-model="campaignForm.prefix" class="w-[100px] text-sm rounded-lg border-gray-300 focus:border-primary focus:ring-primary">
+                                    <option value="+994">+994</option>
+                                </select>
+                                <input 
+                                    v-model="campaignForm.number" 
+                                    type="text" 
+                                    placeholder="50xxxxxx" 
+                                    class="flex-1 text-sm rounded-lg border-gray-300 focus:border-primary focus:ring-primary"
+                                    required
+                                    maxlength="12"
+                                />
+                            </div>
+                        </div>
+                        <button type="submit" :disabled="campaignLoading.isActive" 
+                            class="w-full rounded-3xl text-center font-medium leading-6 py-3 bg-primary text-white hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            {{ campaignLoading.isActive ? $t('button.loading') : $t('button.search') }}
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Progress View (show when progress is loaded) -->
+                <div v-if="campaignProgress" class="mb-6">
+                    <div class="text-center mb-4">
+                        <h4 class="text-base font-semibold text-gray-900">{{ campaignProgress.campaign_name }}</h4>
+                        <p v-if="campaignProgress.type === 'percentage'" class="text-sm text-gray-600 mt-2">
+                            {{ $t('message.approach_branch_for_discount') }}
+                        </p>
+                    </div>
+
+                    <!-- Progress Circles (for item type) -->
+                    <div v-if="campaignProgress.type === 'item'" class="mt-6">
+                        <div class="flex justify-center flex-wrap gap-2 mb-4">
+                            <div 
+                                v-for="n in campaignProgress.required_purchases" 
+                                :key="n"
+                                class="w-10 h-10 rounded-full border-2 flex items-center justify-center text-sm font-medium transition-all"
+                                :class="n <= campaignProgress.current_progress ? 'bg-primary border-primary text-white' : 'border-gray-300 text-gray-400'"
+                            >
+                                <span v-if="n <= campaignProgress.current_progress">✓</span>
+                                <span v-else>{{ n }}</span>
+                            </div>
+                        </div>
+                        <p class="text-center text-sm text-gray-600">
+                            {{ campaignProgress.current_progress }} / {{ campaignProgress.required_purchases }} {{ $t('label.orders') }}
+                        </p>
+                        <p v-if="campaignProgress.is_complete" class="text-center text-sm text-green-600 font-medium mt-2">
+                            🎉 {{ $t('message.campaign_reward_ready') }}
+                        </p>
+                        <p v-if="campaignProgress.rewards_available > 0" class="text-center text-sm text-green-600 mt-1">
+                            {{ $t('label.rewards_available') }}: {{ campaignProgress.rewards_available }}
+                        </p>
+                    </div>
+
+                    <button 
+                        type="button" 
+                        @click="campaignProgress = null" 
+                        class="w-full mt-4 rounded-3xl text-center font-medium leading-6 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                        {{ $t('button.back') }}
+                    </button>
+                </div>
+
+                <!-- Campaigns List -->
+                <div v-if="!campaignProgress">
+                    <h4 class="text-sm font-medium text-gray-700 mb-3">{{ $t('label.available_campaigns') }}</h4>
+                    <div v-if="campaigns.length > 0" class="space-y-3 max-h-[300px] overflow-y-auto">
+                        <div 
+                            v-for="campaign in campaigns" 
+                            :key="campaign.id"
+                            class="p-4 rounded-lg border border-gray-200 hover:border-primary transition-colors"
+                        >
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <h5 class="text-sm font-semibold text-gray-900">{{ campaign.name }}</h5>
+                                    <p v-if="campaign.description" class="text-xs text-gray-500 mt-1">{{ campaign.description }}</p>
+                                </div>
+                                <span 
+                                    class="text-xs px-2 py-1 rounded-full ml-2"
+                                    :class="campaign.type_name === 'percentage' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'"
+                                >
+                                    {{ campaign.type_name === 'percentage' ? campaign.discount_value + '%' : $t('label.buy_x_get_free', { count: campaign.required_purchases }) }}
+                                </span>
+                            </div>
+                            <div class="mt-3">
+                                <button 
+                                    v-if="campaign.type_name === 'percentage'"
+                                    type="button"
+                                    class="text-xs text-gray-500 italic"
+                                >
+                                    {{ $t('message.approach_branch') }}
+                                </button>
+                                <button 
+                                    v-else
+                                    type="button"
+                                    @click="joinCampaign(campaign)"
+                                    :disabled="campaignLoading.isActive || !campaignForm.number"
+                                    class="text-xs px-3 py-1.5 rounded-full bg-primary text-white hover:bg-primary-dark transition-colors disabled:opacity-50"
+                                >
+                                    {{ $t('button.join') }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-else class="text-center py-4">
+                        <p class="text-sm text-gray-600">{{ $t('message.no_campaigns_available') }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </template>
 
 
@@ -172,6 +302,16 @@ export default {
                 isActive: false,
             },
             trackSearched: false,
+            // Campaign data
+            campaigns: [],
+            campaignForm: {
+                prefix: '+994',
+                number: ''
+            },
+            campaignLoading: {
+                isActive: false,
+            },
+            campaignProgress: null,
         }
     },
     computed: {
@@ -380,6 +520,109 @@ export default {
                 // Fallback for mobile browsers (notably iOS) where beforeinstallprompt never fires.
                 this.openInstallModal();
             }
+        },
+        // Campaign methods
+        openCampaignModal: function () {
+            this.campaignForm.prefix = '+994';
+            this.campaignForm.number = '';
+            this.campaignProgress = null;
+            this.loadCampaigns();
+            
+            const modalTarget = this.$refs.campaignModal;
+            if (modalTarget) {
+                modalTarget.classList.add("active");
+                document.body.style.overflowY = "hidden";
+            }
+        },
+        closeCampaignModal: function () {
+            const modalTarget = this.$refs.campaignModal;
+            if (modalTarget) {
+                modalTarget.classList.remove("active");
+                document.body.style.overflowY = "";
+            }
+            this.campaignProgress = null;
+        },
+        loadCampaigns: function () {
+            this.campaignLoading.isActive = true;
+            axios.get('frontend/campaign').then((response) => {
+                if (response.data.status && response.data.data) {
+                    this.campaigns = response.data.data;
+                } else {
+                    this.campaigns = [];
+                }
+                this.campaignLoading.isActive = false;
+            }).catch((error) => {
+                console.error('Error loading campaigns:', error);
+                this.campaigns = [];
+                this.campaignLoading.isActive = false;
+            });
+        },
+        loadCampaignProgress: function () {
+            const phoneNumber = this.campaignForm.prefix + this.campaignForm.number;
+            let normalizedNumber = phoneNumber;
+            if (normalizedNumber.startsWith('+9940')) {
+                normalizedNumber = '+994' + normalizedNumber.substring(5);
+            }
+
+            const branchId = this.onlineBranchId || (this.branches && this.branches.length > 0 ? this.branches[0].id : null);
+            if (!branchId) {
+                console.error('No branch selected');
+                return;
+            }
+
+            this.campaignLoading.isActive = true;
+            axios.post('frontend/campaign/progress', {
+                phone: normalizedNumber,
+                branch_id: branchId
+            }).then((response) => {
+                if (response.data.status && response.data.data) {
+                    this.campaignProgress = response.data.data;
+                } else {
+                    this.campaignProgress = null;
+                }
+                this.campaignLoading.isActive = false;
+            }).catch((error) => {
+                console.error('Error loading campaign progress:', error);
+                this.campaignProgress = null;
+                this.campaignLoading.isActive = false;
+            });
+        },
+        joinCampaign: function (campaign) {
+            const phoneNumber = this.campaignForm.prefix + this.campaignForm.number;
+            let normalizedNumber = phoneNumber;
+            if (normalizedNumber.startsWith('+9940')) {
+                normalizedNumber = '+994' + normalizedNumber.substring(5);
+            }
+
+            if (!normalizedNumber || normalizedNumber.length < 10) {
+                alert(this.$t('message.enter_phone_first'));
+                return;
+            }
+
+            const branchId = this.onlineBranchId || (this.branches && this.branches.length > 0 ? this.branches[0].id : null);
+            if (!branchId) {
+                console.error('No branch selected');
+                return;
+            }
+
+            this.campaignLoading.isActive = true;
+            axios.post('frontend/campaign/join', {
+                campaign_id: campaign.id,
+                phone: normalizedNumber,
+                branch_id: branchId
+            }).then((response) => {
+                if (response.data.status) {
+                    // Load progress after joining
+                    this.loadCampaignProgress();
+                } else {
+                    alert(response.data.message || 'Failed to join campaign');
+                    this.campaignLoading.isActive = false;
+                }
+            }).catch((error) => {
+                console.error('Error joining campaign:', error);
+                alert(error.response?.data?.message || 'Failed to join campaign');
+                this.campaignLoading.isActive = false;
+            });
         }
     },
     mounted() {

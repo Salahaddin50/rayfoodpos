@@ -682,7 +682,10 @@
         "easypaisa_mode": "Easypaisa mode",
         "easypaisa_status": "Easypaisa Status",
         "easypaisa_username": "Easypaisa Username",
-        "easypaisa_password": "Easypaisa Password"
+        "easypaisa_password": "Easypaisa Password",
+        "available_campaigns": "Available Campaigns",
+        "buy_x_get_free": "Buy {count} Get 1 Free",
+        "rewards_available": "Rewards Available"
     },
     "button": {
         "add": "Add",
@@ -770,6 +773,9 @@
         "delivered_orders": "Delivered Orders",
         "go_home": "Go Home",
         "track_order": "Track Order",
+        "join_campaign": "Join Campaign",
+        "join": "Join",
+        "back": "Back",
         "install_app": "Install App",
         "loading": "Loading...",
         "loading_captcha": "Loading security check...",
@@ -876,6 +882,11 @@
         "your_delivery_will_be_free": "Your delivery will be free ({amount})",
         "something_went_wrong": "Something went wrong. Please try again.",
         "driver_added": "Driver Added Successfully.",
-        "no_orders_found": "No orders found for this WhatsApp number in the last 2 hours."
+        "no_orders_found": "No orders found for this WhatsApp number in the last 2 hours.",
+        "no_campaigns_available": "No campaigns available at the moment.",
+        "approach_branch": "Please approach the branch to join",
+        "approach_branch_for_discount": "Please approach the branch for your discount.",
+        "campaign_reward_ready": "Congratulations! Your reward is ready!",
+        "enter_phone_first": "Please enter your phone number first"
     }
 }
