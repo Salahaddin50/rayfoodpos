@@ -215,6 +215,23 @@
                                 order.subtotal_currency_price
                             }}</span>
                         </li>
+                        <li class="flex items-center justify-between text-heading" v-if="order.campaign_discount && parseFloat(order.campaign_discount) > 0">
+                            <span class="text-sm leading-6 capitalize text-green-600">
+                                {{ $t("label.campaign_discount") }}
+                                <span v-if="campaignInfo" class="text-xs text-gray-500">
+                                    ({{ campaignInfo.name }})
+                                </span>
+                            </span>
+                            <span class="text-sm leading-6 capitalize text-green-600 font-semibold">
+                                -{{ order.campaign_discount_currency_price }}
+                            </span>
+                        </li>
+                        <li class="flex items-center justify-between text-heading" v-if="order.discount && parseFloat(order.discount) > 0 && (!order.campaign_discount || parseFloat(order.discount) > parseFloat(order.campaign_discount))">
+                            <span class="text-sm leading-6 capitalize">{{ $t("label.discount") }}</span>
+                            <span class="text-sm leading-6 capitalize">{{
+                                order.discount_currency_price
+                            }}</span>
+                        </li>
                         <li class="flex items-center justify-between text-heading" v-if="!order.dining_table_id || !order.table_name">
                             <span class="text-sm leading-6 capitalize">{{ $t("label.pickup_cost") }}</span>
                             <span class="text-sm leading-6 capitalize">{{
@@ -245,6 +262,37 @@
                                     <span class="text-sm font-semibold text-heading">{{ pickupCostTypeLabel }}</span>
                                     <span class="text-xs text-gray-500">{{ order.delivery_charge_currency_price }}</span>
                                 </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12" v-if="order.campaign_id && campaignInfo">
+                <div class="db-card">
+                    <div class="db-card-header">
+                        <h3 class="db-card-title">{{ $t("label.campaign") }}</h3>
+                    </div>
+                    <div class="db-card-body">
+                        <ul class="flex flex-col gap-3">
+                            <li class="flex items-center gap-2.5">
+                                <i class="lab lab-offers lab-font-size-16 text-primary"></i>
+                                <div class="flex flex-col">
+                                    <span class="text-sm font-semibold text-heading">{{ campaignInfo.name }}</span>
+                                    <span class="text-xs text-gray-500" v-if="campaignInfo.type === 1">
+                                        {{ $t("label.percentage_campaign") }}: {{ campaignInfo.discount_value }}%
+                                    </span>
+                                    <span class="text-xs text-gray-500" v-else-if="campaignInfo.type === 2">
+                                        {{ $t("label.item_campaign") }}: {{ $t("label.buy_x_get_free", { count: campaignInfo.required_purchases }) }}
+                                    </span>
+                                </div>
+                            </li>
+                            <li class="flex items-center justify-between pt-2 border-t border-gray-200" v-if="order.campaign_discount && parseFloat(order.campaign_discount) > 0">
+                                <span class="text-sm text-heading">{{ $t("label.campaign_discount_applied") }}</span>
+                                <span class="text-sm font-semibold text-green-600">{{ order.campaign_discount_currency_price }}</span>
+                            </li>
+                            <li class="flex items-center justify-between pt-2 border-t border-gray-200" v-if="order.campaign_redeem_free_item_id">
+                                <span class="text-sm text-heading">{{ $t("label.free_item_redeemed") }}</span>
+                                <span class="text-sm font-semibold text-green-600">{{ $t("label.yes") }}</span>
                             </li>
                         </ul>
                     </div>
@@ -384,6 +432,29 @@ export default {
             }
             
             return '';
+        },
+        campaignInfo: function () {
+            if (!this.order || !this.order.campaign_snapshot) {
+                return null;
+            }
+            
+            try {
+                const snapshot = typeof this.order.campaign_snapshot === 'string' 
+                    ? JSON.parse(this.order.campaign_snapshot) 
+                    : this.order.campaign_snapshot;
+                
+                return {
+                    id: snapshot.id,
+                    name: snapshot.name,
+                    type: snapshot.type, // 1 = percentage, 2 = item
+                    discount_value: snapshot.discount_value,
+                    required_purchases: snapshot.required_purchases,
+                    free_item_id: snapshot.free_item_id,
+                };
+            } catch (e) {
+                console.error('Error parsing campaign snapshot:', e);
+                return null;
+            }
         },
     },
     mounted() {

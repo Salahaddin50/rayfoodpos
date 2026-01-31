@@ -62,6 +62,7 @@ class OrderDetailsResource extends JsonResource
             'location_url'                        => $this->location_url,
             'campaign_id'                         => $this->campaign_id,
             'campaign_discount'                   => $this->campaign_discount,
+            'campaign_discount_currency_price'    => AppLibrary::currencyAmountFormat($this->campaign_discount ?? 0),
             'campaign_redeem_free_item_id'        => $this->campaign_redeem_free_item_id,
             'campaign_snapshot'                   => $this->campaign_snapshot,
             'pickup_option'                       => $this->pickup_option,
