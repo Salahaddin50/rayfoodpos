@@ -247,13 +247,16 @@
                                 </div>
                             </div>
                             <div class="mt-2 flex items-center gap-2">
+                                <!-- Percentage Campaign - Approach Branch -->
                                 <span 
                                     v-if="campaign.type_name === 'percentage'"
                                     class="text-xs text-gray-500 italic"
                                 >
                                     {{ $t('message.approach_branch') }}
                                 </span>
-                                <template v-else>
+
+                                <!-- Item Campaign - Join/Status Logic -->
+                                <template v-else-if="campaign.type_name === 'item'">
                                     <!-- Show message to search first if not searched yet -->
                                     <span 
                                         v-if="!hasSearchedCampaign"
@@ -261,31 +264,28 @@
                                     >
                                         {{ $t('message.enter_phone_to_join') }}
                                     </span>
-                                    <!-- Joined badge (show after search if joined) -->
-                                    <span 
-                                        v-else-if="userCampaignId === campaign.id"
-                                        class="text-xs px-3 py-1 rounded-full bg-green-100 text-green-700 font-medium"
-                                    >
-                                        ✓ {{ $t('label.joined') }}
-                                    </span>
-                                    <!-- Join button (show after search if not joined) -->
+                                    <!-- Show "Joined" badge and Status button if user has joined this campaign -->
+                                    <template v-else-if="hasSearchedCampaign && userCampaignId && userCampaignId === campaign.id">
+                                        <span class="text-xs px-3 py-1 rounded-full bg-green-100 text-green-700 font-medium">
+                                            ✓ {{ $t('label.joined') }}
+                                        </span>
+                                        <button 
+                                            type="button"
+                                            @click="viewCampaignStatus(campaign)"
+                                            class="text-xs px-3 py-1 rounded-full border border-primary text-primary hover:bg-primary hover:text-white transition-colors"
+                                        >
+                                            {{ $t('button.status') }}
+                                        </button>
+                                    </template>
+                                    <!-- Show "Join" button if user has searched but not joined this campaign -->
                                     <button 
-                                        v-else
+                                        v-else-if="hasSearchedCampaign"
                                         type="button"
                                         @click="joinCampaign(campaign)"
                                         :disabled="campaignLoading.isActive"
                                         class="text-xs px-3 py-1 rounded-full bg-primary text-white hover:bg-primary-dark transition-colors disabled:opacity-50"
                                     >
                                         {{ $t('button.join') }}
-                                    </button>
-                                    <!-- Status button (show when joined) -->
-                                    <button 
-                                        v-if="hasSearchedCampaign && userCampaignId === campaign.id"
-                                        type="button"
-                                        @click="viewCampaignStatus(campaign)"
-                                        class="text-xs px-3 py-1 rounded-full border border-primary text-primary hover:bg-primary hover:text-white transition-colors"
-                                    >
-                                        {{ $t('button.status') }}
                                     </button>
                                 </template>
                             </div>
@@ -734,10 +734,15 @@ export default {
                 phone: normalizedNumber,
                 branch_id: branchId
             }).then((response) => {
+                console.log('=== Campaign Search Response ===');
+                console.log('Response data:', response.data);
                 if (response.data.status && response.data.data && response.data.data.campaign_id) {
                     this.userCampaignId = Number(response.data.data.campaign_id);
+                    console.log('User joined campaign ID:', this.userCampaignId);
+                    console.log('Available campaigns:', this.campaigns.map(c => `ID: ${c.id} (${c.name})`).join(', '));
                 } else {
                     this.userCampaignId = null;
+                    console.log('No campaign found for this user');
                 }
                 this.hasSearchedCampaign = true;
                 this.campaignLoading.isActive = false;
