@@ -490,6 +490,12 @@ class OrderService
     public function tableOrderStore(TableOrderRequest $request): object
     {
         try {
+            \Log::info('=== TABLE ORDER STORE START ===', [
+                'branch_id' => $request->branch_id,
+                'whatsapp' => $request->whatsapp_number,
+                'campaign_redeem' => $request->input('campaign_redeem'),
+            ]);
+            
             DB::transaction(function () use ($request) {
                 // Security: Validate customer exists and use fallback
                 $customer = User::find($request->customer_id);
@@ -745,7 +751,15 @@ class OrderService
                 if (isset($orderData['campaign_redeem_free_item_id'])) {
                     $freeItemId = (int) $orderData['campaign_redeem_free_item_id'];
                     $freeItem = Item::find($freeItemId);
+                    
+                    \Log::info('Adding free campaign item', [
+                        'free_item_id' => $freeItemId,
+                        'found' => $freeItem ? true : false,
+                        'name' => $freeItem?->name,
+                    ]);
+                    
                     if ($freeItem) {
+                        // Add base item (no variations, no extras) as free
                         $itemsArray[$i] = [
                             'order_id'             => $this->order->id,
                             'branch_id'            => $request->branch_id,
@@ -756,15 +770,16 @@ class OrderService
                             'tax_rate'             => 0,
                             'tax_type'             => TaxType::FIXED,
                             'tax_amount'           => 0,
-                            'price'                => 0, // Free item
+                            'price'                => 0, // Free item - campaign reward
                             'item_variations'      => json_encode([]),
                             'item_extras'          => json_encode([]),
-                            'instruction'          => 'Campaign Reward',
+                            'instruction'          => 'Free - Campaign Reward',
                             'item_variation_total' => 0,
                             'item_extra_total'     => 0,
                             'total_price'          => 0,
                         ];
                         $i++;
+                        \Log::info('Free campaign item added to order items', ['item_id' => $freeItemId]);
                     }
                 }
 
@@ -805,6 +820,12 @@ class OrderService
             return $this->order;
         } catch (Exception $exception) {
             DB::rollBack();
+            \Log::error('=== TABLE ORDER STORE ERROR ===', [
+                'message' => $exception->getMessage(),
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+                'trace' => substr($exception->getTraceAsString(), 0, 500),
+            ]);
             Log::info($exception->getMessage());
             throw new Exception(QueryExceptionLibrary::message($exception), 422);
         }
