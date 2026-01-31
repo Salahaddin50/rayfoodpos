@@ -670,9 +670,26 @@ export default {
             this.campaignProgress = null;
             this.showProgressModal = false;
         },
-        loadCampaigns: function () {
+        loadCampaigns: function (phone = null, branchId = null) {
             this.campaignLoading.isActive = true;
-            axios.get('frontend/campaign').then((response) => {
+            
+            // Build query parameters
+            const params = {};
+            if (phone) {
+                params.phone = phone;
+            }
+            if (branchId) {
+                params.branch_id = branchId;
+            }
+            
+            // Build URL with query string
+            let url = 'frontend/campaign';
+            if (Object.keys(params).length > 0) {
+                const queryString = new URLSearchParams(params).toString();
+                url += '?' + queryString;
+            }
+            
+            axios.get(url).then((response) => {
                 if (response.data.status && response.data.data) {
                     // Normalize numeric fields so strict equality checks work reliably
                     this.campaigns = (response.data.data || []).map((c) => {
@@ -772,6 +789,9 @@ export default {
                 }
                 this.hasSearchedCampaign = true;
                 this.campaignLoading.isActive = false;
+                
+                // Reload campaigns to filter out completed ones
+                this.loadCampaigns(normalizedNumber, branchId);
             }).catch((error) => {
                 this.userCampaignId = null;
                 this.hasSearchedCampaign = false;

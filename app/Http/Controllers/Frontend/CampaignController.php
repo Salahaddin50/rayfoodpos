@@ -17,17 +17,47 @@ class CampaignController extends Controller
 {
     /**
      * List active campaigns for frontend
+     * Filters out completed campaigns if phone number is provided
      */
     public function index(Request $request)
     {
         try {
-            $campaigns = Campaign::with(['freeItem:id,name'])->where('status', 5) // Active status
+            $branchId = $request->input('branch_id');
+            $phone = $request->input('phone');
+            
+            // Get completed campaign IDs for this user (if phone provided)
+            $completedCampaignIds = [];
+            if ($phone && $branchId) {
+                try {
+                    $whatsapp = WhatsAppNormalizer::normalize($phone);
+                    if ($whatsapp) {
+                        $completedCampaignIds = \App\Models\CampaignCompletion::where('branch_id', $branchId)
+                            ->where('whatsapp', $whatsapp)
+                            ->pluck('campaign_id')
+                            ->toArray();
+                    }
+                } catch (\Exception $e) {
+                    // Table might not exist yet - ignore
+                    \Log::warning('campaign_completions table not found in index', [
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+            
+            $campaignsQuery = Campaign::with(['freeItem:id,name'])
+                ->where('status', 5) // Active status
                 ->where(function ($query) {
                     // Only filter by end_date - show upcoming campaigns too
                     $query->whereNull('end_date')
                         ->orWhere('end_date', '>=', now());
-                })
-                ->orderBy('name')
+                });
+            
+            // Exclude completed campaigns
+            if (!empty($completedCampaignIds)) {
+                $campaignsQuery->whereNotIn('id', $completedCampaignIds);
+            }
+            
+            $campaigns = $campaignsQuery->orderBy('name')
                 ->get()
                 ->map(function ($campaign) {
                     // Format discount value nicely (remove trailing zeros)
