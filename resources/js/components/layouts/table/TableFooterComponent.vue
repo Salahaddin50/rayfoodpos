@@ -247,45 +247,51 @@
                                 </div>
                             </div>
                             <div class="mt-2 flex items-center gap-2">
-                                <!-- Percentage Campaign - Approach Branch -->
+                                <!-- Show message to search first if not searched yet -->
                                 <span 
-                                    v-if="campaign.type_name === 'percentage'"
-                                    class="text-xs text-gray-500 italic"
+                                    v-if="!hasSearchedCampaign"
+                                    class="text-xs text-gray-400 italic"
                                 >
-                                    {{ $t('message.approach_branch') }}
+                                    {{ $t('message.enter_phone_to_join') }}
                                 </span>
 
-                                <!-- Item Campaign - Join/Status Logic -->
-                                <template v-else-if="campaign.type_name === 'item'">
-                                    <!-- Show message to search first if not searched yet -->
+                                <!-- After search: Show joined status or action buttons -->
+                                <template v-else>
+                                    <!-- User has joined THIS campaign -->
                                     <span 
-                                        v-if="!hasSearchedCampaign"
-                                        class="text-xs text-gray-400 italic"
+                                        v-if="userCampaignId && userCampaignId === campaign.id"
+                                        class="text-xs px-3 py-1 rounded-full bg-green-100 text-green-700 font-medium"
                                     >
-                                        {{ $t('message.enter_phone_to_join') }}
+                                        ✓ {{ $t('label.joined') }}
                                     </span>
-                                    <!-- Show "Joined" badge and Status button if user has joined this campaign -->
-                                    <template v-else-if="hasSearchedCampaign && userCampaignId && userCampaignId === campaign.id">
-                                        <span class="text-xs px-3 py-1 rounded-full bg-green-100 text-green-700 font-medium">
-                                            ✓ {{ $t('label.joined') }}
-                                        </span>
-                                        <button 
-                                            type="button"
-                                            @click="viewCampaignStatus(campaign)"
-                                            class="text-xs px-3 py-1 rounded-full border border-primary text-primary hover:bg-primary hover:text-white transition-colors"
-                                        >
-                                            {{ $t('button.status') }}
-                                        </button>
-                                    </template>
-                                    <!-- Show "Join" button if user has searched but not joined this campaign -->
+
+                                    <!-- For percentage campaigns: show approach branch message if not joined -->
+                                    <span 
+                                        v-else-if="campaign.type_name === 'percentage'"
+                                        class="text-xs text-gray-500 italic"
+                                    >
+                                        {{ $t('message.approach_branch') }}
+                                    </span>
+
+                                    <!-- For item campaigns: show Join button if not joined -->
                                     <button 
-                                        v-else-if="hasSearchedCampaign"
+                                        v-else-if="campaign.type_name === 'item'"
                                         type="button"
                                         @click="joinCampaign(campaign)"
                                         :disabled="campaignLoading.isActive"
                                         class="text-xs px-3 py-1 rounded-full bg-primary text-white hover:bg-primary-dark transition-colors disabled:opacity-50"
                                     >
                                         {{ $t('button.join') }}
+                                    </button>
+
+                                    <!-- Status button: show for joined campaign (item type only) -->
+                                    <button 
+                                        v-if="userCampaignId && userCampaignId === campaign.id && campaign.type_name === 'item'"
+                                        type="button"
+                                        @click="viewCampaignStatus(campaign)"
+                                        class="text-xs px-3 py-1 rounded-full border border-primary text-primary hover:bg-primary hover:text-white transition-colors"
+                                    >
+                                        {{ $t('button.status') }}
                                     </button>
                                 </template>
                             </div>
