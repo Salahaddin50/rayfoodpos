@@ -257,9 +257,9 @@
 
                                 <!-- After search: Show joined status or action buttons -->
                                 <template v-else>
-                                    <!-- User has joined THIS campaign -->
+                                    <!-- User has joined THIS campaign (works for both percentage and item) -->
                                     <span 
-                                        v-if="userCampaignId && userCampaignId === campaign.id"
+                                        v-if="isCampaignJoined(campaign)"
                                         class="text-xs px-3 py-1 rounded-full bg-green-100 text-green-700 font-medium"
                                     >
                                         ✓ {{ $t('label.joined') }}
@@ -286,7 +286,7 @@
 
                                     <!-- Status button: show for joined campaign (item type only) -->
                                     <button 
-                                        v-if="userCampaignId && userCampaignId === campaign.id && campaign.type_name === 'item'"
+                                        v-if="isCampaignJoined(campaign) && campaign.type_name === 'item'"
                                         type="button"
                                         @click="viewCampaignStatus(campaign)"
                                         class="text-xs px-3 py-1 rounded-full border border-primary text-primary hover:bg-primary hover:text-white transition-colors"
@@ -779,14 +779,27 @@ export default {
             }).then((response) => {
                 console.log('=== Campaign Search Response ===');
                 console.log('Response data:', response.data);
-                if (response.data.status && response.data.data && response.data.data.campaign_id) {
-                    this.userCampaignId = Number(response.data.data.campaign_id);
-                    console.log('User joined campaign ID:', this.userCampaignId);
-                    console.log('Available campaigns:', this.campaigns.map(c => `ID: ${c.id} (${c.name})`).join(', '));
+                console.log('Response data.data:', response.data.data);
+                
+                if (response.data.status && response.data.data) {
+                    // Check for campaign_id (works for both percentage and item campaigns)
+                    if (response.data.data.campaign_id) {
+                        this.userCampaignId = Number(response.data.data.campaign_id);
+                        console.log('User joined campaign ID:', this.userCampaignId);
+                        console.log('Campaign type:', response.data.data.type);
+                        console.log('Campaign name:', response.data.data.campaign_name);
+                    } else {
+                        this.userCampaignId = null;
+                        console.log('No campaign_id in response');
+                    }
                 } else {
                     this.userCampaignId = null;
-                    console.log('No campaign found for this user');
+                    console.log('No campaign data found for this user');
                 }
+                
+                console.log('Available campaigns:', this.campaigns.map(c => `ID: ${c.id} (${c.name}, type: ${c.type_name})`).join(', '));
+                console.log('Current userCampaignId:', this.userCampaignId);
+                
                 this.hasSearchedCampaign = true;
                 this.campaignLoading.isActive = false;
                 
@@ -803,6 +816,23 @@ export default {
                 console.error('Campaign progress error:', error?.response?.data || error);
                 alert(msg);
             });
+        },
+        isCampaignJoined: function (campaign) {
+            // Helper method to check if a campaign is joined
+            // Normalize both IDs to numbers for reliable comparison
+            if (!this.userCampaignId || !campaign || !campaign.id) {
+                return false;
+            }
+            const userId = Number(this.userCampaignId);
+            const campaignId = Number(campaign.id);
+            const isJoined = userId === campaignId;
+            
+            // Debug logging
+            if (isJoined) {
+                console.log(`Campaign ${campaignId} (${campaign.name}) is joined by user (${userId})`);
+            }
+            
+            return isJoined;
         },
         viewCampaignStatus: function (campaign) {
             const phoneNumber = this.campaignForm.prefix + this.campaignForm.number;
