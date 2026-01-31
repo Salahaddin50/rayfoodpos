@@ -401,9 +401,11 @@ export default {
         },
         exportContacts() {
             try {
-                // Get unique phone numbers from filtered rows
+                // Get unique phone numbers from ALL online users (not just filtered)
                 const phoneNumbers = new Set();
-                this.filteredRows.forEach(row => {
+                const rowsToExport = this.uniqueRows; // Use all unique rows, not filtered
+                
+                rowsToExport.forEach((row) => {
                     if (row.whatsapp && row.whatsapp.trim() !== "") {
                         // Normalize phone number - remove spaces and special characters except +
                         let phone = row.whatsapp.trim().replace(/[\s\-\(\)]/g, "");
@@ -430,13 +432,14 @@ export default {
 
                 // Generate vCard content
                 // vCard format: each contact is a separate vCard entry
+                // Use CRLF line endings for better compatibility
                 let vcardContent = "";
                 phoneNumbers.forEach(phone => {
                     // vCard format - only phone number, no name
-                    vcardContent += "BEGIN:VCARD\n";
-                    vcardContent += "VERSION:3.0\n";
-                    vcardContent += `TEL:${phone}\n`;
-                    vcardContent += "END:VCARD\n";
+                    vcardContent += "BEGIN:VCARD\r\n";
+                    vcardContent += "VERSION:3.0\r\n";
+                    vcardContent += `TEL:${phone}\r\n`;
+                    vcardContent += "END:VCARD\r\n";
                 });
 
                 // Create blob and download
@@ -444,7 +447,9 @@ export default {
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(blob);
                 link.download = "contacts.vcf";
+                document.body.appendChild(link);
                 link.click();
+                document.body.removeChild(link);
                 URL.revokeObjectURL(link.href);
 
                 alertService.success(this.$t("message.contacts_exported") || `Exported ${phoneNumbers.size} contact(s)`);
