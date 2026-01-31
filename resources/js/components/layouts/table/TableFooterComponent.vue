@@ -241,6 +241,10 @@
                                         <span class="font-medium">{{ $t('label.free_item') }}:</span>
                                         {{ campaign.free_item.name }}
                                     </div>
+                                    <div v-if="campaign.free_item && campaign.free_item.category_name" class="text-xs text-blue-600 mt-1">
+                                        <i class="lab lab-info-circle"></i>
+                                        {{ $t('message.only_category_orders_count', { category: campaign.free_item.category_name }) }}
+                                    </div>
                                     <div v-else class="text-gray-500 italic">
                                         {{ $t('message.approach_branch') }}
                                     </div>

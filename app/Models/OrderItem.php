@@ -68,4 +68,8 @@ class OrderItem extends Model
     {
         return $this->belongsTo(Item::class, 'item_id', 'id')->withTrashed();
     }
+    public function item()
+    {
+        return $this->belongsTo(Item::class, 'item_id', 'id')->withTrashed();
+    }
 }

@@ -596,6 +596,20 @@ class OrderService
 
                         if ($isActive && $inStart && $inEnd) {
                             $orderData['campaign_id'] = $campaign->id;
+                            // Load free item with category for snapshot
+                            $freeItemData = null;
+                            if ($campaign->free_item_id) {
+                                $freeItem = \App\Models\Item::with('category')->find($campaign->free_item_id);
+                                if ($freeItem) {
+                                    $freeItemData = [
+                                        'id' => $freeItem->id,
+                                        'name' => $freeItem->name,
+                                        'category_id' => $freeItem->item_category_id,
+                                        'category_name' => $freeItem->category->name ?? null,
+                                    ];
+                                }
+                            }
+                            
                             $orderData['campaign_snapshot'] = json_encode([
                                 'id' => $campaign->id,
                                 'name' => $campaign->name,
@@ -603,6 +617,7 @@ class OrderService
                                 'discount_value' => (float) $campaign->discount_value,
                                 'required_purchases' => (int) ($campaign->required_purchases ?? 0),
                                 'free_item_id' => $campaign->free_item_id,
+                                'free_item' => $freeItemData,
                                 'start_date' => $campaign->start_date,
                                 'end_date' => $campaign->end_date,
                             ]);
@@ -664,6 +679,26 @@ class OrderService
 
                                 if ($campaign->end_date) {
                                     $ordersQuery->where('order_datetime', '<=', $campaign->end_date . ' 23:59:59');
+                                }
+
+                                // IMPORTANT: Only count orders that contain items from the free item's category
+                                // This prevents users from buying cheap items (like fries) to qualify for expensive free items (like pizza)
+                                if ($campaign->free_item_id) {
+                                    $freeItem = \App\Models\Item::with('category')->find($campaign->free_item_id);
+                                    if ($freeItem && $freeItem->item_category_id) {
+                                        // Use whereHas to filter orders that have at least one item from the required category
+                                        $ordersQuery->whereHas('orderItems', function($q) use ($freeItem) {
+                                            $q->whereHas('item', function($itemQuery) use ($freeItem) {
+                                                $itemQuery->where('item_category_id', $freeItem->item_category_id);
+                                            });
+                                        });
+                                        
+                                        \Log::info('Filtering orders by category', [
+                                            'free_item_id' => $campaign->free_item_id,
+                                            'free_item_category_id' => $freeItem->item_category_id,
+                                            'free_item_category_name' => $freeItem->category->name ?? 'N/A',
+                                        ]);
+                                    }
                                 }
 
                                 $completedCount = (int) $ordersQuery->count();

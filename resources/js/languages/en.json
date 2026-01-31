@@ -886,6 +886,7 @@
         "no_phone_numbers_to_export": "No phone numbers to export",
         "contacts_exported": "Contacts exported successfully",
         "export_failed": "Failed to export contacts",
+        "only_category_orders_count": "Only orders with {category} items count",
         "payment_method": "The payment method is required.",
         "special_instructions_limit": "Special instructions limit is 190 characters.",
         "select_branch_to_order": "Select a branch to start ordering",

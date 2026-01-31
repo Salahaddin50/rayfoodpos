@@ -866,6 +866,7 @@
         "no_phone_numbers_to_export": "Нет номеров телефонов для экспорта",
         "contacts_exported": "Контакты успешно экспортированы",
         "export_failed": "Не удалось экспортировать контакты",
+        "only_category_orders_count": "Учитываются только заказы с товарами категории {category}",
         "payment_method": "Способ оплаты обязателен.",
         "special_instructions_limit": "Лимит особых инструкций составляет 190 символов.",
         "select_branch_to_order": "Выберите филиал для начала заказа",

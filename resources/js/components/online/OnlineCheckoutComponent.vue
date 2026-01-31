@@ -202,8 +202,12 @@
                                         <span v-else>{{ n }}</span>
                                     </div>
                                 </div>
-                                <p class="text-center text-sm text-gray-600 mb-3">
+                                <p class="text-center text-sm text-gray-600 mb-2">
                                     {{ campaignStatus.current_progress }} / {{ campaignStatus.required_purchases }} {{ $t('label.orders') }}
+                                </p>
+                                <p v-if="campaignStatus.free_item && campaignStatus.free_item.category_name" class="text-center text-xs text-blue-600 mb-3">
+                                    <i class="lab lab-info-circle"></i>
+                                    {{ $t('message.only_category_orders_count', { category: campaignStatus.free_item.category_name }) }}
                                 </p>
 
                                 <!-- Not Yet Entitled -->

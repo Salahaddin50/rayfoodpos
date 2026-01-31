@@ -872,6 +872,7 @@
         "no_phone_numbers_to_export": "İxrac ediləcək telefon nömrəsi yoxdur",
         "contacts_exported": "Əlaqələr uğurla ixrac edildi",
         "export_failed": "Əlaqələri ixrac etmək mümkün olmadı",
+        "only_category_orders_count": "Yalnız {category} məhsulları olan sifarişlər sayılır",
         "payment_method": "Ödəniş metodu tələb olunur.",
         "special_instructions_limit": "Xüsusi təlimatlar limiti 190 simvoldur.",
         "select_branch_to_order": "Sifariş vermək üçün filial seçin",

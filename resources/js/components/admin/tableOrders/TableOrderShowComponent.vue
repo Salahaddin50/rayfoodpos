@@ -450,6 +450,7 @@ export default {
                     discount_value: snapshot.discount_value,
                     required_purchases: snapshot.required_purchases,
                     free_item_id: snapshot.free_item_id,
+                    free_item: snapshot.free_item || null, // Includes category info
                 };
             } catch (e) {
                 console.error('Error parsing campaign snapshot:', e);

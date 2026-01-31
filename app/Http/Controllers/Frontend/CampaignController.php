@@ -44,7 +44,7 @@ class CampaignController extends Controller
                 }
             }
             
-            $campaignsQuery = Campaign::with(['freeItem:id,name'])
+            $campaignsQuery = Campaign::with(['freeItem:id,name,item_category_id', 'freeItem.category:id,name'])
                 ->where('status', 5) // Active status
                 ->where(function ($query) {
                     // Only filter by end_date - show upcoming campaigns too
@@ -75,8 +75,10 @@ class CampaignController extends Controller
                         'discount_value'     => $discountValue,
                         'free_item_id'       => $campaign->free_item_id,
                         'free_item'          => $campaign->freeItem ? [
-                            'id'   => $campaign->freeItem->id,
-                            'name' => $campaign->freeItem->name,
+                            'id'         => $campaign->freeItem->id,
+                            'name'       => $campaign->freeItem->name,
+                            'category_id' => $campaign->freeItem->item_category_id,
+                            'category_name' => $campaign->freeItem->category->name ?? null,
                         ] : null,
                         'required_purchases' => $campaign->required_purchases,
                         'start_date'         => $campaign->start_date,
@@ -391,8 +393,10 @@ class CampaignController extends Controller
                                 'completed_at'       => $completedCampaign->completed_at->format('Y-m-d H:i:s'),
                                 'message'            => 'Congratulations! You have completed this campaign.',
                                 'free_item'          => $campaign->freeItem ? [
-                                    'id'   => $campaign->freeItem->id,
-                                    'name' => $campaign->freeItem->name,
+                                    'id'            => $campaign->freeItem->id,
+                                    'name'          => $campaign->freeItem->name,
+                                    'category_id'  => $campaign->freeItem->item_category_id,
+                                    'category_name' => $campaign->freeItem->category->name ?? null,
                                 ] : null,
                             ],
                         ]);
@@ -413,6 +417,11 @@ class CampaignController extends Controller
 
             // User has an active campaign - continue to show progress
             $campaign = $onlineUser->campaign;
+            
+            // Load free item with category for category filtering
+            if ($campaign->free_item_id) {
+                $campaign->load(['freeItem.category']);
+            }
             
             // Validate campaign is active and within date range
             $isActive = ((int) $campaign->status === 5); // Active status
@@ -493,6 +502,26 @@ class CampaignController extends Controller
                 $ordersQuery->where('order_datetime', '<=', $campaign->end_date . ' 23:59:59');
             }
 
+            // IMPORTANT: Only count orders that contain items from the free item's category
+            // This prevents users from buying cheap items (like fries) to qualify for expensive free items (like pizza)
+            if ($campaign->free_item_id) {
+                $freeItem = \App\Models\Item::with('category')->find($campaign->free_item_id);
+                if ($freeItem && $freeItem->item_category_id) {
+                    // Use whereHas to filter orders that have at least one item from the required category
+                    $ordersQuery->whereHas('orderItems', function($q) use ($freeItem) {
+                        $q->whereHas('item', function($itemQuery) use ($freeItem) {
+                            $itemQuery->where('item_category_id', $freeItem->item_category_id);
+                        });
+                    });
+                    
+                    \Log::info('Campaign progress - Filtering orders by category', [
+                        'free_item_id' => $campaign->free_item_id,
+                        'free_item_category_id' => $freeItem->item_category_id,
+                        'free_item_category_name' => $freeItem->category->name ?? 'N/A',
+                    ]);
+                }
+            }
+
             $orderCount = $ordersQuery->count();
             $requiredPurchases = $campaign->required_purchases ?? 8;
             
@@ -551,8 +580,10 @@ class CampaignController extends Controller
                     'rewards_available'  => $rewardsAvailable,
                     'redeemed_count'     => $redeemedCount,
                     'free_item'          => $campaign->freeItem ? [
-                        'id'   => $campaign->freeItem->id,
-                        'name' => $campaign->freeItem->name,
+                        'id'            => $campaign->freeItem->id,
+                        'name'          => $campaign->freeItem->name,
+                        'category_id'   => $campaign->freeItem->item_category_id,
+                        'category_name' => $campaign->freeItem->category->name ?? null,
                     ] : null,
                     'is_complete'        => $progress >= $requiredPurchases,
                     'is_completed'       => false, // Active campaign, not yet completed
