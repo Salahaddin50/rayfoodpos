@@ -200,7 +200,16 @@ class CampaignController extends Controller
                 ]);
             }
 
-            // Count orders within campaign period
+            // Count PAID/COMPLETED orders within campaign period
+            // Include: ACCEPT (4), PREPARING (7), PREPARED (8), OUT_FOR_DELIVERY (10), DELIVERED (13)
+            $completedStatuses = [
+                OrderStatus::ACCEPT,
+                OrderStatus::PREPARING,
+                OrderStatus::PREPARED,
+                OrderStatus::OUT_FOR_DELIVERY,
+                OrderStatus::DELIVERED,
+            ];
+
             $ordersQuery = Order::withoutGlobalScopes()
                 ->where('branch_id', $request->branch_id)
                 ->where(function ($query) use ($whatsapp) {
@@ -208,18 +217,33 @@ class CampaignController extends Controller
                     $query->where('whatsapp_number', 'LIKE', '%' . substr($whatsapp, -9))
                         ->orWhere('whatsapp_number', $whatsapp);
                 })
-                ->whereIn('status', [OrderStatus::DELIVERED]); // Completed statuses
+                ->whereIn('status', $completedStatuses);
 
+            // Filter by campaign period using order_datetime (not created_at)
             if ($campaign->start_date) {
-                $ordersQuery->where('created_at', '>=', $campaign->start_date);
+                $ordersQuery->where('order_datetime', '>=', $campaign->start_date);
             }
             if ($campaign->end_date) {
-                $ordersQuery->where('created_at', '<=', $campaign->end_date);
+                $ordersQuery->where('order_datetime', '<=', $campaign->end_date . ' 23:59:59');
             }
 
             $orderCount = $ordersQuery->count();
             $requiredPurchases = $campaign->required_purchases ?? 8;
-            $progress = min($orderCount, $requiredPurchases);
+            
+            // Progress is how many orders toward next reward (modulo)
+            $progressTowardNext = $orderCount % $requiredPurchases;
+            // But if they just completed a set, show full progress
+            $progress = $progressTowardNext == 0 && $orderCount > 0 ? $requiredPurchases : $progressTowardNext;
+
+            \Log::info('Campaign order count', [
+                'whatsapp' => $whatsapp,
+                'branch_id' => $request->branch_id,
+                'campaign_id' => $campaign->id,
+                'start_date' => $campaign->start_date,
+                'end_date' => $campaign->end_date,
+                'order_count' => $orderCount,
+                'required_purchases' => $requiredPurchases,
+            ]);
 
             // Rewards already redeemed (stored on orders)
             $redeemedCount = Order::withoutGlobalScopes()
@@ -230,7 +254,6 @@ class CampaignController extends Controller
                     $query->where('whatsapp_number', 'LIKE', '%' . substr($whatsapp, -9))
                         ->orWhere('whatsapp_number', $whatsapp);
                 })
-                ->whereIn('status', [OrderStatus::DELIVERED])
                 ->count();
 
             $earnedRewards = (int) floor($orderCount / $requiredPurchases);

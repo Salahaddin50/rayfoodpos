@@ -679,7 +679,11 @@
         "buy_x_get_free": "{count} al 1 pulsuz qazan",
         "rewards_available": "Mövcud Mükafatlar",
         "joined": "Qoşulub",
-        "ongoing": "Davam edir"
+        "ongoing": "Davam edir",
+        "your_discount": "Sizin Endirim",
+        "percent_off": "ENDİRİM",
+        "free_campaign_reward": "PULSUZ - Kampaniya Mükafatı",
+        "campaign_progress": "Kampaniya İrəliləyişi"
     },
     "button": {
         "add": "Əlavə",
@@ -815,6 +819,9 @@
         "campaign_auto_applied": "Kampaniya endirimi avtomatik tətbiq olunur.",
         "redeem_free_item_now": "Pulsuz məhsulu indi istifadə et: {item}",
         "redeem_will_add_free_item": "Aktiv etsəniz, pulsuz məhsul bu sifarişə əlavə olunacaq.",
+        "order_x_more_to_get_free": "PULSUZ {item} almaq üçün daha {count} sifariş verin!",
+        "you_are_entitled_free_item": "Siz PULSUZ {item} qazandınız!",
+        "add_free_item_to_order": "Pulsuz məhsulu bu sifarişə əlavə et",
         "coupon_add": "Kupon Uğurla Əlavə Edildi.",
         "coupon_delete": "Kupon Uğurla Silindi.",
         "order_confirm": "Sifarişiniz hal-hazırda təsdiqləndi",

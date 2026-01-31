@@ -690,7 +690,11 @@
         "buy_x_get_free": "Buy {count} Get 1 Free",
         "rewards_available": "Rewards Available",
         "joined": "Joined",
-        "ongoing": "Ongoing"
+        "ongoing": "Ongoing",
+        "your_discount": "Your Discount",
+        "percent_off": "OFF",
+        "free_campaign_reward": "FREE - Campaign Reward",
+        "campaign_progress": "Campaign Progress"
     },
     "button": {
         "add": "Add",
@@ -829,6 +833,9 @@
         "campaign_auto_applied": "Campaign discount is automatically applied.",
         "redeem_free_item_now": "Redeem free item now: {item}",
         "redeem_will_add_free_item": "If enabled, your free item will be added to this order.",
+        "order_x_more_to_get_free": "Order {count} more to get a FREE {item}!",
+        "you_are_entitled_free_item": "You are entitled to a FREE {item}!",
+        "add_free_item_to_order": "Add free item to this order",
         "coupon_add": "Coupon Add Successfully.",
         "coupon_delete": "Coupon Delete Successfully.",
         "order_confirm": "Your order is currently confirmed as",

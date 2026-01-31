@@ -101,50 +101,6 @@
                         </div>
                     </div>
 
-                    <!-- Campaign (auto apply / redeem) -->
-                    <div v-if="campaignStatus" class="mb-6 rounded-2xl shadow-xs bg-white">
-                        <h3 class="capitalize font-medium p-4 border-b border-gray-100">{{ $t('label.campaign') }}</h3>
-                        <div class="p-4">
-                            <div class="text-sm font-medium text-gray-900">
-                                {{ campaignStatus.campaign_name }}
-                            </div>
-
-                            <div v-if="campaignStatus.type === 'percentage'" class="mt-2 text-sm text-gray-700">
-                                <div class="flex items-center justify-between">
-                                    <span>{{ $t('label.discount') }}</span>
-                                    <span class="font-medium">-{{ campaignStatus.discount_value }}%</span>
-                                </div>
-                                <div class="flex items-center justify-between mt-1">
-                                    <span>{{ $t('label.discount') }} ({{ $t('label.amount') }})</span>
-                                    <span class="font-medium">
-                                        -{{ currencyFormat(campaignDiscountPreview, setting.site_digit_after_decimal_point, setting.site_default_currency_symbol, setting.site_currency_position) }}
-                                    </span>
-                                </div>
-                                <div class="text-xs text-gray-500 mt-2">
-                                    {{ $t('message.campaign_auto_applied') }}
-                                </div>
-                            </div>
-
-                            <div v-else-if="campaignStatus.type === 'item'" class="mt-2">
-                                <div class="text-sm text-gray-700">
-                                    {{ $t('label.campaign_progress') }}: {{ campaignStatus.current_progress }} / {{ campaignStatus.required_purchases }}
-                                </div>
-                                <div class="text-sm text-gray-700 mt-1">
-                                    {{ $t('label.rewards_available') }}: {{ campaignStatus.rewards_available }}
-                                </div>
-                                <div v-if="campaignStatus.rewards_available > 0 && campaignStatus.free_item && campaignStatus.free_item.name" class="mt-3">
-                                    <label class="inline-flex items-center gap-2 text-sm text-gray-800">
-                                        <input type="checkbox" v-model="campaignRedeem" class="rounded border-gray-300" />
-                                        {{ $t('message.redeem_free_item_now', { item: campaignStatus.free_item.name }) }}
-                                    </label>
-                                    <div class="text-xs text-gray-500 mt-1">
-                                        {{ $t('message.redeem_will_add_free_item') }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Delivery cost section: show only after distance is calculated -->
                     <div v-if="distanceFromBranch && locationUrl" class="mb-6 rounded-2xl shadow-xs bg-white">
                         <h3 class="capitalize font-medium p-4 border-b border-gray-100">{{ $t('label.pickup_cost') }}</h3>
@@ -199,6 +155,68 @@
                 </div>
 
                 <div class="col-12 md:col-5">
+                    <!-- Campaign Section - Above Cart Summary -->
+                    <div v-if="campaignStatus" class="mb-4 rounded-2xl shadow-xs bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200">
+                        <div class="p-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="text-lg">🎁</span>
+                                <h3 class="font-semibold text-gray-900">{{ campaignStatus.campaign_name }}</h3>
+                            </div>
+
+                            <!-- Percentage Campaign -->
+                            <div v-if="campaignStatus.type === 'percentage'">
+                                <div class="flex items-center justify-between text-sm">
+                                    <span class="text-gray-700">{{ $t('label.your_discount') }}</span>
+                                    <span class="font-bold text-green-700 text-lg">{{ campaignStatus.discount_value }}% {{ $t('label.percent_off') }}</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-2">{{ $t('message.campaign_auto_applied') }}</p>
+                            </div>
+
+                            <!-- Item Campaign (Buy X Get 1 Free) -->
+                            <div v-else-if="campaignStatus.type === 'item'">
+                                <!-- Progress Circles -->
+                                <div class="flex justify-center flex-wrap gap-2 mb-3">
+                                    <div 
+                                        v-for="n in campaignStatus.required_purchases" 
+                                        :key="n"
+                                        class="w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-medium transition-all"
+                                        :class="n <= campaignStatus.current_progress ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 text-gray-400 bg-white'"
+                                    >
+                                        <span v-if="n <= campaignStatus.current_progress">✓</span>
+                                        <span v-else>{{ n }}</span>
+                                    </div>
+                                </div>
+                                <p class="text-center text-sm text-gray-600 mb-3">
+                                    {{ campaignStatus.current_progress }} / {{ campaignStatus.required_purchases }} {{ $t('label.orders') }}
+                                </p>
+
+                                <!-- Not Yet Entitled -->
+                                <div v-if="campaignStatus.rewards_available === 0 && campaignStatus.free_item" class="text-center">
+                                    <p class="text-sm text-gray-700">
+                                        {{ $t('message.order_x_more_to_get_free', { count: ordersNeededForReward, item: campaignStatus.free_item.name }) }}
+                                    </p>
+                                </div>
+
+                                <!-- Entitled! Can Redeem -->
+                                <div v-if="campaignStatus.rewards_available > 0 && campaignStatus.free_item" class="bg-green-100 rounded-lg p-3 mt-2">
+                                    <p class="text-sm font-medium text-green-800 mb-2">
+                                        🎉 {{ $t('message.you_are_entitled_free_item', { item: campaignStatus.free_item.name }) }}
+                                    </p>
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <input 
+                                            type="checkbox" 
+                                            v-model="campaignRedeem" 
+                                            class="w-5 h-5 rounded border-green-400 text-green-600 focus:ring-green-500"
+                                        />
+                                        <span class="text-sm text-green-900 font-medium">
+                                            {{ $t('message.add_free_item_to_order') }}
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="rounded-2xl shadow-xs bg-white">
                         <div class="p-4 border-b">
                             <h3 class="capitalize font-medium mb-3 text-center">
@@ -256,6 +274,27 @@
                                             <p class="text-xs">{{ cart.instruction }}</p>
                                         </li>
                                     </ul>
+                                </div>
+                            </div>
+                            <!-- Free Item (Campaign Reward) -->
+                            <div v-if="campaignRedeem && campaignStatus && campaignStatus.free_item" 
+                                class="mb-3 pb-3 border-b border-green-200 bg-green-50 rounded-lg p-2">
+                                <div class="flex items-center gap-3 relative">
+                                    <h3 class="absolute top-2 ltr:-left-1 rtl:-right-1 text-xs w-[22px] h-[22px] leading-[22px] text-center rounded-full text-white bg-green-600">
+                                        🎁
+                                    </h3>
+                                    <div class="w-10 h-10 rounded-lg flex-shrink-0 bg-green-100 flex items-center justify-center text-lg ml-4">
+                                        🍕
+                                    </div>
+                                    <div class="w-full">
+                                        <span class="text-sm font-medium capitalize text-green-800">
+                                            {{ campaignStatus.free_item.name }}
+                                        </span>
+                                        <p class="text-xs text-green-600">{{ $t('label.free_campaign_reward') }}</p>
+                                        <h4 class="text-xs font-semibold text-green-700">
+                                            {{ currencyFormat(0, setting.site_digit_after_decimal_point, setting.site_default_currency_symbol, setting.site_currency_position) }}
+                                        </h4>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -445,6 +484,14 @@ export default {
             const percent = parseFloat(this.campaignStatus.discount_value || 0);
             if (!percent) return 0;
             return parseFloat(this.subtotal) * (percent / 100);
+        },
+        ordersNeededForReward: function () {
+            if (!this.campaignStatus || this.campaignStatus.type !== 'item') return 0;
+            const required = parseInt(this.campaignStatus.required_purchases) || 8;
+            const current = parseInt(this.campaignStatus.current_progress) || 0;
+            // How many more orders to reach next reward (including this order)
+            const remaining = required - (current % required);
+            return remaining === required ? 0 : remaining;
         },
         totalAfterCampaign: function () {
             const t = parseFloat(this.total) - parseFloat(this.campaignDiscountPreview || 0);

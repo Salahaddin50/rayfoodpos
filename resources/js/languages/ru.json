@@ -673,7 +673,11 @@
         "buy_x_get_free": "Купи {count} получи 1 бесплатно",
         "rewards_available": "Доступные награды",
         "joined": "Присоединился",
-        "ongoing": "Продолжается"
+        "ongoing": "Продолжается",
+        "your_discount": "Ваша скидка",
+        "percent_off": "СКИДКА",
+        "free_campaign_reward": "БЕСПЛАТНО - Награда кампании",
+        "campaign_progress": "Прогресс кампании"
     },
     "button": {
         "add": "Добавить",
@@ -809,6 +813,9 @@
         "campaign_auto_applied": "Скидка кампании применяется автоматически.",
         "redeem_free_item_now": "Использовать бесплатный товар сейчас: {item}",
         "redeem_will_add_free_item": "Если включено, бесплатный товар будет добавлен в этот заказ.",
+        "order_x_more_to_get_free": "Закажите ещё {count}, чтобы получить БЕСПЛАТНЫЙ {item}!",
+        "you_are_entitled_free_item": "Вы получаете БЕСПЛАТНЫЙ {item}!",
+        "add_free_item_to_order": "Добавить бесплатный товар в заказ",
         "coupon_add": "Купон успешно добавлен.",
         "coupon_delete": "Купон успешно удален.",
         "order_confirm": "Ваш заказ в настоящее время подтвержден как",
