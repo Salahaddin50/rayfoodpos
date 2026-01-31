@@ -230,6 +230,9 @@ class CampaignController extends Controller
             $orderCount = $ordersQuery->count();
             $requiredPurchases = $campaign->required_purchases ?? 8;
             
+            // Debug: Get actual orders for logging
+            $foundOrders = $ordersQuery->get(['id', 'order_serial_no', 'whatsapp_number', 'order_datetime', 'status']);
+            
             // Progress is how many orders toward next reward (modulo)
             $progressTowardNext = $orderCount % $requiredPurchases;
             // But if they just completed a set, show full progress
@@ -237,12 +240,22 @@ class CampaignController extends Controller
 
             \Log::info('Campaign order count', [
                 'whatsapp' => $whatsapp,
+                'whatsapp_last_9' => substr($whatsapp, -9),
                 'branch_id' => $request->branch_id,
                 'campaign_id' => $campaign->id,
                 'start_date' => $campaign->start_date,
                 'end_date' => $campaign->end_date,
                 'order_count' => $orderCount,
                 'required_purchases' => $requiredPurchases,
+                'found_orders' => $foundOrders->map(function($o) {
+                    return [
+                        'id' => $o->id,
+                        'serial' => $o->order_serial_no,
+                        'whatsapp' => $o->whatsapp_number,
+                        'datetime' => $o->order_datetime,
+                        'status' => $o->status,
+                    ];
+                })->toArray(),
             ]);
 
             // Rewards already redeemed (stored on orders)
