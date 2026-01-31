@@ -187,6 +187,23 @@
                                         {{ order.subtotal_currency_price }}
                                     </span>
                                 </li>
+                                <li class="flex items-center justify-between text-heading" v-if="order.campaign_discount && parseFloat(order.campaign_discount) > 0">
+                                    <span class="text-sm leading-6 capitalize text-green-600">
+                                        {{ $t("label.campaign_discount") }}
+                                        <span v-if="campaignInfo" class="text-xs text-gray-500">
+                                            ({{ campaignInfo.name }})
+                                        </span>
+                                    </span>
+                                    <span class="text-sm leading-6 capitalize text-green-600 font-semibold">
+                                        -{{ order.campaign_discount_currency_price }}
+                                    </span>
+                                </li>
+                                <li class="flex items-center justify-between text-heading" v-if="order.discount && parseFloat(order.discount) > 0 && (!order.campaign_discount || parseFloat(order.discount) > parseFloat(order.campaign_discount))">
+                                    <span class="text-sm leading-6 capitalize">{{ $t("label.discount") }}</span>
+                                    <span class="text-sm leading-6 capitalize">
+                                        {{ order.discount_currency_price }}
+                                    </span>
+                                </li>
                                 <li v-if="order.delivery_charge && parseFloat(order.delivery_charge) > 0" class="flex items-center justify-between text-heading">
                                     <span class="text-sm leading-6 capitalize">{{ $t("label.delivery_charge") }}</span>
                                     <span class="text-sm leading-6 capitalize">
@@ -199,6 +216,29 @@
                                 <h5 class="text-sm leading-6 font-semibold capitalize">
                                     {{ order.total_currency_price }}
                                 </h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-4 border-t" v-if="order.campaign_id && campaignInfo">
+                        <div class="rounded-xl border border-primary/20 bg-primary/5 p-3">
+                            <div class="flex items-center gap-2 mb-2">
+                                <i class="lab lab-offers lab-font-size-16 text-primary"></i>
+                                <h4 class="text-sm font-semibold text-heading">{{ $t("label.campaign") }}</h4>
+                            </div>
+                            <p class="text-sm font-medium text-heading mb-1">{{ campaignInfo.name }}</p>
+                            <p class="text-xs text-gray-600" v-if="campaignInfo.type === 1">
+                                {{ $t("label.percentage_campaign") }}: {{ campaignInfo.discount_value }}%
+                            </p>
+                            <p class="text-xs text-gray-600" v-else-if="campaignInfo.type === 2">
+                                {{ $t("label.item_campaign") }}: {{ $t("label.buy_x_get_free", { count: campaignInfo.required_purchases }) }}
+                            </p>
+                            <div class="flex items-center justify-between mt-2 pt-2 border-t border-gray-200" v-if="order.campaign_discount && parseFloat(order.campaign_discount) > 0">
+                                <span class="text-xs text-heading">{{ $t("label.campaign_discount_applied") }}</span>
+                                <span class="text-xs font-semibold text-green-600">{{ order.campaign_discount_currency_price }}</span>
+                            </div>
+                            <div class="flex items-center justify-between mt-1" v-if="order.campaign_redeem_free_item_id">
+                                <span class="text-xs text-heading">{{ $t("label.free_item_redeemed") }}</span>
+                                <span class="text-xs font-semibold text-green-600">{{ $t("label.yes") }}</span>
                             </div>
                         </div>
                     </div>
@@ -333,6 +373,29 @@ export default {
             
             // Use wa.me for better mobile compatibility
             return `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+        },
+        campaignInfo: function () {
+            if (!this.order || !this.order.campaign_snapshot) {
+                return null;
+            }
+            
+            try {
+                const snapshot = typeof this.order.campaign_snapshot === 'string' 
+                    ? JSON.parse(this.order.campaign_snapshot) 
+                    : this.order.campaign_snapshot;
+                
+                return {
+                    id: snapshot.id,
+                    name: snapshot.name,
+                    type: snapshot.type, // 1 = percentage, 2 = item
+                    discount_value: snapshot.discount_value,
+                    required_purchases: snapshot.required_purchases,
+                    free_item_id: snapshot.free_item_id,
+                };
+            } catch (e) {
+                console.error('Error parsing campaign snapshot:', e);
+                return null;
+            }
         }
     },
     mounted() {
