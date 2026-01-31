@@ -191,15 +191,15 @@ class CampaignController extends Controller
                 ]);
             }
 
-            // Check if user is already in another ITEM campaign
+            // Find online user (even if campaign_id is null - they might have completed previous campaign)
             $onlineUser = OnlineUser::withoutGlobalScopes()
                 ->where('branch_id', $request->branch_id)
                 ->where('whatsapp', $whatsapp)
-                ->whereNotNull('campaign_id')
                 ->with('campaign')
                 ->first();
 
-            if ($onlineUser && $onlineUser->campaign) {
+            // If user exists and has an active campaign
+            if ($onlineUser && $onlineUser->campaign_id) {
                 // If already in THIS campaign, just return success
                 if ($onlineUser->campaign_id == $campaign->id) {
                     return response()->json([
@@ -213,7 +213,7 @@ class CampaignController extends Controller
                 }
 
                 // If in a different ITEM campaign, prevent joining
-                if ($onlineUser->campaign->type == CampaignType::ITEM) {
+                if ($onlineUser->campaign && $onlineUser->campaign->type == CampaignType::ITEM) {
                     return response()->json([
                         'status'  => false,
                         'message' => 'You are already enrolled in "' . $onlineUser->campaign->name . '". Complete it first before joining another campaign.',
@@ -286,49 +286,68 @@ class CampaignController extends Controller
                 ], 422);
             }
 
-            // First check if user completed this campaign (even if no longer enrolled)
-            // Gracefully handle if campaign_completions table doesn't exist yet
-            try {
-                $completedCampaign = \App\Models\CampaignCompletion::where('branch_id', $request->branch_id)
-                    ->where('whatsapp', $whatsapp)
-                    ->with('campaign.freeItem')
-                    ->latest('completed_at')
-                    ->first();
-
-                if ($completedCampaign && $completedCampaign->campaign) {
-                    // User completed this campaign - show completion status
-                    $campaign = $completedCampaign->campaign;
-                    
-                    return response()->json([
-                        'status' => true,
-                        'data'   => [
-                            'campaign_id'        => $campaign->id,
-                            'campaign_name'      => $campaign->name,
-                            'type'               => 'item',
-                            'is_completed'       => true,
-                            'completed_at'       => $completedCampaign->completed_at->format('Y-m-d H:i:s'),
-                            'message'            => 'Congratulations! You have completed this campaign.',
-                            'free_item'          => $campaign->freeItem ? [
-                                'id'   => $campaign->freeItem->id,
-                                'name' => $campaign->freeItem->name,
-                            ] : null,
-                        ],
-                    ]);
-                }
-            } catch (\Exception $e) {
-                // Table doesn't exist yet - log and continue to normal flow
-                \Log::warning('campaign_completions table not found, skipping completion check', [
-                    'error' => $e->getMessage(),
-                ]);
-            }
-
-            // Find online user with active campaign
+            // FIRST: Check if user has an ACTIVE campaign enrollment (priority)
+            // This handles users who completed a campaign and joined a new one
             $onlineUser = OnlineUser::withoutGlobalScopes()
                 ->where('branch_id', $request->branch_id)
                 ->where('whatsapp', $whatsapp)
                 ->whereNotNull('campaign_id')
                 ->with('campaign')
                 ->first();
+
+            \Log::info('OnlineUser lookup', [
+                'branch_id' => $request->branch_id,
+                'whatsapp' => $whatsapp,
+                'found' => $onlineUser ? true : false,
+                'campaign_id' => $onlineUser?->campaign_id,
+            ]);
+
+            // If user has an active campaign, show progress for that campaign
+            if ($onlineUser && $onlineUser->campaign) {
+                // Continue to show progress for active campaign (see below)
+            } else {
+                // No active campaign - check if they completed any campaign
+                // Gracefully handle if campaign_completions table doesn't exist yet
+                try {
+                    $completedCampaign = \App\Models\CampaignCompletion::where('branch_id', $request->branch_id)
+                        ->where('whatsapp', $whatsapp)
+                        ->with('campaign.freeItem')
+                        ->latest('completed_at')
+                        ->first();
+
+                    if ($completedCampaign && $completedCampaign->campaign) {
+                        // User completed this campaign - show completion status
+                        $campaign = $completedCampaign->campaign;
+                        
+                        return response()->json([
+                            'status' => true,
+                            'data'   => [
+                                'campaign_id'        => $campaign->id,
+                                'campaign_name'      => $campaign->name,
+                                'type'               => 'item',
+                                'is_completed'       => true,
+                                'completed_at'       => $completedCampaign->completed_at->format('Y-m-d H:i:s'),
+                                'message'            => 'Congratulations! You have completed this campaign.',
+                                'free_item'          => $campaign->freeItem ? [
+                                    'id'   => $campaign->freeItem->id,
+                                    'name' => $campaign->freeItem->name,
+                                ] : null,
+                            ],
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    // Table doesn't exist yet - log and continue to normal flow
+                    \Log::warning('campaign_completions table not found, skipping completion check', [
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+
+                // No active campaign and no completed campaign found
+                return response()->json([
+                    'status' => true,
+                    'data'   => null,
+                ]);
+            }
 
             \Log::info('OnlineUser lookup', [
                 'branch_id' => $request->branch_id,
