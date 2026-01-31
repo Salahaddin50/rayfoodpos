@@ -110,31 +110,46 @@
 
                             <!-- Item Campaign (Buy X Get 1 Free) - Active -->
                             <div v-else-if="campaignStatus.type === 'item' && !campaignStatus.is_completed">
-                                <!-- Progress Circles -->
-                                <div class="flex justify-center flex-wrap gap-2 mb-3">
-                                    <div 
-                                        v-for="n in campaignStatus.required_purchases" 
-                                        :key="n"
-                                        class="w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-medium transition-all"
-                                        :class="n <= campaignStatus.current_progress ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 text-gray-400 bg-white'"
-                                    >
-                                        <span v-if="n <= campaignStatus.current_progress">✓</span>
-                                        <span v-else>{{ n }}</span>
+                                <!-- Zero Progress - Encouraging Message -->
+                                <div v-if="campaignStatus.current_progress === 0" class="text-center py-3">
+                                    <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                                        <p class="text-sm font-medium text-blue-900 leading-relaxed">
+                                            {{ $t('message.campaign_start_encouragement', { 
+                                                campaign: campaignStatus.campaign_name, 
+                                                category: campaignStatus.free_item?.category_name || 'eligible' 
+                                            }) }}
+                                        </p>
                                     </div>
                                 </div>
-                                <p class="text-center text-sm text-gray-600 mb-2">
-                                    {{ campaignStatus.current_progress }} / {{ campaignStatus.required_purchases }} {{ $t('label.orders') }}
-                                </p>
-                                <p v-if="campaignStatus.free_item && campaignStatus.free_item.category_name" class="text-center text-xs text-blue-600 mb-3">
-                                    <i class="lab lab-info-circle"></i>
-                                    {{ $t('message.only_category_orders_count', { category: campaignStatus.free_item.category_name }) }}
-                                </p>
 
-                                <!-- Not Yet Entitled -->
-                                <div v-if="campaignStatus.rewards_available === 0 && campaignStatus.free_item" class="text-center">
-                                    <p class="text-sm text-gray-700">
-                                        {{ $t('message.order_x_more_to_get_free', { count: ordersNeededForReward, item: campaignStatus.free_item.name }) }}
+                                <!-- Has Progress - Show Circles -->
+                                <div v-else>
+                                    <!-- Progress Circles -->
+                                    <div class="flex justify-center flex-wrap gap-2 mb-3">
+                                        <div 
+                                            v-for="n in campaignStatus.required_purchases" 
+                                            :key="n"
+                                            class="w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-medium transition-all"
+                                            :class="n <= campaignStatus.current_progress ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 text-gray-400 bg-white'"
+                                        >
+                                            <span v-if="n <= campaignStatus.current_progress">✓</span>
+                                            <span v-else>{{ n }}</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-center text-sm text-gray-600 mb-2">
+                                        {{ campaignStatus.current_progress }} / {{ campaignStatus.required_purchases }} {{ $t('label.orders') }}
                                     </p>
+                                    <p v-if="campaignStatus.free_item && campaignStatus.free_item.category_name" class="text-center text-xs text-blue-600 mb-3">
+                                        <i class="lab lab-info-circle"></i>
+                                        {{ $t('message.only_category_orders_count', { category: campaignStatus.free_item.category_name }) }}
+                                    </p>
+
+                                    <!-- Not Yet Entitled -->
+                                    <div v-if="campaignStatus.rewards_available === 0 && campaignStatus.free_item" class="text-center">
+                                        <p class="text-sm text-gray-700">
+                                            {{ $t('message.order_x_more_to_get_free', { count: ordersNeededForReward, item: campaignStatus.free_item.name }) }}
+                                        </p>
+                                    </div>
                                 </div>
 
                                 <!-- Entitled! Can Redeem -->

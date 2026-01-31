@@ -355,26 +355,49 @@
 
             <!-- Progress Circles (for active item type campaigns) -->
             <div v-else-if="campaignProgress.type === 'item' && !campaignProgress.is_completed" class="mt-4">
-                <div class="flex justify-center flex-wrap gap-2 mb-4">
-                    <div 
-                        v-for="n in campaignProgress.required_purchases" 
-                        :key="n"
-                        class="w-10 h-10 rounded-full border-2 flex items-center justify-center text-sm font-medium transition-all"
-                        :class="n <= campaignProgress.current_progress ? 'bg-primary border-primary text-white' : 'border-gray-300 text-gray-400'"
-                    >
-                        <span v-if="n <= campaignProgress.current_progress">✓</span>
-                        <span v-else>{{ n }}</span>
+                <!-- Zero Progress - Encouraging Message -->
+                <div v-if="campaignProgress.current_progress === 0" class="text-center py-3">
+                    <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                        <p class="text-sm font-medium text-blue-900 leading-relaxed">
+                            {{ $t('message.campaign_start_encouragement', { 
+                                campaign: campaignProgress.campaign_name, 
+                                category: campaignProgress.free_item?.category_name || campaignProgress.free_item_category_name || 'eligible' 
+                            }) }}
+                        </p>
                     </div>
                 </div>
-                <p class="text-center text-sm text-gray-600">
-                    {{ campaignProgress.current_progress }} / {{ campaignProgress.required_purchases }} {{ $t('label.orders') }}
-                </p>
-                <p v-if="campaignProgress.is_complete" class="text-center text-sm text-green-600 font-medium mt-2">
-                    🎉 {{ $t('message.campaign_reward_ready') }}
-                </p>
-                <p v-if="campaignProgress.rewards_available > 0" class="text-center text-sm text-green-600 mt-1">
-                    {{ $t('label.rewards_available') }}: {{ campaignProgress.rewards_available }}
-                </p>
+
+                <!-- Has Progress - Show Circles -->
+                <div v-else>
+                    <div class="flex justify-center flex-wrap gap-2 mb-4">
+                        <div 
+                            v-for="n in campaignProgress.required_purchases" 
+                            :key="n"
+                            class="w-10 h-10 rounded-full border-2 flex items-center justify-center text-sm font-medium transition-all"
+                            :class="n <= campaignProgress.current_progress ? 'bg-primary border-primary text-white' : 'border-gray-300 text-gray-400'"
+                        >
+                            <span v-if="n <= campaignProgress.current_progress">✓</span>
+                            <span v-else>{{ n }}</span>
+                        </div>
+                    </div>
+                    <p class="text-center text-sm text-gray-600">
+                        {{ campaignProgress.current_progress }} / {{ campaignProgress.required_purchases }} {{ $t('label.orders') }}
+                    </p>
+                    <p v-if="campaignProgress.free_item && campaignProgress.free_item.category_name" class="text-center text-xs text-blue-600 mt-2">
+                        <i class="lab lab-info-circle"></i>
+                        {{ $t('message.only_category_orders_count', { category: campaignProgress.free_item.category_name }) }}
+                    </p>
+                    <p v-else-if="campaignProgress.free_item_category_name" class="text-center text-xs text-blue-600 mt-2">
+                        <i class="lab lab-info-circle"></i>
+                        {{ $t('message.only_category_orders_count', { category: campaignProgress.free_item_category_name }) }}
+                    </p>
+                    <p v-if="campaignProgress.is_complete" class="text-center text-sm text-green-600 font-medium mt-2">
+                        🎉 {{ $t('message.campaign_reward_ready') }}
+                    </p>
+                    <p v-if="campaignProgress.rewards_available > 0" class="text-center text-sm text-green-600 mt-1">
+                        {{ $t('label.rewards_available') }}: {{ campaignProgress.rewards_available }}
+                    </p>
+                </div>
             </div>
 
             <button 

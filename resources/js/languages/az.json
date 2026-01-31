@@ -831,6 +831,7 @@
         "redeem_will_add_free_item": "Aktiv etsəniz, pulsuz məhsul bu sifarişə əlavə olunacaq.",
         "order_x_more_to_get_free": "PULSUZ {item} almaq üçün daha {count} sifariş verin!",
         "you_are_entitled_free_item": "Siz PULSUZ {item} qazandınız!",
+        "campaign_start_encouragement": "🎯 Siz {campaign} kampaniyasında iştirak edirsiniz! Pulsuz mükafat qazanmaq üçün {category} məhsullarından sifariş verməyə başlayın!",
         "add_free_item_to_order": "Pulsuz məhsulu bu sifarişə əlavə et",
         "coupon_add": "Kupon Uğurla Əlavə Edildi.",
         "coupon_delete": "Kupon Uğurla Silindi.",

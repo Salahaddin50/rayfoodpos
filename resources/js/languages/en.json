@@ -845,6 +845,7 @@
         "redeem_will_add_free_item": "If enabled, your free item will be added to this order.",
         "order_x_more_to_get_free": "Order {count} more to get a FREE {item}!",
         "you_are_entitled_free_item": "You are entitled to a FREE {item}!",
+        "campaign_start_encouragement": "🎯 You're participating in {campaign}! Start ordering {category} items to earn your free reward!",
         "add_free_item_to_order": "Add free item to this order",
         "coupon_add": "Coupon Add Successfully.",
         "coupon_delete": "Coupon Delete Successfully.",
