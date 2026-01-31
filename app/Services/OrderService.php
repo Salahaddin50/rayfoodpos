@@ -624,7 +624,7 @@ class OrderService
                                     OrderStatus::DELIVERED,
                                 ];
 
-                                $ordersQuery = Order::withoutGlobalScopes(\App\Models\Scopes\BranchScope::class)
+                                $ordersQuery = Order::withoutGlobalScopes([\App\Models\Scopes\BranchScope::class])
                                     ->where('branch_id', $request->branch_id)
                                     ->where('whatsapp_number', $normalizedWhatsApp)
                                     ->whereIn('status', $completedStatuses);
@@ -640,7 +640,7 @@ class OrderService
                                 $earnedRewards = (int) floor($completedCount / $requiredPurchases);
 
                                 // Already redeemed rewards (stored on orders)
-                                $redeemedCount = (int) Order::withoutGlobalScopes(\App\Models\Scopes\BranchScope::class)
+                                $redeemedCount = (int) Order::withoutGlobalScopes([\App\Models\Scopes\BranchScope::class])
                                     ->where('branch_id', $request->branch_id)
                                     ->where('campaign_id', $campaign->id)
                                     ->where('whatsapp_number', $normalizedWhatsApp)
