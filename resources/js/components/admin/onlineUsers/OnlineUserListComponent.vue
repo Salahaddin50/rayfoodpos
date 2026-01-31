@@ -9,9 +9,21 @@
                     <span>{{ $t("menu.online_users") }}</span>
                 </h3>
                 <div class="db-card-filter">
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-3 flex-wrap">
                         <div class="text-xs text-gray-500" v-if="branch && branch.name">
                             {{ $t("label.branch") }}: <b class="font-medium">{{ branch.name }}</b>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input 
+                                v-model="searchPhone" 
+                                type="text" 
+                                class="db-field-control" 
+                                :placeholder="$t('label.search_phone_number') || 'Search phone number...'"
+                                style="min-width: 200px;"
+                                @input="filterRows" />
+                            <button v-if="searchPhone" class="db-btn py-2 text-white bg-gray-600" @click.prevent="clearSearch">
+                                <i class="lab lab-close lab-font-size-16"></i>
+                            </button>
                         </div>
                         <div class="dropdown-group">
                             <ExportComponent />
@@ -19,6 +31,10 @@
                                 <ExcelComponent :method="xls" />
                             </div>
                         </div>
+                        <button class="db-btn py-2 text-white bg-green-600" @click.prevent="exportContacts">
+                            <i class="lab lab-phone lab-font-size-16"></i>
+                            <span>{{ $t("button.export_contacts") || "Export Contacts" }}</span>
+                        </button>
                         <div class="dropdown-group">
                             <ImportComponent />
                             <div class="dropdown-list db-card-filter-dropdown-list transition-all duration-300 scale-y-0 origin-top">
@@ -51,8 +67,8 @@
                             </th>
                         </tr>
                     </thead>
-                    <tbody class="db-table-body" v-if="rows.length > 0">
-                        <tr class="db-table-body-tr" v-for="row in uniqueRows" :key="row.id">
+                    <tbody class="db-table-body" v-if="filteredRows.length > 0">
+                        <tr class="db-table-body-tr" v-for="row in filteredRows" :key="row.id">
                             <td class="db-table-body-td">
                                 <span dir="ltr">{{ row.whatsapp }}</span>
                             </td>
@@ -223,6 +239,7 @@ export default {
             form: { whatsapp: "", location: "", campaign_id: null },
             editId: null,
             editForm: { whatsapp: "", location: "", campaign_id: null },
+            searchPhone: "",
         };
     },
     computed: {
@@ -241,6 +258,20 @@ export default {
                 if (!map.has(key)) map.set(key, r);
             });
             return Array.from(map.values());
+        },
+        filteredRows() {
+            let rows = this.uniqueRows;
+            
+            // Filter by phone number search
+            if (this.searchPhone && this.searchPhone.trim() !== "") {
+                const searchTerm = this.searchPhone.trim().toLowerCase();
+                rows = rows.filter(row => {
+                    const phone = String(row.whatsapp || "").toLowerCase();
+                    return phone.includes(searchTerm);
+                });
+            }
+            
+            return rows;
         },
         campaignsWithNone() {
             // Add "No Campaign" option at the beginning
@@ -360,6 +391,67 @@ export default {
                     alertService.error(err?.response?.data?.message || "Failed to delete");
                 });
             });
+        },
+        filterRows() {
+            // Filtering is handled by computed property filteredRows
+            // This method is called on input to trigger reactivity
+        },
+        clearSearch() {
+            this.searchPhone = "";
+        },
+        exportContacts() {
+            try {
+                // Get unique phone numbers from filtered rows
+                const phoneNumbers = new Set();
+                this.filteredRows.forEach(row => {
+                    if (row.whatsapp && row.whatsapp.trim() !== "") {
+                        // Normalize phone number - remove spaces and special characters except +
+                        let phone = row.whatsapp.trim().replace(/[\s\-\(\)]/g, "");
+                        // Ensure it starts with + if it doesn't
+                        if (!phone.startsWith("+")) {
+                            // If it starts with 994, add +
+                            if (phone.startsWith("994")) {
+                                phone = "+" + phone;
+                            } else if (phone.startsWith("0")) {
+                                // Replace leading 0 with +994
+                                phone = "+994" + phone.substring(1);
+                            } else {
+                                phone = "+" + phone;
+                            }
+                        }
+                        phoneNumbers.add(phone);
+                    }
+                });
+
+                if (phoneNumbers.size === 0) {
+                    alertService.error(this.$t("message.no_phone_numbers_to_export") || "No phone numbers to export");
+                    return;
+                }
+
+                // Generate vCard content
+                // vCard format: each contact is a separate vCard entry
+                let vcardContent = "";
+                phoneNumbers.forEach(phone => {
+                    // vCard format - only phone number, no name
+                    vcardContent += "BEGIN:VCARD\n";
+                    vcardContent += "VERSION:3.0\n";
+                    vcardContent += `TEL:${phone}\n`;
+                    vcardContent += "END:VCARD\n";
+                });
+
+                // Create blob and download
+                const blob = new Blob([vcardContent], { type: "text/vcard;charset=utf-8" });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = "contacts.vcf";
+                link.click();
+                URL.revokeObjectURL(link.href);
+
+                alertService.success(this.$t("message.contacts_exported") || `Exported ${phoneNumbers.size} contact(s)`);
+            } catch (error) {
+                console.error("Error exporting contacts:", error);
+                alertService.error(this.$t("message.export_failed") || "Failed to export contacts");
+            }
         },
     },
 };
