@@ -629,9 +629,14 @@ class OrderService
                                     ->where('whatsapp_number', $normalizedWhatsApp)
                                     ->whereIn('status', $completedStatuses);
 
-                                if ($campaign->start_date) {
+                                // IMPORTANT: Only count orders placed AFTER user joined the campaign
+                                if ($onlineUser->campaign_joined_at) {
+                                    $ordersQuery->where('order_datetime', '>=', $onlineUser->campaign_joined_at);
+                                } elseif ($campaign->start_date) {
+                                    // Fallback to campaign start date if no join date recorded
                                     $ordersQuery->where('order_datetime', '>=', $campaign->start_date);
                                 }
+
                                 if ($campaign->end_date) {
                                     $ordersQuery->where('order_datetime', '<=', $campaign->end_date . ' 23:59:59');
                                 }
@@ -802,6 +807,47 @@ class OrderService
                 $this->order->delivery_time   = "$start - $end";
                 $this->order->save();
             });
+
+            // Mark campaign as completed if user redeemed a free item
+            if ($this->order->campaign_redeem_free_item_id && $this->order->campaign_id) {
+                $normalizedWhatsApp = WhatsAppNormalizer::normalize($this->order->whatsapp_number ?? '');
+                
+                if ($normalizedWhatsApp) {
+                    try {
+                        // Record completion
+                        \App\Models\CampaignCompletion::create([
+                            'campaign_id'    => $this->order->campaign_id,
+                            'branch_id'      => $this->order->branch_id,
+                            'whatsapp'       => $normalizedWhatsApp,
+                            'completed_at'   => now(),
+                            'final_order_id' => $this->order->id,
+                        ]);
+
+                        // Remove user from campaign (they completed it)
+                        $onlineUser = \App\Models\OnlineUser::withoutGlobalScopes()
+                            ->where('branch_id', $this->order->branch_id)
+                            ->where('whatsapp', $normalizedWhatsApp)
+                            ->where('campaign_id', $this->order->campaign_id)
+                            ->first();
+
+                        if ($onlineUser) {
+                            $onlineUser->update([
+                                'campaign_id'        => null,
+                                'campaign_joined_at' => null,
+                            ]);
+                        }
+
+                        \Log::info('Campaign completed and user unlinked', [
+                            'campaign_id' => $this->order->campaign_id,
+                            'whatsapp'    => $normalizedWhatsApp,
+                            'order_id'    => $this->order->id,
+                        ]);
+                    } catch (\Exception $e) {
+                        \Log::warning('Failed to mark campaign as completed: ' . $e->getMessage());
+                        // Don't fail the order if campaign completion tracking fails
+                    }
+                }
+            }
 
             // Persist WhatsApp/location into online_users for quick lookup in Admin → Users → Online Users.
             // Includes dining-table orders as well if whatsapp_number is provided.

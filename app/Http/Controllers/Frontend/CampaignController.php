@@ -96,12 +96,50 @@ class CampaignController extends Controller
                 ], 422);
             }
 
-            // Find or create online user
+            // Check if user already completed this campaign
+            $alreadyCompleted = \App\Models\CampaignCompletion::where('campaign_id', $campaign->id)
+                ->where('branch_id', $request->branch_id)
+                ->where('whatsapp', $whatsapp)
+                ->exists();
+
+            if ($alreadyCompleted) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'You have already completed this campaign and cannot rejoin it.',
+                ], 422);
+            }
+
+            // Check if user is already in another ITEM campaign
             $onlineUser = OnlineUser::withoutGlobalScopes()
                 ->where('branch_id', $request->branch_id)
                 ->where('whatsapp', $whatsapp)
+                ->whereNotNull('campaign_id')
+                ->with('campaign')
                 ->first();
 
+            if ($onlineUser && $onlineUser->campaign) {
+                // If already in THIS campaign, just return success
+                if ($onlineUser->campaign_id == $campaign->id) {
+                    return response()->json([
+                        'status'  => true,
+                        'message' => 'You are already enrolled in this campaign!',
+                        'data'    => [
+                            'campaign_name'      => $campaign->name,
+                            'required_purchases' => $campaign->required_purchases,
+                        ],
+                    ]);
+                }
+
+                // If in a different ITEM campaign, prevent joining
+                if ($onlineUser->campaign->type == CampaignType::ITEM) {
+                    return response()->json([
+                        'status'  => false,
+                        'message' => 'You are already enrolled in "' . $onlineUser->campaign->name . '". Complete it first before joining another campaign.',
+                    ], 422);
+                }
+            }
+
+            // Find or create online user
             if (!$onlineUser) {
                 $onlineUser = OnlineUser::create([
                     'branch_id' => $request->branch_id,
@@ -109,8 +147,11 @@ class CampaignController extends Controller
                 ]);
             }
 
-            // Link to campaign
-            $onlineUser->update(['campaign_id' => $campaign->id]);
+            // Link to campaign with join timestamp
+            $onlineUser->update([
+                'campaign_id'        => $campaign->id,
+                'campaign_joined_at' => now(),
+            ]);
 
             return response()->json([
                 'status'  => true,
@@ -219,10 +260,15 @@ class CampaignController extends Controller
                 })
                 ->whereIn('status', $completedStatuses);
 
-            // Filter by campaign period using order_datetime (not created_at)
-            if ($campaign->start_date) {
+            // IMPORTANT: Only count orders placed AFTER user joined the campaign
+            if ($onlineUser->campaign_joined_at) {
+                $ordersQuery->where('order_datetime', '>=', $onlineUser->campaign_joined_at);
+            } elseif ($campaign->start_date) {
+                // Fallback to campaign start date if no join date recorded
                 $ordersQuery->where('order_datetime', '>=', $campaign->start_date);
             }
+
+            // Filter by campaign end date using order_datetime (not created_at)
             if ($campaign->end_date) {
                 $ordersQuery->where('order_datetime', '<=', $campaign->end_date . ' 23:59:59');
             }

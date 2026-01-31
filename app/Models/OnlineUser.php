@@ -15,16 +15,18 @@ class OnlineUser extends Model
         'whatsapp',
         'location',
         'campaign_id',
+        'campaign_joined_at',
         'last_order_id',
         'last_order_at',
     ];
 
     protected $casts = [
-        'id'            => 'integer',
-        'branch_id'     => 'integer',
-        'campaign_id'   => 'integer',
-        'last_order_id' => 'integer',
-        'last_order_at' => 'datetime',
+        'id'                 => 'integer',
+        'branch_id'          => 'integer',
+        'campaign_id'        => 'integer',
+        'campaign_joined_at' => 'datetime',
+        'last_order_id'      => 'integer',
+        'last_order_at'      => 'datetime',
     ];
 
     public function campaign(): \Illuminate\Database\Eloquent\Relations\BelongsTo
