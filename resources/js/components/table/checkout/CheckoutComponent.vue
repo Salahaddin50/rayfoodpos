@@ -481,16 +481,13 @@ export default {
                 this.checkoutProps.form.branch_id = table.branch_id;
             this.checkoutProps.form.subtotal = this.subtotal;
             
-            // Apply campaign discount if percentage campaign
-            let finalTotal = this.subtotal;
-            if (this.campaignStatus && this.campaignStatus.type === 'percentage') {
-                this.checkoutProps.form.discount = parseFloat(this.campaignDiscountPreview).toFixed(this.setting.site_digit_after_decimal_point);
-                finalTotal = this.displayTotal;
-            } else {
-                this.checkoutProps.form.discount = 0;
-            }
+            // IMPORTANT: Do NOT send campaign discount in discount field
+            // Backend will calculate and apply campaign discount automatically
+            // Frontend discount calculation is only for preview/display
+            this.checkoutProps.form.discount = 0; // Let backend handle campaign discounts
             
-            this.checkoutProps.form.total = parseFloat(finalTotal).toFixed(this.setting.site_digit_after_decimal_point);
+            // Send original subtotal - backend will apply discount and recalculate total
+            this.checkoutProps.form.total = parseFloat(this.subtotal).toFixed(this.setting.site_digit_after_decimal_point);
             
             // Only allow redemption if campaign is active and not completed
             this.checkoutProps.form.campaign_redeem = !!(this.campaignRedeem && this.campaignStatus && !this.campaignStatus.is_completed);

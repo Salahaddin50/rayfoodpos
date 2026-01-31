@@ -608,6 +608,8 @@ class OrderService
                             ]);
 
                             // Percentage campaign: auto-apply discount on subtotal
+                            // NOTE: Frontend sends discount=0, backend calculates and applies campaign discount here
+                            // This prevents double-application of campaign discounts
                             if ((int) $campaign->type === (int) CampaignType::PERCENTAGE) {
                                 $percent = (float) $campaign->discount_value;
                                 if ($percent > 0) {
@@ -615,11 +617,21 @@ class OrderService
                                     $campaignDiscount = max(0, min((float) $request->subtotal, $campaignDiscount));
 
                                     $orderData['campaign_discount'] = $campaignDiscount;
+                                    // Add campaign discount to any existing discount (coupons, etc.)
+                                    // Frontend should send discount=0 for campaign-only orders
                                     $orderData['discount'] = ((float) ($orderData['discount'] ?? 0)) + $campaignDiscount;
                                     $orderData['total'] = max(
                                         0,
                                         ((float) $request->subtotal) - ((float) $orderData['discount']) + ((float) ($orderData['delivery_charge'] ?? 0))
                                     );
+                                    
+                                    \Log::info('Campaign discount applied', [
+                                        'subtotal' => $request->subtotal,
+                                        'percent' => $percent,
+                                        'campaign_discount' => $campaignDiscount,
+                                        'total_discount' => $orderData['discount'],
+                                        'final_total' => $orderData['total'],
+                                    ]);
                                 }
                             }
 

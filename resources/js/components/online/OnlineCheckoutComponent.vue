@@ -836,9 +836,14 @@ export default {
             this.checkoutProps.form.branch_id = parseInt(this.$route.params.branchId);
             this.checkoutProps.form.subtotal = this.subtotal;
             this.checkoutProps.form.delivery_charge = this.pickupCost; // Store pickup cost in delivery_charge field
-            // Campaign preview (backend will enforce final totals)
-            this.checkoutProps.form.discount = parseFloat(this.campaignDiscountPreview || 0).toFixed(this.setting.site_digit_after_decimal_point);
-            this.checkoutProps.form.total = parseFloat(this.totalAfterCampaign).toFixed(this.setting.site_digit_after_decimal_point);
+            
+            // IMPORTANT: Do NOT send campaign discount in discount field
+            // Backend will calculate and apply campaign discount automatically
+            // Frontend discount calculation (campaignDiscountPreview) is only for preview/display
+            this.checkoutProps.form.discount = 0; // Let backend handle campaign discounts
+            
+            // Send original subtotal - backend will apply discount and recalculate total
+            this.checkoutProps.form.total = parseFloat(this.subtotal).toFixed(this.setting.site_digit_after_decimal_point);
             // Only allow redemption if campaign is active and not completed
             this.checkoutProps.form.campaign_redeem = !!(this.campaignRedeem && this.campaignStatus && !this.campaignStatus.is_completed);
             this.checkoutProps.form.items = [];
