@@ -55,6 +55,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => RoleOrPermissionMiddleware::class,
             'localization'       => \App\Http\Middleware\localization::class,
             'installed'          => Installed::class,
+            'campaign.ratelimit' => \App\Http\Middleware\CampaignRateLimiter::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

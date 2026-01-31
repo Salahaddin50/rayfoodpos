@@ -72,6 +72,15 @@ class CampaignController extends Controller
     public function join(Request $request)
     {
         try {
+            // Security: Log all campaign join attempts
+            \Log::info('Campaign join attempt', [
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'phone' => $request->phone,
+                'campaign_id' => $request->campaign_id,
+                'branch_id' => $request->branch_id,
+            ]);
+            
             $request->validate([
                 'campaign_id' => 'required|exists:campaigns,id',
                 'phone'       => 'required|string|max:32',

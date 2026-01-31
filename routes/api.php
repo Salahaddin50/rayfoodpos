@@ -650,9 +650,18 @@ Route::prefix('frontend')->name('frontend.')->middleware(['installed', 'apiKey',
     });
 
     Route::prefix('campaign')->name('campaign.')->group(function () {
+        // Public: List active campaigns (no sensitive data)
         Route::get('/', [\App\Http\Controllers\Frontend\CampaignController::class, 'index']);
-        Route::post('/join', [\App\Http\Controllers\Frontend\CampaignController::class, 'join']);
-        Route::post('/progress', [\App\Http\Controllers\Frontend\CampaignController::class, 'progress']);
+        
+        // Protected: Campaign join with strict rate limiting (3 per hour per phone)
+        Route::post('/join', [\App\Http\Controllers\Frontend\CampaignController::class, 'join'])
+            ->middleware('campaign.ratelimit:join')
+            ->middleware('throttle:10,1'); // Also limit by IP: 10 per minute
+        
+        // Protected: Progress check with moderate rate limiting (20 per hour per phone)
+        Route::post('/progress', [\App\Http\Controllers\Frontend\CampaignController::class, 'progress'])
+            ->middleware('campaign.ratelimit:progress')
+            ->middleware('throttle:30,1'); // Also limit by IP: 30 per minute
     });
 });
 

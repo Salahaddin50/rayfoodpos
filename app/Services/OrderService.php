@@ -562,8 +562,21 @@ class OrderService
                  * - One campaign at a time (from online_users.campaign_id)
                  * - Percentage campaigns auto-apply discount
                  * - Item campaigns allow user-controlled redeem (campaign_redeem=true)
+                 * 
+                 * SECURITY: Campaign is determined server-side from online_users table.
+                 * Users CANNOT specify campaign_id in the request - prevents manipulation.
                  */
                 $campaignRedeemRequested = (bool) ($request->input('campaign_redeem') ?? false);
+                
+                // Security: Log campaign redemption attempts
+                if ($campaignRedeemRequested) {
+                    \Log::info('Campaign redemption attempt', [
+                        'whatsapp' => $normalizedWhatsApp,
+                        'branch_id' => $request->branch_id,
+                        'ip' => request()->ip(),
+                    ]);
+                }
+                
                 if ($normalizedWhatsApp) {
                     $onlineUser = OnlineUser::withoutGlobalScopes()
                         ->where('branch_id', $request->branch_id)
