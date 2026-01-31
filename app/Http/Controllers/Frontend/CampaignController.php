@@ -141,16 +141,24 @@ class CampaignController extends Controller
             }
 
             // Check if user already completed this campaign
-            $alreadyCompleted = \App\Models\CampaignCompletion::where('campaign_id', $campaign->id)
-                ->where('branch_id', $request->branch_id)
-                ->where('whatsapp', $whatsapp)
-                ->exists();
+            // Gracefully handle if campaign_completions table doesn't exist yet
+            try {
+                $alreadyCompleted = \App\Models\CampaignCompletion::where('campaign_id', $campaign->id)
+                    ->where('branch_id', $request->branch_id)
+                    ->where('whatsapp', $whatsapp)
+                    ->exists();
 
-            if ($alreadyCompleted) {
-                return response()->json([
-                    'status'  => false,
-                    'message' => 'You have already completed this campaign and cannot rejoin it.',
-                ], 422);
+                if ($alreadyCompleted) {
+                    return response()->json([
+                        'status'  => false,
+                        'message' => 'You have already completed this campaign and cannot rejoin it.',
+                    ], 422);
+                }
+            } catch (\Exception $e) {
+                // Table doesn't exist yet - log and continue
+                \Log::warning('campaign_completions table not found, skipping completion check in join', [
+                    'error' => $e->getMessage(),
+                ]);
             }
 
             // Check if user is already in another ITEM campaign
@@ -249,30 +257,38 @@ class CampaignController extends Controller
             }
 
             // First check if user completed this campaign (even if no longer enrolled)
-            $completedCampaign = \App\Models\CampaignCompletion::where('branch_id', $request->branch_id)
-                ->where('whatsapp', $whatsapp)
-                ->with('campaign.freeItem')
-                ->latest('completed_at')
-                ->first();
+            // Gracefully handle if campaign_completions table doesn't exist yet
+            try {
+                $completedCampaign = \App\Models\CampaignCompletion::where('branch_id', $request->branch_id)
+                    ->where('whatsapp', $whatsapp)
+                    ->with('campaign.freeItem')
+                    ->latest('completed_at')
+                    ->first();
 
-            if ($completedCampaign && $completedCampaign->campaign) {
-                // User completed this campaign - show completion status
-                $campaign = $completedCampaign->campaign;
-                
-                return response()->json([
-                    'status' => true,
-                    'data'   => [
-                        'campaign_id'        => $campaign->id,
-                        'campaign_name'      => $campaign->name,
-                        'type'               => 'item',
-                        'is_completed'       => true,
-                        'completed_at'       => $completedCampaign->completed_at->format('Y-m-d H:i:s'),
-                        'message'            => 'Congratulations! You have completed this campaign.',
-                        'free_item'          => $campaign->freeItem ? [
-                            'id'   => $campaign->freeItem->id,
-                            'name' => $campaign->freeItem->name,
-                        ] : null,
-                    ],
+                if ($completedCampaign && $completedCampaign->campaign) {
+                    // User completed this campaign - show completion status
+                    $campaign = $completedCampaign->campaign;
+                    
+                    return response()->json([
+                        'status' => true,
+                        'data'   => [
+                            'campaign_id'        => $campaign->id,
+                            'campaign_name'      => $campaign->name,
+                            'type'               => 'item',
+                            'is_completed'       => true,
+                            'completed_at'       => $completedCampaign->completed_at->format('Y-m-d H:i:s'),
+                            'message'            => 'Congratulations! You have completed this campaign.',
+                            'free_item'          => $campaign->freeItem ? [
+                                'id'   => $campaign->freeItem->id,
+                                'name' => $campaign->freeItem->name,
+                            ] : null,
+                        ],
+                    ]);
+                }
+            } catch (\Exception $e) {
+                // Table doesn't exist yet - log and continue to normal flow
+                \Log::warning('campaign_completions table not found, skipping completion check', [
+                    'error' => $e->getMessage(),
                 ]);
             }
 
