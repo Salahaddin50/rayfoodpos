@@ -677,7 +677,8 @@
         "your_discount": "Ваша скидка",
         "percent_off": "СКИДКА",
         "free_campaign_reward": "БЕСПЛАТНО - Награда кампании",
-        "campaign_progress": "Прогресс кампании"
+        "campaign_progress": "Прогресс кампании",
+        "campaign_completed": "Кампания Завершена"
     },
     "button": {
         "add": "Добавить",
@@ -883,6 +884,9 @@
         "approach_branch": "Пожалуйста, обратитесь в филиал для присоединения",
         "approach_branch_for_discount": "Пожалуйста, обратитесь в филиал за скидкой.",
         "campaign_reward_ready": "Поздравляем! Ваша награда готова!",
+        "campaign_completed": "Кампания Завершена!",
+        "campaign_completed_description": "Вы успешно завершили эту кампанию и получили бесплатную награду.",
+        "you_received_free_item": "Вы получили: {item}",
         "enter_phone_first": "Пожалуйста, сначала введите номер телефона"
     }
 }

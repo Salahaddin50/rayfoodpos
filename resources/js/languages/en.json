@@ -694,7 +694,8 @@
         "your_discount": "Your Discount",
         "percent_off": "OFF",
         "free_campaign_reward": "FREE - Campaign Reward",
-        "campaign_progress": "Campaign Progress"
+        "campaign_progress": "Campaign Progress",
+        "campaign_completed": "Campaign Completed"
     },
     "button": {
         "add": "Add",
@@ -906,6 +907,9 @@
         "approach_branch": "Please approach the branch to join",
         "approach_branch_for_discount": "Please approach the branch for your discount.",
         "campaign_reward_ready": "Congratulations! Your reward is ready!",
+        "campaign_completed": "Campaign Completed!",
+        "campaign_completed_description": "You have successfully completed this campaign and received your free reward.",
+        "you_received_free_item": "You received: {item}",
         "enter_phone_first": "Please enter your phone number first"
     }
 }

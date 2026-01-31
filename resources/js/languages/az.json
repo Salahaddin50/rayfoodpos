@@ -683,7 +683,8 @@
         "your_discount": "Sizin Endirim",
         "percent_off": "ENDİRİM",
         "free_campaign_reward": "PULSUZ - Kampaniya Mükafatı",
-        "campaign_progress": "Kampaniya İrəliləyişi"
+        "campaign_progress": "Kampaniya İrəliləyişi",
+        "campaign_completed": "Kampaniya Tamamlandı"
     },
     "button": {
         "add": "Əlavə",
@@ -889,6 +890,9 @@
         "approach_branch": "Qoşulmaq üçün filiala yaxınlaşın",
         "approach_branch_for_discount": "Endiriminiz üçün filiala yaxınlaşın.",
         "campaign_reward_ready": "Təbrik edirik! Mükafatınız hazırdır!",
+        "campaign_completed": "Kampaniya Tamamlandı!",
+        "campaign_completed_description": "Bu kampaniyanı uğurla tamamladınız və pulsuz mükafatınızı aldınız.",
+        "you_received_free_item": "Aldınız: {item}",
         "enter_phone_first": "Zəhmət olmasa əvvəlcə telefon nömrənizi daxil edin"
     }
 }

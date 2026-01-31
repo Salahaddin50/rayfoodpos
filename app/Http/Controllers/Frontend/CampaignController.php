@@ -248,7 +248,35 @@ class CampaignController extends Controller
                 ], 422);
             }
 
-            // Find online user with campaign
+            // First check if user completed this campaign (even if no longer enrolled)
+            $completedCampaign = \App\Models\CampaignCompletion::where('branch_id', $request->branch_id)
+                ->where('whatsapp', $whatsapp)
+                ->with('campaign.freeItem')
+                ->latest('completed_at')
+                ->first();
+
+            if ($completedCampaign && $completedCampaign->campaign) {
+                // User completed this campaign - show completion status
+                $campaign = $completedCampaign->campaign;
+                
+                return response()->json([
+                    'status' => true,
+                    'data'   => [
+                        'campaign_id'        => $campaign->id,
+                        'campaign_name'      => $campaign->name,
+                        'type'               => 'item',
+                        'is_completed'       => true,
+                        'completed_at'       => $completedCampaign->completed_at->format('Y-m-d H:i:s'),
+                        'message'            => 'Congratulations! You have completed this campaign.',
+                        'free_item'          => $campaign->freeItem ? [
+                            'id'   => $campaign->freeItem->id,
+                            'name' => $campaign->freeItem->name,
+                        ] : null,
+                    ],
+                ]);
+            }
+
+            // Find online user with active campaign
             $onlineUser = OnlineUser::withoutGlobalScopes()
                 ->where('branch_id', $request->branch_id)
                 ->where('whatsapp', $whatsapp)
@@ -389,6 +417,7 @@ class CampaignController extends Controller
                         'name' => $campaign->freeItem->name,
                     ] : null,
                     'is_complete'        => $progress >= $requiredPurchases,
+                    'is_completed'       => false, // Active campaign, not yet completed
                 ],
             ]);
         } catch (ValidationException $exception) {

@@ -320,17 +320,37 @@
             </button>
             
             <div class="text-center mb-4">
-                <h4 class="text-lg font-semibold text-gray-900">{{ $t('label.campaign_progress') }}</h4>
+                <h4 class="text-lg font-semibold text-gray-900">
+                    {{ campaignProgress.is_completed ? $t('label.campaign_completed') : $t('label.campaign_progress') }}
+                </h4>
                 <p class="text-sm text-gray-600 mt-1">{{ campaignProgress.campaign_name }}</p>
             </div>
 
+            <!-- Campaign Completed Message -->
+            <div v-if="campaignProgress.is_completed" class="mt-4 text-center">
+                <div class="mb-4">
+                    <div class="w-20 h-20 mx-auto rounded-full bg-green-100 flex items-center justify-center mb-3">
+                        <span class="text-4xl">🎉</span>
+                    </div>
+                    <p class="text-lg font-semibold text-green-600 mb-2">
+                        {{ $t('message.campaign_completed') }}
+                    </p>
+                    <p class="text-sm text-gray-600">
+                        {{ $t('message.campaign_completed_description') }}
+                    </p>
+                    <p v-if="campaignProgress.free_item" class="text-sm text-gray-700 mt-3 font-medium">
+                        {{ $t('message.you_received_free_item', { item: campaignProgress.free_item.name }) }}
+                    </p>
+                </div>
+            </div>
+
             <!-- For percentage campaigns -->
-            <p v-if="campaignProgress.type === 'percentage'" class="text-sm text-gray-600 text-center">
+            <p v-else-if="campaignProgress.type === 'percentage'" class="text-sm text-gray-600 text-center">
                 {{ $t('message.approach_branch_for_discount') }}
             </p>
 
-            <!-- Progress Circles (for item type) -->
-            <div v-if="campaignProgress.type === 'item'" class="mt-4">
+            <!-- Progress Circles (for active item type campaigns) -->
+            <div v-else-if="campaignProgress.type === 'item' && !campaignProgress.is_completed" class="mt-4">
                 <div class="flex justify-center flex-wrap gap-2 mb-4">
                     <div 
                         v-for="n in campaignProgress.required_purchases" 
