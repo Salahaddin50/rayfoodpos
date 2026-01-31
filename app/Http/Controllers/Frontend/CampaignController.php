@@ -88,6 +88,41 @@ class CampaignController extends Controller
                 ], 422);
             }
 
+            // Check if campaign has started
+            $now = now();
+            if ($campaign->start_date && $campaign->start_date > $now) {
+                $daysUntilStart = $now->diffInDays($campaign->start_date, false);
+                $hoursUntilStart = $now->diffInHours($campaign->start_date, false);
+                
+                if ($daysUntilStart >= 1) {
+                    $message = sprintf('Campaign will start in %d day%s.', 
+                        ceil($daysUntilStart), 
+                        ceil($daysUntilStart) > 1 ? 's' : ''
+                    );
+                } else {
+                    $message = sprintf('Campaign will start in %d hour%s.', 
+                        ceil($hoursUntilStart), 
+                        ceil($hoursUntilStart) > 1 ? 's' : ''
+                    );
+                }
+                
+                return response()->json([
+                    'status'  => false,
+                    'message' => $message,
+                    'data'    => [
+                        'start_date' => $campaign->start_date->format('Y-m-d H:i:s'),
+                    ],
+                ], 422);
+            }
+
+            // Check if campaign has ended
+            if ($campaign->end_date && $campaign->end_date < $now) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'This campaign has ended.',
+                ], 422);
+            }
+
             $whatsapp = WhatsAppNormalizer::normalize($request->phone);
             if ($whatsapp === '') {
                 return response()->json([
@@ -147,10 +182,11 @@ class CampaignController extends Controller
                 ]);
             }
 
-            // Link to campaign with join timestamp
+            // Link to campaign with join timestamp (NOW, not campaign start date)
+            // This ensures orders are counted from the moment they join
             $onlineUser->update([
                 'campaign_id'        => $campaign->id,
-                'campaign_joined_at' => now(),
+                'campaign_joined_at' => now(), // Always use current time, even if campaign started earlier
             ]);
 
             return response()->json([
@@ -261,11 +297,20 @@ class CampaignController extends Controller
                 ->whereIn('status', $completedStatuses);
 
             // IMPORTANT: Only count orders placed AFTER user joined the campaign
+            // This prevents orders from previous campaigns from carrying over
             if ($onlineUser->campaign_joined_at) {
                 $ordersQuery->where('order_datetime', '>=', $onlineUser->campaign_joined_at);
+                \Log::info('Using campaign_joined_at for filtering', [
+                    'campaign_joined_at' => $onlineUser->campaign_joined_at,
+                ]);
             } elseif ($campaign->start_date) {
-                // Fallback to campaign start date if no join date recorded
+                // Fallback to campaign start date if no join date recorded (legacy users)
                 $ordersQuery->where('order_datetime', '>=', $campaign->start_date);
+                \Log::warning('campaign_joined_at is NULL, falling back to campaign start_date', [
+                    'campaign_start_date' => $campaign->start_date,
+                ]);
+            } else {
+                \Log::warning('No campaign_joined_at or campaign start_date - counting all orders!');
             }
 
             // Filter by campaign end date using order_datetime (not created_at)
@@ -289,8 +334,9 @@ class CampaignController extends Controller
                 'whatsapp_last_9' => substr($whatsapp, -9),
                 'branch_id' => $request->branch_id,
                 'campaign_id' => $campaign->id,
-                'start_date' => $campaign->start_date,
-                'end_date' => $campaign->end_date,
+                'campaign_joined_at' => $onlineUser->campaign_joined_at,
+                'campaign_start_date' => $campaign->start_date,
+                'campaign_end_date' => $campaign->end_date,
                 'order_count' => $orderCount,
                 'required_purchases' => $requiredPurchases,
                 'found_orders' => $foundOrders->map(function($o) {

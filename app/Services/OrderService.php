@@ -657,6 +657,8 @@ class OrderService
                                 \Log::info('Campaign redeem check', [
                                     'phone' => $normalizedWhatsApp,
                                     'campaign_id' => $campaign->id,
+                                    'campaign_joined_at' => $onlineUser->campaign_joined_at,
+                                    'campaign_start_date' => $campaign->start_date,
                                     'completed_orders' => $completedCount,
                                     'required_purchases' => $requiredPurchases,
                                     'earned_rewards' => $earnedRewards,
