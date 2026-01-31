@@ -669,6 +669,7 @@
         "easypaisa_username": "Имя пользователя Easypaisa",
         "easypaisa_password": "Пароль Easypaisa",
         "campaign": "Кампания",
+        "no_campaign": "Нет кампании",
         "campaign_discount": "Скидка по кампании",
         "campaign_discount_applied": "Примененная скидка по кампании",
         "free_item_redeemed": "Бесплатный товар использован",

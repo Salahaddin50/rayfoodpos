@@ -675,6 +675,7 @@
         "easypaisa_username": "Easypaisa İstifadəçi Adı",
         "easypaisa_password": "Easypaisa Şifrəsi",
         "campaign": "Kampaniya",
+        "no_campaign": "Kampaniya Yoxdur",
         "campaign_discount": "Kampaniya Endirimi",
         "campaign_discount_applied": "Tətbiq Edilmiş Kampaniya Endirimi",
         "free_item_redeemed": "Pulsuz Məhsul İstifadə Edilib",

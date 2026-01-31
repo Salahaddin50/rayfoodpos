@@ -114,7 +114,7 @@
                             <label class="db-field-title after:hidden">{{ $t("menu.campaigns") }}</label>
                             <vue-select class="db-field-control f-b-custom-select" 
                                 v-model="form.campaign_id" 
-                                :options="campaigns" 
+                                :options="campaignsWithNone" 
                                 label-by="name" 
                                 value-by="id" 
                                 :closeOnSelect="true" 
@@ -163,7 +163,7 @@
                             <label class="db-field-title after:hidden">{{ $t("menu.campaigns") }}</label>
                             <vue-select class="db-field-control f-b-custom-select" 
                                 v-model="editForm.campaign_id" 
-                                :options="campaigns" 
+                                :options="campaignsWithNone" 
                                 label-by="name" 
                                 value-by="id" 
                                 :closeOnSelect="true" 
@@ -241,6 +241,14 @@ export default {
                 if (!map.has(key)) map.set(key, r);
             });
             return Array.from(map.values());
+        },
+        campaignsWithNone() {
+            // Add "No Campaign" option at the beginning
+            const noCampaignOption = {
+                id: null,
+                name: this.$t("label.no_campaign") || "No Campaign"
+            };
+            return [noCampaignOption, ...this.campaigns];
         },
     },
     mounted() {

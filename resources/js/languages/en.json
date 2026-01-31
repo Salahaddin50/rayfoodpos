@@ -686,6 +686,7 @@
         "easypaisa_username": "Easypaisa Username",
         "easypaisa_password": "Easypaisa Password",
         "campaign": "Campaign",
+        "no_campaign": "No Campaign",
         "campaign_discount": "Campaign Discount",
         "campaign_discount_applied": "Campaign Discount Applied",
         "free_item_redeemed": "Free Item Redeemed",
