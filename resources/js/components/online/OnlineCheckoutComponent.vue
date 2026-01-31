@@ -172,8 +172,24 @@
                                 <p class="text-xs text-gray-500 mt-2">{{ $t('message.campaign_auto_applied') }}</p>
                             </div>
 
-                            <!-- Item Campaign (Buy X Get 1 Free) -->
-                            <div v-else-if="campaignStatus.type === 'item'">
+                            <!-- Campaign Completed Message -->
+                            <div v-if="campaignStatus.is_completed" class="text-center py-4">
+                                <div class="w-16 h-16 mx-auto rounded-full bg-green-100 flex items-center justify-center mb-3">
+                                    <span class="text-3xl">🎉</span>
+                                </div>
+                                <p class="text-lg font-semibold text-green-600 mb-2">
+                                    {{ $t('message.campaign_completed') }}
+                                </p>
+                                <p class="text-sm text-gray-600 mb-3">
+                                    {{ $t('message.campaign_completed_description') }}
+                                </p>
+                                <p v-if="campaignStatus.free_item" class="text-sm text-gray-700 font-medium">
+                                    {{ $t('message.you_received_free_item', { item: campaignStatus.free_item.name }) }}
+                                </p>
+                            </div>
+
+                            <!-- Item Campaign (Buy X Get 1 Free) - Active -->
+                            <div v-else-if="campaignStatus.type === 'item' && !campaignStatus.is_completed">
                                 <!-- Progress Circles -->
                                 <div class="flex justify-center flex-wrap gap-2 mb-3">
                                     <div 
@@ -276,8 +292,8 @@
                                     </ul>
                                 </div>
                             </div>
-                            <!-- Free Item (Campaign Reward) -->
-                            <div v-if="campaignRedeem && campaignStatus && campaignStatus.free_item" 
+                            <!-- Free Item (Campaign Reward) - Only show if campaign is active and not completed -->
+                            <div v-if="campaignRedeem && campaignStatus && campaignStatus.free_item && !campaignStatus.is_completed" 
                                 class="mb-3 pb-3 border-b border-green-200 bg-green-50 rounded-lg p-2">
                                 <div class="flex items-center gap-3 relative">
                                     <h3 class="absolute top-2 ltr:-left-1 rtl:-right-1 text-xs w-[22px] h-[22px] leading-[22px] text-center rounded-full text-white bg-green-600">
@@ -823,7 +839,8 @@ export default {
             // Campaign preview (backend will enforce final totals)
             this.checkoutProps.form.discount = parseFloat(this.campaignDiscountPreview || 0).toFixed(this.setting.site_digit_after_decimal_point);
             this.checkoutProps.form.total = parseFloat(this.totalAfterCampaign).toFixed(this.setting.site_digit_after_decimal_point);
-            this.checkoutProps.form.campaign_redeem = !!this.campaignRedeem;
+            // Only allow redemption if campaign is active and not completed
+            this.checkoutProps.form.campaign_redeem = !!(this.campaignRedeem && this.campaignStatus && !this.campaignStatus.is_completed);
             this.checkoutProps.form.items = [];
             
             // Set location URL (now mandatory)
