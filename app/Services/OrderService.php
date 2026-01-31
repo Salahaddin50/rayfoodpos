@@ -577,16 +577,16 @@ class OrderService
 
                         if ($isActive && $inStart && $inEnd) {
                             $orderData['campaign_id'] = $campaign->id;
-                            $orderData['campaign_snapshot'] = [
+                            $orderData['campaign_snapshot'] = json_encode([
                                 'id' => $campaign->id,
                                 'name' => $campaign->name,
                                 'type' => (int) $campaign->type,
                                 'discount_value' => (float) $campaign->discount_value,
                                 'required_purchases' => (int) ($campaign->required_purchases ?? 0),
                                 'free_item_id' => $campaign->free_item_id,
-                                'start_date' => $campaign->start_date?->toDateTimeString(),
-                                'end_date' => $campaign->end_date?->toDateTimeString(),
-                            ];
+                                'start_date' => $campaign->start_date,
+                                'end_date' => $campaign->end_date,
+                            ]);
 
                             // Percentage campaign: auto-apply discount on subtotal
                             if ((int) $campaign->type === (int) CampaignType::PERCENTAGE) {
@@ -609,17 +609,25 @@ class OrderService
                                 $requiredPurchases = (int) ($campaign->required_purchases ?? 0);
                                 $requiredPurchases = $requiredPurchases > 0 ? $requiredPurchases : 8;
 
-                                // Count completed orders in campaign window
+                                // Count completed orders in campaign window (same statuses as progress endpoint)
+                                $completedStatuses = [
+                                    OrderStatus::ACCEPT,
+                                    OrderStatus::PREPARING,
+                                    OrderStatus::PREPARED,
+                                    OrderStatus::OUT_FOR_DELIVERY,
+                                    OrderStatus::DELIVERED,
+                                ];
+
                                 $ordersQuery = Order::withoutGlobalScopes(\App\Models\Scopes\BranchScope::class)
                                     ->where('branch_id', $request->branch_id)
                                     ->where('whatsapp_number', $normalizedWhatsApp)
-                                    ->whereIn('status', [OrderStatus::DELIVERED]);
+                                    ->whereIn('status', $completedStatuses);
 
                                 if ($campaign->start_date) {
-                                    $ordersQuery->where('created_at', '>=', $campaign->start_date);
+                                    $ordersQuery->where('order_datetime', '>=', $campaign->start_date);
                                 }
                                 if ($campaign->end_date) {
-                                    $ordersQuery->where('created_at', '<=', $campaign->end_date);
+                                    $ordersQuery->where('order_datetime', '<=', $campaign->end_date . ' 23:59:59');
                                 }
 
                                 $completedCount = (int) $ordersQuery->count();
@@ -631,10 +639,20 @@ class OrderService
                                     ->where('campaign_id', $campaign->id)
                                     ->where('whatsapp_number', $normalizedWhatsApp)
                                     ->whereNotNull('campaign_redeem_free_item_id')
-                                    ->whereIn('status', [OrderStatus::DELIVERED])
                                     ->count();
 
                                 $available = max(0, $earnedRewards - $redeemedCount);
+
+                                \Log::info('Campaign redeem check', [
+                                    'phone' => $normalizedWhatsApp,
+                                    'campaign_id' => $campaign->id,
+                                    'completed_orders' => $completedCount,
+                                    'required_purchases' => $requiredPurchases,
+                                    'earned_rewards' => $earnedRewards,
+                                    'redeemed_count' => $redeemedCount,
+                                    'available' => $available,
+                                    'redeem_requested' => $campaignRedeemRequested,
+                                ]);
 
                                 if ($available > 0 && $campaign->free_item_id) {
                                     $orderData['campaign_redeem_free_item_id'] = (int) $campaign->free_item_id;
@@ -721,6 +739,33 @@ class OrderService
                 $subtotalTolerance = 0.10; // Allow 10 cents tolerance for entire order
                 if (abs($calculatedSubtotal - $request->subtotal) > $subtotalTolerance) {
                     throw new Exception("Order total validation failed. Please refresh and try again.", 422);
+                }
+
+                // Add free item from campaign if user is redeeming
+                if (isset($orderData['campaign_redeem_free_item_id'])) {
+                    $freeItemId = (int) $orderData['campaign_redeem_free_item_id'];
+                    $freeItem = Item::find($freeItemId);
+                    if ($freeItem) {
+                        $itemsArray[$i] = [
+                            'order_id'             => $this->order->id,
+                            'branch_id'            => $request->branch_id,
+                            'item_id'              => $freeItemId,
+                            'quantity'             => 1,
+                            'discount'             => 0,
+                            'tax_name'             => null,
+                            'tax_rate'             => 0,
+                            'tax_type'             => TaxType::FIXED,
+                            'tax_amount'           => 0,
+                            'price'                => 0, // Free item
+                            'item_variations'      => json_encode([]),
+                            'item_extras'          => json_encode([]),
+                            'instruction'          => 'Campaign Reward',
+                            'item_variation_total' => 0,
+                            'item_extra_total'     => 0,
+                            'total_price'          => 0,
+                        ];
+                        $i++;
+                    }
                 }
 
                 if (!blank($itemsArray)) {
