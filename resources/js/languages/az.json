@@ -684,7 +684,8 @@
         "percent_off": "ENDİRİM",
         "free_campaign_reward": "PULSUZ - Kampaniya Mükafatı",
         "campaign_progress": "Kampaniya İrəliləyişi",
-        "campaign_completed": "Kampaniya Tamamlandı"
+        "campaign_completed": "Kampaniya Tamamlandı",
+        "campaign_discount": "Kampaniya Endirimi"
     },
     "button": {
         "add": "Əlavə",

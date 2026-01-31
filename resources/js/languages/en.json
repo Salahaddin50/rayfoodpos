@@ -695,7 +695,8 @@
         "percent_off": "OFF",
         "free_campaign_reward": "FREE - Campaign Reward",
         "campaign_progress": "Campaign Progress",
-        "campaign_completed": "Campaign Completed"
+        "campaign_completed": "Campaign Completed",
+        "campaign_discount": "Campaign Discount"
     },
     "button": {
         "add": "Add",

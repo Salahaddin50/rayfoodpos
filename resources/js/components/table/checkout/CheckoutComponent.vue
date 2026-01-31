@@ -75,6 +75,84 @@
                 </div>
 
                 <div class="col-12 md:col-5">
+                    <!-- Campaign Section -->
+                    <div v-if="campaignStatus" class="mb-4 rounded-2xl shadow-xs bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200">
+                        <div class="p-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="text-lg">🎁</span>
+                                <h3 class="font-semibold text-gray-900">{{ campaignStatus.campaign_name }}</h3>
+                            </div>
+
+                            <!-- Campaign Completed Message -->
+                            <div v-if="campaignStatus.is_completed" class="text-center py-4">
+                                <div class="w-16 h-16 mx-auto rounded-full bg-green-100 flex items-center justify-center mb-3">
+                                    <span class="text-3xl">🎉</span>
+                                </div>
+                                <p class="text-lg font-semibold text-green-600 mb-2">
+                                    {{ $t('message.campaign_completed') }}
+                                </p>
+                                <p class="text-sm text-gray-600 mb-3">
+                                    {{ $t('message.campaign_completed_description') }}
+                                </p>
+                                <p v-if="campaignStatus.free_item" class="text-sm text-gray-700 font-medium">
+                                    {{ $t('message.you_received_free_item', { item: campaignStatus.free_item.name }) }}
+                                </p>
+                            </div>
+
+                            <!-- Percentage Campaign -->
+                            <div v-else-if="campaignStatus.type === 'percentage'">
+                                <div class="flex items-center justify-between text-sm">
+                                    <span class="text-gray-700">{{ $t('label.your_discount') }}</span>
+                                    <span class="font-bold text-green-700 text-lg">{{ campaignStatus.discount_value }}% {{ $t('label.percent_off') }}</span>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-2">{{ $t('message.campaign_auto_applied') }}</p>
+                            </div>
+
+                            <!-- Item Campaign (Buy X Get 1 Free) - Active -->
+                            <div v-else-if="campaignStatus.type === 'item' && !campaignStatus.is_completed">
+                                <!-- Progress Circles -->
+                                <div class="flex justify-center flex-wrap gap-2 mb-3">
+                                    <div 
+                                        v-for="n in campaignStatus.required_purchases" 
+                                        :key="n"
+                                        class="w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-medium transition-all"
+                                        :class="n <= campaignStatus.current_progress ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 text-gray-400 bg-white'"
+                                    >
+                                        <span v-if="n <= campaignStatus.current_progress">✓</span>
+                                        <span v-else>{{ n }}</span>
+                                    </div>
+                                </div>
+                                <p class="text-center text-sm text-gray-600 mb-3">
+                                    {{ campaignStatus.current_progress }} / {{ campaignStatus.required_purchases }} {{ $t('label.orders') }}
+                                </p>
+
+                                <!-- Not Yet Entitled -->
+                                <div v-if="campaignStatus.rewards_available === 0 && campaignStatus.free_item" class="text-center">
+                                    <p class="text-sm text-gray-700">
+                                        {{ $t('message.order_x_more_to_get_free', { count: ordersNeededForReward, item: campaignStatus.free_item.name }) }}
+                                    </p>
+                                </div>
+
+                                <!-- Entitled! Can Redeem -->
+                                <div v-if="campaignStatus.rewards_available > 0 && campaignStatus.free_item" class="bg-green-100 rounded-lg p-3 mt-2">
+                                    <p class="text-sm font-medium text-green-800 mb-2">
+                                        🎉 {{ $t('message.you_are_entitled_free_item', { item: campaignStatus.free_item.name }) }}
+                                    </p>
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <input 
+                                            type="checkbox" 
+                                            v-model="campaignRedeem" 
+                                            class="w-5 h-5 rounded border-green-400 text-green-600 focus:ring-green-500"
+                                        />
+                                        <span class="text-sm text-green-900 font-medium">
+                                            {{ $t('message.add_free_item_to_order') }}
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="rounded-2xl shadow-xs bg-white">
                         <div class="p-4 border-b">
                             <h3 class="capitalize font-medium mb-3 text-center">
@@ -133,6 +211,28 @@
                                         </li>
                                     </ul>
                                 </div>
+                                
+                                <!-- Free Item (Campaign Reward) - Only show if campaign is active and not completed -->
+                                <div v-if="campaignRedeem && campaignStatus && campaignStatus.free_item && !campaignStatus.is_completed" 
+                                    class="mb-3 pb-3 border-b border-green-200 bg-green-50 rounded-lg p-2">
+                                    <div class="flex items-center gap-3 relative">
+                                        <h3 class="absolute top-2 ltr:-left-1 rtl:-right-1 text-xs w-[22px] h-[22px] leading-[22px] text-center rounded-full text-white bg-green-600">
+                                            🎁
+                                        </h3>
+                                        <div class="w-10 h-10 rounded-lg flex-shrink-0 bg-green-100 flex items-center justify-center text-lg ml-4">
+                                            🍕
+                                        </div>
+                                        <div class="w-full">
+                                            <span class="text-sm font-medium capitalize text-green-800">
+                                                {{ campaignStatus.free_item.name }}
+                                            </span>
+                                            <p class="text-xs text-green-600">{{ $t('label.free_campaign_reward') }}</p>
+                                            <h4 class="text-xs font-semibold text-green-700">
+                                                {{ currencyFormat(0, setting.site_digit_after_decimal_point, setting.site_default_currency_symbol, setting.site_currency_position) }}
+                                            </h4>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="p-4">
@@ -149,6 +249,18 @@
                                             }}
                                         </span>
                                     </li>
+                                    <li v-if="campaignStatus && campaignStatus.type === 'percentage' && campaignDiscountPreview > 0" 
+                                        class="flex items-center justify-between text-green-600">
+                                        <span class="text-sm leading-6 capitalize">
+                                            {{ $t('label.campaign_discount') }}
+                                        </span>
+                                        <span class="text-sm leading-6 capitalize font-medium">
+                                            -{{
+                                                currencyFormat(campaignDiscountPreview, setting.site_digit_after_decimal_point,
+                                                    setting.site_default_currency_symbol, setting.site_currency_position)
+                                            }}
+                                        </span>
+                                    </li>
                                 </ul>
                                 <div class="flex items-center justify-between p-3">
                                     <h4 class="text-sm leading-6 font-semibold capitalize">
@@ -156,7 +268,7 @@
                                     </h4>
                                     <h5 class="text-sm leading-6 font-semibold capitalize">
                                         {{
-                                            currencyFormat(subtotal, setting.site_digit_after_decimal_point,
+                                            currencyFormat(displayTotal, setting.site_digit_after_decimal_point,
                                                 setting.site_default_currency_symbol, setting.site_currency_position)
                                         }}
                                     </h5>
@@ -186,6 +298,7 @@ import OrderTypeEnum from "../../../enums/modules/orderTypeEnum";
 import IsAdvanceOrderEnum from "../../../enums/modules/isAdvanceOrderEnum";
 import router from "../../../router";
 import alertService from "../../../services/alertService";
+import axios from "axios";
 
 export default {
     name: "CheckoutComponent",
@@ -233,11 +346,28 @@ export default {
                     items: []
                 }
             },
+            campaignStatus: null,
+            campaignRedeem: false,
         }
     },
     mounted() {
         if (this.$store.getters['tableCart/lists'].length === 0) {
             this.$router.push({ name: 'table.menu.table', params: { slug: this.$route.params.slug } });
+        }
+        
+        // Fetch campaign status if phone number is already set
+        if (this.checkoutProps.form.whatsapp_number) {
+            this.$nextTick(() => {
+                this.fetchCampaignStatus();
+            });
+        }
+    },
+    watch: {
+        'table.branch_id': function() {
+            // Fetch campaign status when table/branch is loaded
+            if (this.checkoutProps.form.whatsapp_number) {
+                this.fetchCampaignStatus();
+            }
         }
     },
     computed: {
@@ -252,6 +382,20 @@ export default {
         },
         table: function () {
             return this.$store.getters['tableCart/table'];
+        },
+        campaignDiscountPreview: function () {
+            if (!this.campaignStatus || this.campaignStatus.type !== 'percentage') return 0;
+            const percent = parseFloat(this.campaignStatus.discount_value || 0);
+            return (this.subtotal * percent) / 100;
+        },
+        displayTotal: function () {
+            return Math.max(0, this.subtotal - this.campaignDiscountPreview);
+        },
+        ordersNeededForReward: function () {
+            if (!this.campaignStatus || this.campaignStatus.type !== 'item') return 0;
+            const required = parseInt(this.campaignStatus.required_purchases) || 8;
+            const current = parseInt(this.campaignStatus.current_progress) || 0;
+            return Math.max(0, required - current);
         }
     },
     methods: {
@@ -263,6 +407,51 @@ export default {
             this.phoneNumber = this.phoneNumber.replace(/[^\d]/g, '');
             // Combine country code with phone number
             this.checkoutProps.form.whatsapp_number = this.countryCode + this.phoneNumber;
+            // Fetch campaign status when phone number changes
+            this.fetchCampaignStatus();
+        },
+        fetchCampaignStatus: function () {
+            const phone = this.checkoutProps.form.whatsapp_number;
+            if (!this.table || !this.table.branch_id) {
+                // Wait for table to be loaded
+                setTimeout(() => {
+                    if (this.table && this.table.branch_id) {
+                        this.fetchCampaignStatus();
+                    }
+                }, 500);
+                return;
+            }
+            const branchId = this.table.branch_id;
+            
+            if (!phone || phone.trim() === '' || !branchId) {
+                this.campaignStatus = null;
+                this.campaignRedeem = false;
+                return;
+            }
+
+            // Normalize phone number
+            let normalizedPhone = phone;
+            if (normalizedPhone.startsWith('+9940')) {
+                normalizedPhone = '+994' + normalizedPhone.substring(5);
+            }
+
+            axios.post('frontend/campaign/progress', { 
+                phone: normalizedPhone, 
+                branch_id: branchId 
+            })
+                .then((res) => {
+                    if (res.data && res.data.status) {
+                        this.campaignStatus = res.data.data;
+                        this.campaignRedeem = false;
+                    } else {
+                        this.campaignStatus = null;
+                        this.campaignRedeem = false;
+                    }
+                })
+                .catch(() => {
+                    this.campaignStatus = null;
+                    this.campaignRedeem = false;
+                });
         },
         orderSubmit: function () {
             if (!this.paymentMethod) {
@@ -291,7 +480,21 @@ export default {
                 this.checkoutProps.form.dining_table_id = table.id;
                 this.checkoutProps.form.branch_id = table.branch_id;
             this.checkoutProps.form.subtotal = this.subtotal;
-            this.checkoutProps.form.total = parseFloat(this.subtotal).toFixed(this.setting.site_digit_after_decimal_point);
+            
+            // Apply campaign discount if percentage campaign
+            let finalTotal = this.subtotal;
+            if (this.campaignStatus && this.campaignStatus.type === 'percentage') {
+                this.checkoutProps.form.discount = parseFloat(this.campaignDiscountPreview).toFixed(this.setting.site_digit_after_decimal_point);
+                finalTotal = this.displayTotal;
+            } else {
+                this.checkoutProps.form.discount = 0;
+            }
+            
+            this.checkoutProps.form.total = parseFloat(finalTotal).toFixed(this.setting.site_digit_after_decimal_point);
+            
+            // Only allow redemption if campaign is active and not completed
+            this.checkoutProps.form.campaign_redeem = !!(this.campaignRedeem && this.campaignStatus && !this.campaignStatus.is_completed);
+            
             this.checkoutProps.form.items = [];
             _.forEach(this.carts, (item, index) => {
                 let item_variations = [];

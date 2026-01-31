@@ -678,7 +678,8 @@
         "percent_off": "СКИДКА",
         "free_campaign_reward": "БЕСПЛАТНО - Награда кампании",
         "campaign_progress": "Прогресс кампании",
-        "campaign_completed": "Кампания Завершена"
+        "campaign_completed": "Кампания Завершена",
+        "campaign_discount": "Скидка Кампании"
     },
     "button": {
         "add": "Добавить",
