@@ -295,17 +295,24 @@ class CampaignController extends Controller
                 ->with('campaign')
                 ->first();
 
-            \Log::info('OnlineUser lookup', [
+            \Log::info('Campaign progress - Active campaign check', [
                 'branch_id' => $request->branch_id,
                 'whatsapp' => $whatsapp,
-                'found' => $onlineUser ? true : false,
+                'found_user' => $onlineUser ? true : false,
                 'campaign_id' => $onlineUser?->campaign_id,
+                'campaign_name' => $onlineUser?->campaign?->name,
+                'campaign_type' => $onlineUser?->campaign?->type,
             ]);
 
             // If user has an active campaign, show progress for that campaign
             if ($onlineUser && $onlineUser->campaign) {
+                \Log::info('User has active campaign - showing progress', [
+                    'campaign_id' => $onlineUser->campaign_id,
+                    'campaign_name' => $onlineUser->campaign->name,
+                ]);
                 // Continue to show progress for active campaign (see below)
             } else {
+                \Log::info('No active campaign found - checking for completed campaigns');
                 // No active campaign - check if they completed any campaign
                 // Gracefully handle if campaign_completions table doesn't exist yet
                 try {
@@ -349,20 +356,7 @@ class CampaignController extends Controller
                 ]);
             }
 
-            \Log::info('OnlineUser lookup', [
-                'branch_id' => $request->branch_id,
-                'whatsapp' => $whatsapp,
-                'found' => $onlineUser ? true : false,
-                'campaign_id' => $onlineUser?->campaign_id,
-            ]);
-
-            if (!$onlineUser || !$onlineUser->campaign) {
-                return response()->json([
-                    'status' => true,
-                    'data'   => null,
-                ]);
-            }
-
+            // User has an active campaign - continue to show progress
             $campaign = $onlineUser->campaign;
 
             // Only show progress for item-type campaigns
