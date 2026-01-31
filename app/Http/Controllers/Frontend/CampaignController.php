@@ -288,12 +288,66 @@ class CampaignController extends Controller
 
             // FIRST: Check if user has an ACTIVE campaign enrollment (priority)
             // This handles users who completed a campaign and joined a new one
+            // Check both online_users and campaign_registrations (for admin-assigned campaigns)
             $onlineUser = OnlineUser::withoutGlobalScopes()
                 ->where('branch_id', $request->branch_id)
                 ->where('whatsapp', $whatsapp)
                 ->whereNotNull('campaign_id')
                 ->with('campaign')
                 ->first();
+
+            // Also check campaign_registrations (for admin-assigned percentage campaigns)
+            $campaignRegistration = null;
+            if (!$onlineUser || !$onlineUser->campaign_id) {
+                try {
+                    // Check with normalized phone and also try variations
+                    $phoneVariations = [
+                        $whatsapp,
+                        substr($whatsapp, -9), // Last 9 digits
+                        ltrim($whatsapp, '+'), // Without +
+                    ];
+                    
+                    $campaignRegistration = \App\Models\CampaignRegistration::where(function($q) use ($phoneVariations) {
+                            foreach ($phoneVariations as $phone) {
+                                $q->orWhere('phone', 'LIKE', '%' . $phone);
+                            }
+                        })
+                        ->where('status', 5) // Active status
+                        ->with('campaign')
+                        ->whereHas('campaign', function($q) {
+                            $q->where('status', 5); // Campaign must be active
+                        })
+                        ->latest('updated_at')
+                        ->first();
+                    
+                    // If found registration, sync to online_users for consistency
+                    if ($campaignRegistration && $campaignRegistration->campaign) {
+                        $onlineUser = OnlineUser::withoutGlobalScopes()
+                            ->where('branch_id', $request->branch_id)
+                            ->where('whatsapp', $whatsapp)
+                            ->first();
+                        
+                        if ($onlineUser) {
+                            $onlineUser->update([
+                                'campaign_id' => $campaignRegistration->campaign_id,
+                                'campaign_joined_at' => $campaignRegistration->created_at ?? now(),
+                            ]);
+                            $onlineUser->load('campaign');
+                        } else {
+                            // Create online_user from registration
+                            $onlineUser = OnlineUser::create([
+                                'branch_id' => $request->branch_id,
+                                'whatsapp' => $whatsapp,
+                                'campaign_id' => $campaignRegistration->campaign_id,
+                                'campaign_joined_at' => $campaignRegistration->created_at ?? now(),
+                            ]);
+                            $onlineUser->load('campaign');
+                        }
+                    }
+                } catch (\Exception $e) {
+                    \Log::warning('Error checking campaign_registrations', ['error' => $e->getMessage()]);
+                }
+            }
 
             \Log::info('Campaign progress - Active campaign check', [
                 'branch_id' => $request->branch_id,
@@ -302,6 +356,7 @@ class CampaignController extends Controller
                 'campaign_id' => $onlineUser?->campaign_id,
                 'campaign_name' => $onlineUser?->campaign?->name,
                 'campaign_type' => $onlineUser?->campaign?->type,
+                'from_registration' => $campaignRegistration ? true : false,
             ]);
 
             // If user has an active campaign, show progress for that campaign
@@ -358,9 +413,33 @@ class CampaignController extends Controller
 
             // User has an active campaign - continue to show progress
             $campaign = $onlineUser->campaign;
+            
+            // Validate campaign is active and within date range
+            $isActive = ((int) $campaign->status === 5); // Active status
+            $now = now();
+            $inStart = (!$campaign->start_date) || $campaign->start_date <= $now;
+            $inEnd = (!$campaign->end_date) || $campaign->end_date >= $now;
+            
+            if (!$isActive || !$inStart || !$inEnd) {
+                \Log::warning('User has inactive/expired campaign assigned', [
+                    'campaign_id' => $campaign->id,
+                    'status' => $campaign->status,
+                    'start_date' => $campaign->start_date,
+                    'end_date' => $campaign->end_date,
+                ]);
+                // Don't show inactive/expired campaigns - treat as no campaign
+                return response()->json([
+                    'status' => true,
+                    'data'   => null,
+                ]);
+            }
 
             // Only show progress for item-type campaigns
             if ($campaign->type == CampaignType::PERCENTAGE) {
+                \Log::info('Returning percentage campaign', [
+                    'campaign_id' => $campaign->id,
+                    'campaign_name' => $campaign->name,
+                ]);
                 return response()->json([
                     'status' => true,
                     'data'   => [
