@@ -54,6 +54,11 @@ class OnlineUser extends Model
             return null;
         }
 
+        // Ensure freeItem and category are loaded
+        if (!$this->campaign->relationLoaded('freeItem')) {
+            $this->campaign->load('freeItem.category');
+        }
+        
         $campaign = $this->campaign;
         
         // Only calculate for item-type campaigns
@@ -96,18 +101,44 @@ class OnlineUser extends Model
 
         // Filter by category if free item exists
         if ($campaign->free_item_id) {
-            $freeItem = \App\Models\Item::with('category')->find($campaign->free_item_id);
+            // Try to get freeItem from relationship first, then fallback to query
+            $freeItem = $campaign->freeItem ?? \App\Models\Item::with('category')->find($campaign->free_item_id);
+            
             if ($freeItem && $freeItem->item_category_id) {
                 $ordersQuery->whereHas('orderItems', function($q) use ($freeItem) {
                     $q->whereHas('item', function($itemQuery) use ($freeItem) {
                         $itemQuery->where('item_category_id', $freeItem->item_category_id);
                     });
                 });
+                
+                \Log::info('Campaign progress - Filtering by category', [
+                    'free_item_id' => $freeItem->id,
+                    'category_id' => $freeItem->item_category_id,
+                    'category_name' => $freeItem->category->name ?? 'N/A',
+                ]);
+            } else {
+                \Log::warning('Campaign has free_item_id but item not found or has no category', [
+                    'campaign_id' => $campaign->id,
+                    'free_item_id' => $campaign->free_item_id,
+                ]);
             }
         }
 
         $orderCount = $ordersQuery->count();
         $requiredPurchases = $campaign->required_purchases ?? 8;
+        
+        // Debug logging for campaign progress calculation
+        \Log::info('Campaign progress calculation (OnlineUser model)', [
+            'online_user_id' => $this->id,
+            'whatsapp' => $this->whatsapp,
+            'campaign_id' => $campaign->id,
+            'campaign_joined_at' => $this->campaign_joined_at,
+            'branch_id' => $this->branch_id,
+            'order_count' => $orderCount,
+            'required_purchases' => $requiredPurchases,
+            'has_category_filter' => $campaign->free_item_id ? true : false,
+            'free_item_category_id' => $campaign->freeItem?->item_category_id ?? null,
+        ]);
 
         // Count redeemed rewards
         $redeemedCount = \App\Models\Order::withoutGlobalScopes()

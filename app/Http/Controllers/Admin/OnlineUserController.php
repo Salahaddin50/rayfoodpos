@@ -44,11 +44,12 @@ class OnlineUserController extends Controller implements HasMiddleware
             // Ensure DB-backed list exists (including dining-table orders when whatsapp is provided)
             $this->onlineUserService->ensureSyncedForCurrentBranch();
 
-            return OnlineUserResource::collection(
-                OnlineUser::with('campaign')
-                    ->orderByDesc('last_order_at')
-                    ->get()
-            );
+            // Load campaign with freeItem and category for progress calculation
+            $users = OnlineUser::with(['campaign.freeItem.category'])
+                ->orderByDesc('last_order_at')
+                ->get();
+            
+            return OnlineUserResource::collection($users);
         } catch (Exception $exception) {
             return response(['status' => false, 'message' => $exception->getMessage()], 422);
         }
@@ -288,6 +289,7 @@ class OnlineUserController extends Controller implements HasMiddleware
                                 \Log::error('Failed to save campaign_joined_at', [
                                     'online_user_id' => $onlineUser->id,
                                     'new_join_date' => $newJoinDate,
+                                    'errors' => $onlineUser->getErrors() ?? 'No errors',
                                 ]);
                                 return response(['status' => false, 'message' => 'Failed to save join date'], 422);
                             }
@@ -302,27 +304,54 @@ class OnlineUserController extends Controller implements HasMiddleware
                         } else {
                             // Fallback - set to now
                             $onlineUser->campaign_joined_at = now();
-                            $onlineUser->save();
+                            $saved = $onlineUser->save();
+                            if (!$saved) {
+                                \Log::error('Failed to save campaign_joined_at (fallback)', [
+                                    'online_user_id' => $onlineUser->id,
+                                ]);
+                                return response(['status' => false, 'message' => 'Failed to save join date'], 422);
+                            }
                         }
                     }
                     
-                    // Verify the update was saved
+                    // Force refresh from database to verify
                     $onlineUser->refresh();
                     
+                    // Double-check the save worked by querying fresh from DB
+                    $verifyUser = \App\Models\OnlineUser::withoutGlobalScopes()
+                        ->where('id', $onlineUser->id)
+                        ->first();
+                    
+                    $savedJoinDate = $verifyUser ? $verifyUser->campaign_joined_at : null;
+                    
                     // Log the update for debugging
-                    \Log::info('Campaign join date adjusted', [
+                    \Log::info('Campaign join date adjusted - verification', [
                         'online_user_id' => $onlineUser->id,
                         'whatsapp' => $onlineUser->whatsapp,
                         'campaign_id' => $onlineUser->campaign_id,
-                        'new_campaign_joined_at' => $onlineUser->campaign_joined_at,
+                        'model_join_date' => $onlineUser->campaign_joined_at?->format('Y-m-d H:i:s'),
+                        'db_join_date' => $savedJoinDate?->format('Y-m-d H:i:s'),
                         'desired_order_count' => $desiredOrderCount,
+                        'dates_match' => $onlineUser->campaign_joined_at && $savedJoinDate && 
+                                        $onlineUser->campaign_joined_at->format('Y-m-d H:i:s') == $savedJoinDate->format('Y-m-d H:i:s'),
                     ]);
+                    
+                    if (!$savedJoinDate || ($onlineUser->campaign_joined_at && 
+                        $onlineUser->campaign_joined_at->format('Y-m-d H:i:s') != $savedJoinDate->format('Y-m-d H:i:s'))) {
+                        \Log::error('Campaign join date not saved correctly', [
+                            'online_user_id' => $onlineUser->id,
+                            'expected' => $onlineUser->campaign_joined_at?->format('Y-m-d H:i:s'),
+                            'actual_db' => $savedJoinDate?->format('Y-m-d H:i:s'),
+                        ]);
+                        return response(['status' => false, 'message' => 'Failed to save join date. Please try again.'], 422);
+                    }
                     
                     return response([
                         'status' => true,
                         'message' => "Order count adjusted to {$desiredOrderCount}. Join date updated.",
                         'data' => [
                             'campaign_joined_at' => $onlineUser->campaign_joined_at?->format('Y-m-d H:i:s'),
+                            'verified' => true,
                         ],
                     ]);
 
@@ -392,6 +421,10 @@ class OnlineUserController extends Controller implements HasMiddleware
                     return response(['status' => false, 'message' => 'Invalid action'], 422);
             }
         } catch (\Throwable $exception) {
+            \Log::error('Campaign progress update failed', [
+                'error' => $exception->getMessage(),
+                'trace' => $exception->getTraceAsString(),
+            ]);
             return response(['status' => false, 'message' => $exception->getMessage()], 422);
         }
     }
