@@ -168,6 +168,22 @@ class OnlineUserController extends Controller implements HasMiddleware
             switch ($action) {
                 case 'reset':
                     // Reset campaign progress - clear manual count and reset join date to now
+                    // Also delete any completion records so frontend doesn't show it as completed
+                    try {
+                        if ($onlineUser->campaign_id) {
+                            \App\Models\CampaignCompletion::withoutGlobalScopes()
+                                ->where('campaign_id', $onlineUser->campaign_id)
+                                ->where('branch_id', $onlineUser->branch_id)
+                                ->where('whatsapp', $onlineUser->whatsapp)
+                                ->delete();
+                        }
+                    } catch (\Exception $e) {
+                        \Log::warning('Failed to delete completion record on reset', [
+                            'error' => $e->getMessage(),
+                            'online_user_id' => $onlineUser->id,
+                        ]);
+                    }
+                    
                     $onlineUser->update([
                         'campaign_joined_at' => now(),
                         'campaign_manual_order_count' => null, // Clear manual override
@@ -220,6 +236,23 @@ class OnlineUserController extends Controller implements HasMiddleware
 
                 case 'remove':
                     // Remove campaign assignment
+                    // Also delete any completion records so frontend doesn't show it as completed
+                    $campaignIdToRemove = $onlineUser->campaign_id;
+                    try {
+                        if ($campaignIdToRemove) {
+                            \App\Models\CampaignCompletion::withoutGlobalScopes()
+                                ->where('campaign_id', $campaignIdToRemove)
+                                ->where('branch_id', $onlineUser->branch_id)
+                                ->where('whatsapp', $onlineUser->whatsapp)
+                                ->delete();
+                        }
+                    } catch (\Exception $e) {
+                        \Log::warning('Failed to delete completion record on remove', [
+                            'error' => $e->getMessage(),
+                            'online_user_id' => $onlineUser->id,
+                        ]);
+                    }
+                    
                     $onlineUser->update([
                         'campaign_id' => null,
                         'campaign_joined_at' => null,
