@@ -933,6 +933,12 @@
         "confirm_reset_campaign": "Are you sure you want to reset campaign progress? This will start counting orders from now.",
         "confirm_remove_campaign": "Are you sure you want to remove this campaign from the user?",
         "campaign_progress_reset": "Campaign progress reset successfully",
-        "campaign_removed": "Campaign removed successfully"
+        "campaign_removed": "Campaign removed successfully",
+        "adjust_order_count": "Adjust Order Count",
+        "current_orders": "Current Orders",
+        "set_order_count": "Set Order Count",
+        "confirm_adjust_order_count": "Change order count from {current} to {new}?",
+        "order_count_adjusted": "Order count adjusted successfully",
+        "order_count_unchanged": "Order count is already at this value."
     }
 }

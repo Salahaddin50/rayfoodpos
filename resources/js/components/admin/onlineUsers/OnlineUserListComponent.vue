@@ -278,6 +278,34 @@
                             </div>
                         </div>
 
+                        <!-- Adjust Order Count -->
+                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                            <label class="text-sm font-medium text-blue-900 mb-2 block">
+                                {{ $t("message.adjust_order_count") || "Adjust Order Count" }}
+                            </label>
+                            <div class="flex items-center gap-3">
+                                <input 
+                                    type="number" 
+                                    v-model.number="adjustOrderCount"
+                                    :min="0"
+                                    :max="selectedCampaignUser.campaign_progress.required_purchases * 10"
+                                    class="db-field-control flex-1"
+                                    :placeholder="$t('message.current_orders') || 'Current Orders'"
+                                />
+                                <button 
+                                    class="db-btn py-2 text-white bg-blue-600" 
+                                    type="button" 
+                                    @click.prevent="adjustOrderCountAction"
+                                    :disabled="adjustOrderCount === null || adjustOrderCount < 0"
+                                >
+                                    <span>{{ $t("message.set_order_count") || "Set" }}</span>
+                                </button>
+                            </div>
+                            <p class="text-xs text-blue-700 mt-2">
+                                {{ $t("message.current_orders") || "Current" }}: {{ selectedCampaignUser.campaign_progress.current_progress || 0 }}
+                            </p>
+                        </div>
+
                         <div class="bg-green-50 p-4 rounded-lg" v-if="selectedCampaignUser.campaign_progress.rewards_available > 0">
                             <p class="text-sm font-medium text-green-900">
                                 {{ $t("label.rewards_available") || "Rewards Available" }}: {{ selectedCampaignUser.campaign_progress.rewards_available }}
@@ -354,6 +382,7 @@ export default {
             editForm: { whatsapp: "", location: "", campaign_id: null },
             searchPhone: "",
             selectedCampaignUser: null,
+            adjustOrderCount: null,
         };
     },
     computed: {
@@ -574,11 +603,53 @@ export default {
         },
         openCampaignStatusModal(row) {
             this.selectedCampaignUser = row;
+            this.adjustOrderCount = row.campaign_progress?.current_progress || 0;
             appService.modalShow(this.$refs.campaignStatusModal);
         },
         closeCampaignStatusModal() {
             appService.modalHide(this.$refs.campaignStatusModal);
             this.selectedCampaignUser = null;
+            this.adjustOrderCount = null;
+        },
+        adjustOrderCountAction() {
+            if (!this.selectedCampaignUser || this.adjustOrderCount === null || this.adjustOrderCount < 0) {
+                return;
+            }
+
+            const currentCount = this.selectedCampaignUser.campaign_progress?.current_progress || 0;
+            if (this.adjustOrderCount === currentCount) {
+                alertService.info(this.$t("message.order_count_unchanged") || "Order count is already at this value.");
+                return;
+            }
+
+            appService.destroyConfirmation(
+                this.$t("message.confirm_adjust_order_count", { 
+                    current: currentCount, 
+                    new: this.adjustOrderCount 
+                }) || `Change order count from ${currentCount} to ${this.adjustOrderCount}?`
+            ).then(() => {
+                this.loading.isActive = true;
+                this.$store.dispatch("onlineUser/updateCampaignProgress", {
+                    id: this.selectedCampaignUser.id,
+                    action: 'adjust',
+                    order_count: this.adjustOrderCount
+                }).then(() => {
+                    this.loading.isActive = false;
+                    alertService.success(this.$t("message.order_count_adjusted") || "Order count adjusted successfully");
+                    this.list();
+                    // Refresh the modal data
+                    setTimeout(() => {
+                        const updatedUser = this.rows.find(r => r.id === this.selectedCampaignUser.id);
+                        if (updatedUser) {
+                            this.selectedCampaignUser = updatedUser;
+                            this.adjustOrderCount = updatedUser.campaign_progress?.current_progress || 0;
+                        }
+                    }, 500);
+                }).catch((err) => {
+                    this.loading.isActive = false;
+                    alertService.error(err?.response?.data?.message || "Failed to adjust order count");
+                });
+            });
         },
         resetCampaignProgress() {
             if (!this.selectedCampaignUser) return;

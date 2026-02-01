@@ -160,7 +160,7 @@ class OnlineUserController extends Controller implements HasMiddleware
         try {
             $request->validate([
                 'action' => 'required|in:reset,adjust,remove',
-                'order_count' => 'nullable|integer|min:0', // For adjust action
+                'order_count' => 'nullable|integer|min:0', // For adjust action - sets manual order count
             ]);
 
             $action = $request->input('action');
@@ -177,21 +177,106 @@ class OnlineUserController extends Controller implements HasMiddleware
                     ]);
 
                 case 'adjust':
-                    // This is more complex - we'd need to track manual adjustments
-                    // For now, we'll just reset the join date to effectively adjust the count
-                    // In the future, we could add a manual_adjustment field
-                    $orderCount = $request->input('order_count', 0);
-                    if ($orderCount < 0) {
+                    // Adjust order count by setting a manual adjustment
+                    // We'll store this in a JSON field or use a workaround
+                    // For now, we'll calculate the required join date to achieve the desired count
+                    $desiredOrderCount = $request->input('order_count', 0);
+                    if ($desiredOrderCount < 0) {
                         return response(['status' => false, 'message' => 'Order count cannot be negative'], 422);
                     }
-                    // Reset join date - this will effectively change the order count
-                    // Note: This is a simplified approach. A full solution would track manual adjustments
-                    $onlineUser->update([
-                        'campaign_joined_at' => now(),
-                    ]);
+                    
+                    if (!$onlineUser->campaign_id || !$onlineUser->campaign) {
+                        return response(['status' => false, 'message' => 'User is not enrolled in a campaign'], 422);
+                    }
+                    
+                    $campaign = $onlineUser->campaign;
+                    
+                    // Calculate how many orders the user currently has
+                    $completedStatuses = [
+                        \App\Enums\OrderStatus::ACCEPT,
+                        \App\Enums\OrderStatus::PREPARING,
+                        \App\Enums\OrderStatus::PREPARED,
+                        \App\Enums\OrderStatus::OUT_FOR_DELIVERY,
+                        \App\Enums\OrderStatus::DELIVERED,
+                    ];
+                    
+                    $currentOrdersQuery = \App\Models\Order::withoutGlobalScopes()
+                        ->where('branch_id', $onlineUser->branch_id)
+                        ->where(function ($query) use ($onlineUser) {
+                            $query->where('whatsapp_number', 'LIKE', '%' . substr($onlineUser->whatsapp, -9))
+                                ->orWhere('whatsapp_number', $onlineUser->whatsapp);
+                        })
+                        ->whereIn('status', $completedStatuses);
+                    
+                    if ($onlineUser->campaign_joined_at) {
+                        $currentOrdersQuery->where('order_datetime', '>=', $onlineUser->campaign_joined_at);
+                    }
+                    
+                    if ($campaign->end_date) {
+                        $currentOrdersQuery->where('order_datetime', '<=', $campaign->end_date . ' 23:59:59');
+                    }
+                    
+                    // Filter by category if needed
+                    if ($campaign->free_item_id) {
+                        $freeItem = \App\Models\Item::with('category')->find($campaign->free_item_id);
+                        if ($freeItem && $freeItem->item_category_id) {
+                            $currentOrdersQuery->whereHas('orderItems', function($q) use ($freeItem) {
+                                $q->whereHas('item', function($itemQuery) use ($freeItem) {
+                                    $itemQuery->where('item_category_id', $freeItem->item_category_id);
+                                });
+                            });
+                        }
+                    }
+                    
+                    $currentOrderCount = $currentOrdersQuery->count();
+                    $difference = $desiredOrderCount - $currentOrderCount;
+                    
+                    if ($difference == 0) {
+                        return response([
+                            'status' => true,
+                            'message' => 'Order count is already at the desired value.',
+                        ]);
+                    }
+                    
+                    // Adjust the join date to achieve the desired count
+                    // If we want more orders, move join date backwards
+                    // If we want fewer orders, move join date forwards
+                    // We'll find the date that gives us the desired count
+                    if ($difference > 0) {
+                        // Need more orders - move join date backwards
+                        // Find the date where we have exactly the desired count
+                        $orders = $currentOrdersQuery->orderBy('order_datetime', 'asc')->get();
+                        if ($orders->count() >= $desiredOrderCount) {
+                            // Set join date to the date of the order that would give us the desired count
+                            $targetOrder = $orders[$desiredOrderCount - 1] ?? null;
+                            if ($targetOrder) {
+                                $newJoinDate = \Carbon\Carbon::parse($targetOrder->order_datetime)->subSecond();
+                                $onlineUser->update(['campaign_joined_at' => $newJoinDate]);
+                            }
+                        } else {
+                            // Not enough orders exist - set join date to a past date
+                            $onlineUser->update(['campaign_joined_at' => now()->subDays(30)]);
+                        }
+                    } else {
+                        // Need fewer orders - move join date forwards
+                        // Find the date where we have exactly the desired count
+                        $orders = $currentOrdersQuery->orderBy('order_datetime', 'desc')->get();
+                        if ($orders->count() > abs($difference)) {
+                            // Set join date to exclude the extra orders
+                            $targetOrder = $orders[abs($difference) - 1] ?? null;
+                            if ($targetOrder) {
+                                $newJoinDate = \Carbon\Carbon::parse($targetOrder->order_datetime)->addSecond();
+                                $onlineUser->update(['campaign_joined_at' => $newJoinDate]);
+                            }
+                        } else {
+                            // Set to now to reset
+                            $onlineUser->update(['campaign_joined_at' => now()]);
+                        }
+                    }
+                    
                     return response([
                         'status' => true,
-                        'message' => 'Campaign progress adjusted. Note: This resets the join date.',
+                        'message' => "Order count adjusted to {$desiredOrderCount}.",
                     ]);
 
                 case 'remove':
