@@ -532,16 +532,21 @@ class CampaignController extends Controller
                 }
             }
 
-            $orderCount = $ordersQuery->count();
+            // Use manual order count if set, otherwise calculate from orders
+            $calculatedOrderCount = $ordersQuery->count();
+            $orderCount = $onlineUser->campaign_manual_order_count !== null 
+                ? $onlineUser->campaign_manual_order_count 
+                : $calculatedOrderCount;
             $requiredPurchases = $campaign->required_purchases ?? 8;
             
             // Debug: Get actual orders for logging
             $foundOrders = $ordersQuery->get(['id', 'order_serial_no', 'whatsapp_number', 'order_datetime', 'status']);
             
-            // Progress is how many orders toward next reward (modulo)
+            // current_progress should be the actual order count (e.g., 5/8 means current_progress = 5)
+            // Progress toward next reward (modulo) for rewards calculation
             $progressTowardNext = $orderCount % $requiredPurchases;
-            // But if they just completed a set, show full progress
-            $progress = $progressTowardNext == 0 && $orderCount > 0 ? $requiredPurchases : $progressTowardNext;
+            // But if they just completed a set, show full progress for rewards
+            $progressForRewards = $progressTowardNext == 0 && $orderCount > 0 ? $requiredPurchases : $progressTowardNext;
 
             \Log::info('Campaign order count', [
                 'whatsapp' => $whatsapp,
@@ -549,6 +554,8 @@ class CampaignController extends Controller
                 'branch_id' => $request->branch_id,
                 'campaign_id' => $campaign->id,
                 'campaign_joined_at' => $onlineUser->campaign_joined_at,
+                'campaign_manual_order_count' => $onlineUser->campaign_manual_order_count,
+                'calculated_order_count' => $calculatedOrderCount,
                 'campaign_start_date' => $campaign->start_date,
                 'campaign_end_date' => $campaign->end_date,
                 'order_count' => $orderCount,
@@ -578,6 +585,18 @@ class CampaignController extends Controller
             $earnedRewards = (int) floor($orderCount / $requiredPurchases);
             $rewardsAvailable = max(0, $earnedRewards - $redeemedCount);
 
+            // Check if campaign is completed (has completion record)
+            $isCompleted = false;
+            try {
+                $isCompleted = \App\Models\CampaignCompletion::withoutGlobalScopes()
+                    ->where('campaign_id', $campaign->id)
+                    ->where('branch_id', $request->branch_id)
+                    ->where('whatsapp', $whatsapp)
+                    ->exists();
+            } catch (\Exception $e) {
+                // Table might not exist
+            }
+
             return response()->json([
                 'status' => true,
                 'data'   => [
@@ -585,7 +604,7 @@ class CampaignController extends Controller
                     'campaign_name'      => $campaign->name,
                     'type'               => 'item',
                     'required_purchases' => $requiredPurchases,
-                    'current_progress'   => $progress,
+                    'current_progress'   => $orderCount, // Actual order count (e.g., 5 for 5/8)
                     'total_orders'       => $orderCount,
                     'rewards_available'  => $rewardsAvailable,
                     'redeemed_count'     => $redeemedCount,
@@ -595,8 +614,8 @@ class CampaignController extends Controller
                         'category_id'   => $campaign->freeItem->item_category_id,
                         'category_name' => $campaign->freeItem->category->name ?? null,
                     ] : null,
-                    'is_complete'        => $progress >= $requiredPurchases,
-                    'is_completed'       => false, // Active campaign, not yet completed
+                    'is_complete'        => $progressForRewards >= $requiredPurchases,
+                    'is_completed'       => $isCompleted, // Check completion record
                 ],
             ]);
         } catch (ValidationException $exception) {
