@@ -530,6 +530,7 @@ Route::prefix('admin')->name('admin.')->middleware(['installed', 'apiKey', 'auth
         Route::post('/', [OnlineUserController::class, 'store']);
         Route::match(['post', 'put', 'patch'], '/{onlineUser}', [OnlineUserController::class, 'update']);
         Route::delete('/{onlineUser}', [OnlineUserController::class, 'destroy']);
+        Route::post('/{onlineUser}/campaign-progress', [OnlineUserController::class, 'updateCampaignProgress']);
     });
 
     Route::prefix('drivers')->name('drivers.')->group(function () {

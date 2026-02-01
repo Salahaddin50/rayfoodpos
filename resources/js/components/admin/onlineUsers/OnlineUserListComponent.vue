@@ -61,6 +61,7 @@
                             <th class="db-table-head-th">{{ $t("label.whatsapp_number") }}</th>
                             <th class="db-table-head-th">{{ $t("label.location") }}</th>
                             <th class="db-table-head-th">{{ $t("menu.campaigns") }}</th>
+                            <th class="db-table-head-th">{{ $t("label.campaign_status") || "Campaign Status" }}</th>
                             <th class="db-table-head-th">{{ $t("label.last_order") }}</th>
                             <th class="db-table-head-th hidden-print" v-if="permissionChecker('online_users_edit') || permissionChecker('online_users_delete')">
                                 {{ $t("label.action") }}
@@ -77,6 +78,29 @@
                             </td>
                             <td class="db-table-body-td">
                                 <span v-if="row.campaign_name" class="text-primary font-medium">{{ row.campaign_name }}</span>
+                                <span v-else class="text-gray-400">-</span>
+                            </td>
+                            <td class="db-table-body-td">
+                                <div v-if="row.campaign_progress" class="flex items-center gap-2">
+                                    <span v-if="row.campaign_progress.type === 'percentage'" class="text-sm text-blue-600">
+                                        {{ row.campaign_progress.discount_value }}% {{ $t("label.off") || "off" }}
+                                    </span>
+                                    <span v-else-if="row.campaign_progress.type === 'item'" class="text-sm">
+                                        <span v-if="row.campaign_progress.is_completed" class="text-green-600 font-medium">
+                                            ✓ {{ $t("label.completed") || "Completed" }}
+                                        </span>
+                                        <span v-else class="text-gray-700">
+                                            {{ row.campaign_progress.current_progress || 0 }} / {{ row.campaign_progress.required_purchases || 0 }}
+                                        </span>
+                                    </span>
+                                    <button 
+                                        v-if="permissionChecker('online_users_edit') && row.campaign_progress" 
+                                        class="text-xs text-blue-600 hover:text-blue-800 underline"
+                                        @click="openCampaignStatusModal(row)"
+                                    >
+                                        {{ $t("button.manage") || "Manage" }}
+                                    </button>
+                                </div>
                                 <span v-else class="text-gray-400">-</span>
                             </td>
                             <td class="db-table-body-td">
@@ -203,6 +227,95 @@
             </div>
         </div>
     </div>
+
+    <!-- Campaign Status Modal -->
+    <div ref="campaignStatusModal" class="modal ff-modal">
+        <div class="modal-dialog max-w-[600px] p-0">
+            <div class="modal-header p-4 border-b">
+                <h3 class="text-base font-medium">{{ $t("label.campaign_status") || "Campaign Status" }}</h3>
+                <button class="modal-close" @click.prevent="closeCampaignStatusModal">
+                    <i class="fa-regular fa-circle-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body p-4" v-if="selectedCampaignUser">
+                <div class="mb-4">
+                    <p class="text-sm text-gray-600 mb-2">
+                        <strong>{{ $t("label.whatsapp_number") }}:</strong> {{ selectedCampaignUser.whatsapp }}
+                    </p>
+                    <p class="text-sm text-gray-600 mb-2">
+                        <strong>{{ $t("menu.campaigns") }}:</strong> {{ selectedCampaignUser.campaign_name || '-' }}
+                    </p>
+                    <p v-if="selectedCampaignUser.campaign_joined_at" class="text-sm text-gray-600 mb-4">
+                        <strong>{{ $t("label.joined_at") || "Joined At" }}:</strong> {{ selectedCampaignUser.campaign_joined_at }}
+                    </p>
+                </div>
+
+                <div v-if="selectedCampaignUser.campaign_progress" class="space-y-4">
+                    <!-- Percentage Campaign -->
+                    <div v-if="selectedCampaignUser.campaign_progress.type === 'percentage'" class="bg-blue-50 p-4 rounded-lg">
+                        <p class="text-sm font-medium text-blue-900">
+                            {{ $t("label.percentage_campaign") || "Percentage Campaign" }}
+                        </p>
+                        <p class="text-sm text-blue-700 mt-1">
+                            {{ selectedCampaignUser.campaign_progress.discount_value }}% {{ $t("label.off") || "off" }}
+                        </p>
+                    </div>
+
+                    <!-- Item Campaign -->
+                    <div v-else-if="selectedCampaignUser.campaign_progress.type === 'item'" class="space-y-3">
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-medium text-gray-700">{{ $t("label.progress") || "Progress" }}:</span>
+                                <span class="text-sm text-gray-900 font-semibold">
+                                    {{ selectedCampaignUser.campaign_progress.current_progress || 0 }} / {{ selectedCampaignUser.campaign_progress.required_purchases || 0 }} {{ $t("label.orders") || "Orders" }}
+                                </span>
+                            </div>
+                            <div v-if="selectedCampaignUser.campaign_progress.free_item" class="text-xs text-gray-600 mt-2">
+                                <strong>{{ $t("label.free_item") || "Free Item" }}:</strong> {{ selectedCampaignUser.campaign_progress.free_item.name }}
+                                <span v-if="selectedCampaignUser.campaign_progress.free_item.category_name" class="text-blue-600">
+                                    ({{ selectedCampaignUser.campaign_progress.free_item.category_name }})
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="bg-green-50 p-4 rounded-lg" v-if="selectedCampaignUser.campaign_progress.rewards_available > 0">
+                            <p class="text-sm font-medium text-green-900">
+                                {{ $t("label.rewards_available") || "Rewards Available" }}: {{ selectedCampaignUser.campaign_progress.rewards_available }}
+                            </p>
+                        </div>
+
+                        <div class="bg-yellow-50 p-4 rounded-lg" v-if="selectedCampaignUser.campaign_progress.is_completed">
+                            <p class="text-sm font-medium text-yellow-900">
+                                ✓ {{ $t("label.campaign_completed") || "Campaign Completed" }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-3 mt-6">
+                    <button 
+                        v-if="selectedCampaignUser.campaign_progress && selectedCampaignUser.campaign_progress.type === 'item'"
+                        class="db-btn py-2 text-white bg-yellow-600" 
+                        type="button" 
+                        @click.prevent="resetCampaignProgress"
+                    >
+                        <span>{{ $t("button.reset_progress") || "Reset Progress" }}</span>
+                    </button>
+                    <button 
+                        v-if="selectedCampaignUser.campaign_id"
+                        class="db-btn py-2 text-white bg-red-600" 
+                        type="button" 
+                        @click.prevent="removeCampaign"
+                    >
+                        <span>{{ $t("button.remove_campaign") || "Remove Campaign" }}</span>
+                    </button>
+                    <button class="db-btn py-2 text-white bg-gray-600" type="button" @click.prevent="closeCampaignStatusModal">
+                        <span>{{ $t("button.close") || "Close" }}</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script>
@@ -240,6 +353,7 @@ export default {
             editId: null,
             editForm: { whatsapp: "", location: "", campaign_id: null },
             searchPhone: "",
+            selectedCampaignUser: null,
         };
     },
     computed: {
@@ -457,6 +571,52 @@ export default {
                 console.error("Error exporting contacts:", error);
                 alertService.error(this.$t("message.export_failed") || "Failed to export contacts");
             }
+        },
+        openCampaignStatusModal(row) {
+            this.selectedCampaignUser = row;
+            appService.modalShow(this.$refs.campaignStatusModal);
+        },
+        closeCampaignStatusModal() {
+            appService.modalHide(this.$refs.campaignStatusModal);
+            this.selectedCampaignUser = null;
+        },
+        resetCampaignProgress() {
+            if (!this.selectedCampaignUser) return;
+            
+            appService.destroyConfirmation(this.$t("message.confirm_reset_campaign") || "Are you sure you want to reset campaign progress? This will start counting orders from now.").then(() => {
+                this.loading.isActive = true;
+                this.$store.dispatch("onlineUser/updateCampaignProgress", {
+                    id: this.selectedCampaignUser.id,
+                    action: 'reset'
+                }).then(() => {
+                    this.loading.isActive = false;
+                    alertService.success(this.$t("message.campaign_progress_reset") || "Campaign progress reset successfully");
+                    this.list();
+                    this.closeCampaignStatusModal();
+                }).catch((err) => {
+                    this.loading.isActive = false;
+                    alertService.error(err?.response?.data?.message || "Failed to reset campaign progress");
+                });
+            });
+        },
+        removeCampaign() {
+            if (!this.selectedCampaignUser) return;
+            
+            appService.destroyConfirmation(this.$t("message.confirm_remove_campaign") || "Are you sure you want to remove this campaign from the user?").then(() => {
+                this.loading.isActive = true;
+                this.$store.dispatch("onlineUser/updateCampaignProgress", {
+                    id: this.selectedCampaignUser.id,
+                    action: 'remove'
+                }).then(() => {
+                    this.loading.isActive = false;
+                    alertService.success(this.$t("message.campaign_removed") || "Campaign removed successfully");
+                    this.list();
+                    this.closeCampaignStatusModal();
+                }).catch((err) => {
+                    this.loading.isActive = false;
+                    alertService.error(err?.response?.data?.message || "Failed to remove campaign");
+                });
+            });
         },
     },
 };

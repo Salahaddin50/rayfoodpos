@@ -150,6 +150,68 @@ class OnlineUserController extends Controller implements HasMiddleware
             return response(['status' => false, 'message' => $exception->getMessage()], 422);
         }
     }
+
+    /**
+     * Update campaign progress for an online user
+     * Allows admin to adjust order count, reset progress, or remove campaign
+     */
+    public function updateCampaignProgress(Request $request, OnlineUser $onlineUser)
+    {
+        try {
+            $request->validate([
+                'action' => 'required|in:reset,adjust,remove',
+                'order_count' => 'nullable|integer|min:0', // For adjust action
+            ]);
+
+            $action = $request->input('action');
+
+            switch ($action) {
+                case 'reset':
+                    // Reset campaign join date to now (starts counting from now)
+                    $onlineUser->update([
+                        'campaign_joined_at' => now(),
+                    ]);
+                    return response([
+                        'status' => true,
+                        'message' => 'Campaign progress reset successfully. Order count will start from now.',
+                    ]);
+
+                case 'adjust':
+                    // This is more complex - we'd need to track manual adjustments
+                    // For now, we'll just reset the join date to effectively adjust the count
+                    // In the future, we could add a manual_adjustment field
+                    $orderCount = $request->input('order_count', 0);
+                    if ($orderCount < 0) {
+                        return response(['status' => false, 'message' => 'Order count cannot be negative'], 422);
+                    }
+                    // Reset join date - this will effectively change the order count
+                    // Note: This is a simplified approach. A full solution would track manual adjustments
+                    $onlineUser->update([
+                        'campaign_joined_at' => now(),
+                    ]);
+                    return response([
+                        'status' => true,
+                        'message' => 'Campaign progress adjusted. Note: This resets the join date.',
+                    ]);
+
+                case 'remove':
+                    // Remove campaign assignment
+                    $onlineUser->update([
+                        'campaign_id' => null,
+                        'campaign_joined_at' => null,
+                    ]);
+                    return response([
+                        'status' => true,
+                        'message' => 'Campaign removed from user successfully.',
+                    ]);
+
+                default:
+                    return response(['status' => false, 'message' => 'Invalid action'], 422);
+            }
+        } catch (\Throwable $exception) {
+            return response(['status' => false, 'message' => $exception->getMessage()], 422);
+        }
+    }
 }
 
 

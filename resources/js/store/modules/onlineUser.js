@@ -78,6 +78,17 @@ export const onlineUser = {
                     .catch((err) => reject(err));
             });
         },
+        updateCampaignProgress: function (context, payload) {
+            return new Promise((resolve, reject) => {
+                axios
+                    .post(`admin/online-users/${payload.id}/campaign-progress`, {
+                        action: payload.action,
+                        order_count: payload.order_count || null,
+                    })
+                    .then((res) => resolve(res))
+                    .catch((err) => reject(err));
+            });
+        },
     },
     mutations: {
         lists: function (state, payload) {

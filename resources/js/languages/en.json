@@ -689,6 +689,11 @@
         "campaign": "Campaign",
         "no_campaign": "No Campaign",
         "campaign_discount": "Campaign Discount",
+        "campaign_status": "Campaign Status",
+        "joined_at": "Joined At",
+        "completed": "Completed",
+        "progress": "Progress",
+        "manage": "Manage",
         "campaign_discount_applied": "Campaign Discount Applied",
         "free_item_redeemed": "Free Item Redeemed",
         "percentage_campaign": "Percentage Campaign",
@@ -924,6 +929,10 @@
         "campaign_completed": "Campaign Completed!",
         "campaign_completed_description": "You have successfully completed this campaign and received your free reward.",
         "you_received_free_item": "You received: {item}",
-        "enter_phone_first": "Please enter your phone number first"
+        "enter_phone_first": "Please enter your phone number first",
+        "confirm_reset_campaign": "Are you sure you want to reset campaign progress? This will start counting orders from now.",
+        "confirm_remove_campaign": "Are you sure you want to remove this campaign from the user?",
+        "campaign_progress_reset": "Campaign progress reset successfully",
+        "campaign_removed": "Campaign removed successfully"
     }
 }

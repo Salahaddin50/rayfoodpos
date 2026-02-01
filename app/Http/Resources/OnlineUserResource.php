@@ -16,6 +16,8 @@ class OnlineUserResource extends JsonResource
             'location'      => $this->location,
             'campaign_id'   => $this->campaign_id,
             'campaign_name' => $this->campaign ? $this->campaign->name : null,
+            'campaign_joined_at' => $this->campaign_joined_at?->format('Y-m-d H:i:s'),
+            'campaign_progress' => $this->campaign_progress,
             'last_order_id' => $this->last_order_id,
             'last_order_at' => $this->last_order_at,
         ];
