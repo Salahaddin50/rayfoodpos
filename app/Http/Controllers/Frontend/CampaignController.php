@@ -113,10 +113,20 @@ class CampaignController extends Controller
                 'branch_id' => $request->branch_id,
             ]);
             
-            $request->validate([
-                'campaign_id' => 'required|exists:campaigns,id',
+            $validated = $request->validate([
+                'campaign_id' => 'required|integer|exists:campaigns,id',
                 'phone'       => 'required|string|max:32',
-                'branch_id'   => 'required|exists:branches,id',
+                'branch_id'   => 'required|integer|exists:branches,id',
+            ], [
+                'campaign_id.required' => 'Campaign ID is required.',
+                'campaign_id.integer'   => 'Campaign ID must be a number.',
+                'campaign_id.exists'    => 'The selected campaign does not exist.',
+                'phone.required'        => 'Phone number is required.',
+                'phone.string'          => 'Phone number must be a string.',
+                'phone.max'             => 'Phone number cannot exceed 32 characters.',
+                'branch_id.required'    => 'Branch ID is required.',
+                'branch_id.integer'     => 'Branch ID must be a number.',
+                'branch_id.exists'      => 'The selected branch does not exist.',
             ]);
 
             $campaign = Campaign::find($request->campaign_id);

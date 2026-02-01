@@ -884,14 +884,33 @@ export default {
                 || this.$route.params.branchId
                 || (this.branches && this.branches.length > 0 ? this.branches[0].id : null)
             );
-            if (!branchId) {
-                console.error('No branch selected');
+            
+            if (!branchId || isNaN(branchId)) {
+                console.error('No valid branch ID found', {
+                    onlineBranchId: this.onlineBranchId,
+                    routeParams: this.$route.params.branchId,
+                    branches: this.branches
+                });
+                alert(this.$t('message.branch_required') || 'Please select a branch first.');
                 return;
             }
 
+            if (!campaign || !campaign.id) {
+                console.error('Invalid campaign data', campaign);
+                alert('Invalid campaign. Please try again.');
+                return;
+            }
+
+            // Log what we're sending for debugging
+            console.log('Joining campaign:', {
+                campaign_id: Number(campaign.id),
+                phone: normalizedNumber,
+                branch_id: branchId
+            });
+
             this.campaignLoading.isActive = true;
             axios.post('frontend/campaign/join', {
-                campaign_id: campaign.id,
+                campaign_id: Number(campaign.id),
                 phone: normalizedNumber,
                 branch_id: branchId
             }).then((response) => {
@@ -905,7 +924,20 @@ export default {
                 }
             }).catch((error) => {
                 console.error('Error joining campaign:', error);
-                alert(error.response?.data?.message || 'Failed to join campaign');
+                let errorMessage = 'Failed to join campaign';
+                
+                if (error.response?.data) {
+                    // Check for validation errors
+                    if (error.response.data.errors) {
+                        const errors = error.response.data.errors;
+                        const errorMessages = Object.values(errors).flat();
+                        errorMessage = errorMessages.join('\n');
+                    } else if (error.response.data.message) {
+                        errorMessage = error.response.data.message;
+                    }
+                }
+                
+                alert(errorMessage);
                 this.campaignLoading.isActive = false;
             });
         }
