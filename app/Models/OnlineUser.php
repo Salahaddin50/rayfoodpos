@@ -50,16 +50,24 @@ class OnlineUser extends Model
      */
     public function getCampaignProgressAttribute(): ?array
     {
-        if (!$this->campaign_id || !$this->campaign) {
-            return null;
-        }
+        try {
+            if (!$this->campaign_id || !$this->campaign) {
+                return null;
+            }
 
-        // Ensure freeItem and category are loaded
-        if (!$this->campaign->relationLoaded('freeItem')) {
-            $this->campaign->load('freeItem.category');
-        }
-        
-        $campaign = $this->campaign;
+            // Ensure freeItem and category are loaded (with error handling)
+            try {
+                if (!$this->campaign->relationLoaded('freeItem')) {
+                    $this->campaign->load('freeItem.category');
+                }
+            } catch (\Exception $e) {
+                \Log::warning('Failed to load freeItem relationship', [
+                    'campaign_id' => $this->campaign_id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+            
+            $campaign = $this->campaign;
         
         // Only calculate for item-type campaigns
         if ($campaign->type != \App\Enums\CampaignType::ITEM) {
@@ -127,18 +135,23 @@ class OnlineUser extends Model
         $orderCount = $ordersQuery->count();
         $requiredPurchases = $campaign->required_purchases ?? 8;
         
-        // Debug logging for campaign progress calculation
-        \Log::info('Campaign progress calculation (OnlineUser model)', [
-            'online_user_id' => $this->id,
-            'whatsapp' => $this->whatsapp,
-            'campaign_id' => $campaign->id,
-            'campaign_joined_at' => $this->campaign_joined_at,
-            'branch_id' => $this->branch_id,
-            'order_count' => $orderCount,
-            'required_purchases' => $requiredPurchases,
-            'has_category_filter' => $campaign->free_item_id ? true : false,
-            'free_item_category_id' => $campaign->freeItem?->item_category_id ?? null,
-        ]);
+        // Debug logging for campaign progress calculation (only in development)
+        // Commented out to prevent potential serialization issues
+        // if (config('app.debug')) {
+        //     try {
+        //         \Log::info('Campaign progress calculation (OnlineUser model)', [
+        //             'online_user_id' => $this->id,
+        //             'whatsapp' => $this->whatsapp,
+        //             'campaign_id' => $campaign->id,
+        //             'campaign_joined_at' => $this->campaign_joined_at?->format('Y-m-d H:i:s'),
+        //             'branch_id' => $this->branch_id,
+        //             'order_count' => $orderCount,
+        //             'required_purchases' => $requiredPurchases,
+        //         ]);
+        //     } catch (\Exception $logError) {
+        //         // Ignore logging errors
+        //     }
+        // }
 
         // Count redeemed rewards
         $redeemedCount = \App\Models\Order::withoutGlobalScopes()
@@ -183,9 +196,20 @@ class OnlineUser extends Model
             'free_item' => $campaign->freeItem ? [
                 'id' => $campaign->freeItem->id,
                 'name' => $campaign->freeItem->name,
-                'category_name' => $campaign->freeItem->category->name ?? null,
+                'category_name' => ($campaign->freeItem->category ?? null)?->name ?? null,
             ] : null,
         ];
+        } catch (\Exception $e) {
+            \Log::error('Error calculating campaign progress', [
+                'online_user_id' => $this->id,
+                'campaign_id' => $this->campaign_id,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            // Return null on error to prevent breaking the API
+            return null;
+        }
     }
 }
 

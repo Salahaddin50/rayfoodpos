@@ -45,6 +45,6 @@ class Campaign extends Model
 
     public function freeItem(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
-        return $this->belongsTo(Item::class, 'free_item_id', 'id');
+        return $this->belongsTo(Item::class, 'free_item_id', 'id')->withTrashed();
     }
 }

@@ -44,13 +44,19 @@ class OnlineUserController extends Controller implements HasMiddleware
             // Ensure DB-backed list exists (including dining-table orders when whatsapp is provided)
             $this->onlineUserService->ensureSyncedForCurrentBranch();
 
-            // Load campaign with freeItem and category for progress calculation
-            $users = OnlineUser::with(['campaign.freeItem.category'])
+            // Load campaign - freeItem will be loaded on-demand in the accessor
+            $users = OnlineUser::with('campaign')
                 ->orderByDesc('last_order_at')
                 ->get();
             
             return OnlineUserResource::collection($users);
         } catch (Exception $exception) {
+            \Log::error('Online users index error', [
+                'message' => $exception->getMessage(),
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+                'trace' => $exception->getTraceAsString(),
+            ]);
             return response(['status' => false, 'message' => $exception->getMessage()], 422);
         }
     }
