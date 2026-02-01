@@ -14,10 +14,42 @@ class RootController extends Controller
 
     public function index(): \Illuminate\Contracts\View\Factory | \Illuminate\Contracts\View\View | \Illuminate\Contracts\Foundation\Application
     {
-        $analytics =  Analytic::with('analyticSections')->where(['status' => Status::ACTIVE])->get();
-        $themeFavicon = ThemeSetting::where(['key' => 'theme_favicon_logo'])->first();
-        $favIcon = $themeFavicon?->faviconLogo ?? null;
-        return view('master', ['analytics' => $analytics, 'favicon' => $favIcon]);
+        try {
+            $analytics = Analytic::with('analyticSections')->where(['status' => Status::ACTIVE])->get();
+        } catch (\Exception $e) {
+            \Log::error('Error loading analytics in RootController', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            $analytics = collect([]);
+        }
+
+        try {
+            $themeFavicon = ThemeSetting::where(['key' => 'theme_favicon_logo'])->first();
+            $favIcon = $themeFavicon?->faviconLogo ?? null;
+        } catch (\Exception $e) {
+            \Log::error('Error loading theme favicon in RootController', [
+                'error' => $e->getMessage(),
+            ]);
+            $favIcon = null;
+        }
+
+        // Get company name with error handling
+        try {
+            $companyName = Settings::group('company')->get('company_name') ?? 'Restaurant POS';
+        } catch (\Exception $e) {
+            \Log::error('Error loading company name in RootController', [
+                'error' => $e->getMessage(),
+            ]);
+            $companyName = 'Restaurant POS';
+        }
+
+        return view('master', [
+            'analytics' => $analytics,
+            'favicon' => $favIcon,
+            'companyName' => $companyName,
+        ]);
     }
 
     public function manifest(): \Illuminate\Http\JsonResponse

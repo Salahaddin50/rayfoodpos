@@ -10,7 +10,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="{{ Settings::group('company')->get('company_name') }}">
+    <meta name="apple-mobile-web-app-title" content="{{ $companyName ?? 'Restaurant POS' }}">
 
 
     <!-- PWA MANIFEST -->
@@ -28,7 +28,7 @@
     
     <!-- PAGE TITLE -->
 
-    <title>{{ Settings::group('company')->get('company_name') }}</title>
+    <title>{{ $companyName ?? 'Restaurant POS' }}</title>
 
     <!-- FAV ICON -->
     <link rel="icon" type="image" href="{{ $favicon }}">
