@@ -167,9 +167,10 @@ class OnlineUserController extends Controller implements HasMiddleware
 
             switch ($action) {
                 case 'reset':
-                    // Reset campaign join date to now (starts counting from now)
+                    // Reset campaign progress - clear manual count and reset join date to now
                     $onlineUser->update([
                         'campaign_joined_at' => now(),
+                        'campaign_manual_order_count' => null, // Clear manual override
                     ]);
                     return response([
                         'status' => true,
@@ -177,7 +178,7 @@ class OnlineUserController extends Controller implements HasMiddleware
                     ]);
 
                 case 'adjust':
-                    // Adjust order count by calculating the required join date
+                    // Directly set manual order count (e.g., set to 5/8)
                     $desiredOrderCount = $request->input('order_count', 0);
                     if ($desiredOrderCount < 0) {
                         return response(['status' => false, 'message' => 'Order count cannot be negative'], 422);
@@ -187,142 +188,33 @@ class OnlineUserController extends Controller implements HasMiddleware
                         return response(['status' => false, 'message' => 'User is not enrolled in a campaign'], 422);
                     }
                     
-                    $campaign = $onlineUser->campaign;
+                    // Directly set the manual order count
+                    $onlineUser->campaign_manual_order_count = $desiredOrderCount;
+                    $saved = $onlineUser->save();
                     
-                    // Get ALL eligible orders (without join date filter) to find the right date
-                    $completedStatuses = [
-                        \App\Enums\OrderStatus::ACCEPT,
-                        \App\Enums\OrderStatus::PREPARING,
-                        \App\Enums\OrderStatus::PREPARED,
-                        \App\Enums\OrderStatus::OUT_FOR_DELIVERY,
-                        \App\Enums\OrderStatus::DELIVERED,
-                    ];
-                    
-                    // Query ALL orders (no join date filter yet)
-                    $allOrdersQuery = \App\Models\Order::withoutGlobalScopes()
-                        ->where('branch_id', $onlineUser->branch_id)
-                        ->where(function ($query) use ($onlineUser) {
-                            $query->where('whatsapp_number', 'LIKE', '%' . substr($onlineUser->whatsapp, -9))
-                                ->orWhere('whatsapp_number', $onlineUser->whatsapp);
-                        })
-                        ->whereIn('status', $completedStatuses);
-                    
-                    // Filter by campaign end date if exists
-                    if ($campaign->end_date) {
-                        $allOrdersQuery->where('order_datetime', '<=', $campaign->end_date . ' 23:59:59');
-                    }
-                    
-                    // Filter by category if needed
-                    if ($campaign->free_item_id) {
-                        $freeItem = \App\Models\Item::with('category')->find($campaign->free_item_id);
-                        if ($freeItem && $freeItem->item_category_id) {
-                            $allOrdersQuery->whereHas('orderItems', function($q) use ($freeItem) {
-                                $q->whereHas('item', function($itemQuery) use ($freeItem) {
-                                    $itemQuery->where('item_category_id', $freeItem->item_category_id);
-                                });
-                            });
-                        }
-                    }
-                    
-                    // Get all orders sorted by date
-                    $allOrders = $allOrdersQuery->orderBy('order_datetime', 'asc')->get();
-                    
-                    if ($allOrders->count() == 0) {
-                        // No orders exist - set join date to now
-                        $onlineUser->campaign_joined_at = now();
-                        $onlineUser->save();
-                        return response([
-                            'status' => true,
-                            'message' => "No eligible orders found. Join date reset to now.",
+                    if (!$saved) {
+                        \Log::error('Failed to save campaign_manual_order_count', [
+                            'online_user_id' => $onlineUser->id,
+                            'desired_order_count' => $desiredOrderCount,
                         ]);
-                    }
-                    
-                    if ($desiredOrderCount == 0) {
-                        // Set join date to now (no orders counted)
-                        $onlineUser->campaign_joined_at = now();
-                        $onlineUser->save();
-                        return response([
-                            'status' => true,
-                            'message' => "Order count set to 0. Join date reset to now.",
-                        ]);
-                    }
-                    
-                    if ($desiredOrderCount > $allOrders->count()) {
-                        // Desired count is more than available orders
-                        // Set join date to the earliest order date
-                        $earliestOrder = $allOrders->first();
-                        $newJoinDate = \Carbon\Carbon::parse($earliestOrder->order_datetime)->subSecond();
-                        $onlineUser->campaign_joined_at = $newJoinDate;
-                        $saved = $onlineUser->save();
-                        
-                        if (!$saved) {
-                            \Log::error('Failed to save campaign_joined_at', [
-                                'online_user_id' => $onlineUser->id,
-                                'new_join_date' => $newJoinDate,
-                            ]);
-                            return response(['status' => false, 'message' => 'Failed to save join date'], 422);
-                        }
-                        
-                        \Log::info('Adjusted join date - desired count exceeds available orders', [
-                            'desired' => $desiredOrderCount,
-                            'available' => $allOrders->count(),
-                            'new_join_date' => $newJoinDate,
-                            'saved' => $saved,
-                        ]);
-                    } else {
-                        // Find the order that would give us exactly the desired count
-                        // If we want 1 order, we need join date before the 1st order
-                        // If we want 2 orders, we need join date before the 2nd order, etc.
-                        $targetOrderIndex = $desiredOrderCount - 1;
-                        $targetOrder = $allOrders[$targetOrderIndex] ?? null;
-                        
-                        if ($targetOrder) {
-                            // Set join date to just before this order
-                            $newJoinDate = \Carbon\Carbon::parse($targetOrder->order_datetime)->subSecond();
-                            
-                            // Update using save() to ensure it's persisted
-                            $onlineUser->campaign_joined_at = $newJoinDate;
-                            $saved = $onlineUser->save();
-                            
-                            if (!$saved) {
-                                \Log::error('Failed to save campaign_joined_at', [
-                                    'online_user_id' => $onlineUser->id,
-                                    'new_join_date' => $newJoinDate,
-                                ]);
-                                return response(['status' => false, 'message' => 'Failed to save join date'], 422);
-                            }
-                            
-                            \Log::info('Adjusted join date for order count', [
-                                'desired_count' => $desiredOrderCount,
-                                'target_order_id' => $targetOrder->id,
-                                'target_order_date' => $targetOrder->order_datetime,
-                                'new_join_date' => $newJoinDate,
-                                'saved' => $saved,
-                            ]);
-                        } else {
-                            // Fallback - set to now
-                            $onlineUser->campaign_joined_at = now();
-                            $onlineUser->save();
-                        }
+                        return response(['status' => false, 'message' => 'Failed to save order count'], 422);
                     }
                     
                     // Verify the update was saved
                     $onlineUser->refresh();
                     
-                    // Log the update for debugging
-                    \Log::info('Campaign join date adjusted', [
+                    \Log::info('Manual order count set', [
                         'online_user_id' => $onlineUser->id,
                         'whatsapp' => $onlineUser->whatsapp,
                         'campaign_id' => $onlineUser->campaign_id,
-                        'new_campaign_joined_at' => $onlineUser->campaign_joined_at,
-                        'desired_order_count' => $desiredOrderCount,
+                        'manual_order_count' => $onlineUser->campaign_manual_order_count,
                     ]);
                     
                     return response([
                         'status' => true,
-                        'message' => "Order count adjusted to {$desiredOrderCount}. Join date updated.",
+                        'message' => "Order count set to {$desiredOrderCount}.",
                         'data' => [
-                            'campaign_joined_at' => $onlineUser->campaign_joined_at?->format('Y-m-d H:i:s'),
+                            'campaign_manual_order_count' => $onlineUser->campaign_manual_order_count,
                         ],
                     ]);
 
@@ -331,6 +223,7 @@ class OnlineUserController extends Controller implements HasMiddleware
                     $onlineUser->update([
                         'campaign_id' => null,
                         'campaign_joined_at' => null,
+                        'campaign_manual_order_count' => null, // Clear manual override
                     ]);
                     return response([
                         'status' => true,

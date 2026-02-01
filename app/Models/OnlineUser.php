@@ -16,6 +16,7 @@ class OnlineUser extends Model
         'location',
         'campaign_id',
         'campaign_joined_at',
+        'campaign_manual_order_count',
         'last_order_id',
         'last_order_at',
     ];
@@ -106,7 +107,11 @@ class OnlineUser extends Model
             }
         }
 
-        $orderCount = $ordersQuery->count();
+        // Use manual order count if set, otherwise calculate from orders
+        $calculatedOrderCount = $ordersQuery->count();
+        $orderCount = $this->campaign_manual_order_count !== null 
+            ? $this->campaign_manual_order_count 
+            : $calculatedOrderCount;
         $requiredPurchases = $campaign->required_purchases ?? 8;
 
         // Count redeemed rewards

@@ -642,17 +642,23 @@ export default {
                     action: 'adjust',
                     order_count: this.adjustOrderCount
                 }).then(() => {
-                    this.loading.isActive = false;
-                    alertService.success(this.$t("message.order_count_adjusted") || "Order count adjusted successfully");
-                    this.list();
-                    // Refresh the modal data
-                    setTimeout(() => {
-                        const updatedUser = this.rows.find(r => r.id === this.selectedCampaignUser.id);
-                        if (updatedUser) {
-                            this.selectedCampaignUser = updatedUser;
-                            this.adjustOrderCount = updatedUser.campaign_progress?.current_progress || 0;
-                        }
-                    }, 500);
+                    // Reload the list to get fresh data from DB
+                    this.$store.dispatch("onlineUser/lists", { paginate: 0, order_column: "last_order_at", order_type: "desc" })
+                        .then(() => {
+                            this.rows = this.onlineUsers || [];
+                            this.loading.isActive = false;
+                            alertService.success(this.$t("message.order_count_adjusted") || "Order count adjusted successfully");
+                            // Refresh the modal data with fresh data from DB
+                            const updatedUser = this.rows.find(r => r.id === this.selectedCampaignUser.id);
+                            if (updatedUser) {
+                                this.selectedCampaignUser = updatedUser;
+                                this.adjustOrderCount = updatedUser.campaign_progress?.current_progress || 0;
+                            }
+                        })
+                        .catch(() => {
+                            this.loading.isActive = false;
+                            alertService.error("Failed to refresh data");
+                        });
                 }).catch((err) => {
                     this.loading.isActive = false;
                     alertService.error(err?.response?.data?.message || "Failed to adjust order count");
@@ -688,6 +694,38 @@ export default {
                 }).catch((err) => {
                     this.loading.isActive = false;
                     alertService.error(err?.response?.data?.message || "Failed to reset campaign progress");
+                });
+            });
+        },
+        markAsCompleted() {
+            if (!this.selectedCampaignUser) return;
+            
+            appService.destroyConfirmation(this.$t("message.confirm_mark_completed") || "Mark this campaign as completed? This will create a completion record.").then(() => {
+                this.loading.isActive = true;
+                this.$store.dispatch("onlineUser/updateCampaignProgress", {
+                    id: this.selectedCampaignUser.id,
+                    action: 'complete'
+                }).then(() => {
+                    // Reload the list to get fresh data
+                    this.$store.dispatch("onlineUser/lists", { paginate: 0, order_column: "last_order_at", order_type: "desc" })
+                        .then(() => {
+                            this.rows = this.onlineUsers || [];
+                            this.loading.isActive = false;
+                            alertService.success(this.$t("message.campaign_marked_completed") || "Campaign marked as completed successfully");
+                            // Refresh modal if still open
+                            const updatedUser = this.rows.find(r => r.id === this.selectedCampaignUser.id);
+                            if (updatedUser) {
+                                this.selectedCampaignUser = updatedUser;
+                                this.adjustOrderCount = updatedUser.campaign_progress?.current_progress || 0;
+                            }
+                        })
+                        .catch(() => {
+                            this.loading.isActive = false;
+                            alertService.error("Failed to refresh data");
+                        });
+                }).catch((err) => {
+                    this.loading.isActive = false;
+                    alertService.error(err?.response?.data?.message || "Failed to mark campaign as completed");
                 });
             });
         },
