@@ -98,7 +98,7 @@
                                         class="text-xs text-blue-600 hover:text-blue-800 underline"
                                         @click="openCampaignStatusModal(row)"
                                     >
-                                        {{ $t("button.manage") || "Manage" }}
+                                        {{ $t("button.manage") }}
                                     </button>
                                 </div>
                                 <span v-else class="text-gray-400">-</span>
@@ -322,12 +322,20 @@
 
                 <div class="flex flex-wrap gap-3 mt-6">
                     <button 
+                        v-if="selectedCampaignUser.campaign_progress && selectedCampaignUser.campaign_progress.type === 'item' && !selectedCampaignUser.campaign_progress.is_completed"
+                        class="db-btn py-2 text-white bg-green-600" 
+                        type="button" 
+                        @click.prevent="markAsCompleted"
+                    >
+                        <span>{{ $t("button.mark_completed") }}</span>
+                    </button>
+                    <button 
                         v-if="selectedCampaignUser.campaign_progress && selectedCampaignUser.campaign_progress.type === 'item'"
                         class="db-btn py-2 text-white bg-yellow-600" 
                         type="button" 
                         @click.prevent="resetCampaignProgress"
                     >
-                        <span>{{ $t("button.reset_progress") || "Reset Progress" }}</span>
+                        <span>{{ $t("button.reset_progress") }}</span>
                     </button>
                     <button 
                         v-if="selectedCampaignUser.campaign_id"
@@ -335,10 +343,10 @@
                         type="button" 
                         @click.prevent="removeCampaign"
                     >
-                        <span>{{ $t("button.remove_campaign") || "Remove Campaign" }}</span>
+                        <span>{{ $t("button.remove_campaign") }}</span>
                     </button>
                     <button class="db-btn py-2 text-white bg-gray-600" type="button" @click.prevent="closeCampaignStatusModal">
-                        <span>{{ $t("button.close") || "Close" }}</span>
+                        <span>{{ $t("button.close") }}</span>
                     </button>
                 </div>
             </div>
@@ -660,10 +668,23 @@ export default {
                     id: this.selectedCampaignUser.id,
                     action: 'reset'
                 }).then(() => {
-                    this.loading.isActive = false;
-                    alertService.success(this.$t("message.campaign_progress_reset") || "Campaign progress reset successfully");
-                    this.list();
-                    this.closeCampaignStatusModal();
+                    // Reload the list to get fresh data
+                    this.$store.dispatch("onlineUser/lists", { paginate: 0, order_column: "last_order_at", order_type: "desc" })
+                        .then(() => {
+                            this.rows = this.onlineUsers || [];
+                            this.loading.isActive = false;
+                            alertService.success(this.$t("message.campaign_progress_reset") || "Campaign progress reset successfully");
+                            // Refresh modal if still open
+                            const updatedUser = this.rows.find(r => r.id === this.selectedCampaignUser.id);
+                            if (updatedUser) {
+                                this.selectedCampaignUser = updatedUser;
+                                this.adjustOrderCount = updatedUser.campaign_progress?.current_progress || 0;
+                            }
+                        })
+                        .catch(() => {
+                            this.loading.isActive = false;
+                            alertService.error("Failed to refresh data");
+                        });
                 }).catch((err) => {
                     this.loading.isActive = false;
                     alertService.error(err?.response?.data?.message || "Failed to reset campaign progress");
@@ -679,10 +700,18 @@ export default {
                     id: this.selectedCampaignUser.id,
                     action: 'remove'
                 }).then(() => {
-                    this.loading.isActive = false;
-                    alertService.success(this.$t("message.campaign_removed") || "Campaign removed successfully");
-                    this.list();
-                    this.closeCampaignStatusModal();
+                    // Reload the list to get fresh data
+                    this.$store.dispatch("onlineUser/lists", { paginate: 0, order_column: "last_order_at", order_type: "desc" })
+                        .then(() => {
+                            this.rows = this.onlineUsers || [];
+                            this.loading.isActive = false;
+                            alertService.success(this.$t("message.campaign_removed") || "Campaign removed successfully");
+                            this.closeCampaignStatusModal();
+                        })
+                        .catch(() => {
+                            this.loading.isActive = false;
+                            alertService.error("Failed to refresh data");
+                        });
                 }).catch((err) => {
                     this.loading.isActive = false;
                     alertService.error(err?.response?.data?.message || "Failed to remove campaign");

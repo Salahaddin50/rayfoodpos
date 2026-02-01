@@ -159,7 +159,7 @@ class OnlineUserController extends Controller implements HasMiddleware
     {
         try {
             $request->validate([
-                'action' => 'required|in:reset,adjust,remove',
+                'action' => 'required|in:reset,adjust,remove,complete',
                 'order_count' => 'nullable|integer|min:0', // For adjust action - sets manual order count
             ]);
 
@@ -289,6 +289,57 @@ class OnlineUserController extends Controller implements HasMiddleware
                         'status' => true,
                         'message' => 'Campaign removed from user successfully.',
                     ]);
+
+                case 'complete':
+                    // Mark campaign as completed
+                    if (!$onlineUser->campaign_id || !$onlineUser->campaign) {
+                        return response(['status' => false, 'message' => 'User is not enrolled in a campaign'], 422);
+                    }
+
+                    $campaign = $onlineUser->campaign;
+                    
+                    // Check if already completed
+                    try {
+                        $alreadyCompleted = \App\Models\CampaignCompletion::withoutGlobalScopes()
+                            ->where('campaign_id', $campaign->id)
+                            ->where('branch_id', $onlineUser->branch_id)
+                            ->where('whatsapp', $onlineUser->whatsapp)
+                            ->exists();
+                        
+                        if ($alreadyCompleted) {
+                            return response([
+                                'status' => true,
+                                'message' => 'Campaign is already marked as completed.',
+                            ]);
+                        }
+
+                        // Create completion record
+                        \App\Models\CampaignCompletion::create([
+                            'campaign_id'    => $campaign->id,
+                            'branch_id'      => $onlineUser->branch_id,
+                            'whatsapp'       => $onlineUser->whatsapp,
+                            'completed_at'   => now(),
+                            'final_order_id' => null, // No specific order for manual completion
+                        ]);
+
+                        // Optionally remove user from campaign (uncomment if desired)
+                        // $onlineUser->update([
+                        //     'campaign_id'        => null,
+                        //     'campaign_joined_at' => null,
+                        // ]);
+
+                        return response([
+                            'status' => true,
+                            'message' => 'Campaign marked as completed successfully.',
+                        ]);
+                    } catch (\Exception $e) {
+                        \Log::error('Failed to mark campaign as completed', [
+                            'error' => $e->getMessage(),
+                            'online_user_id' => $onlineUser->id,
+                            'campaign_id' => $campaign->id,
+                        ]);
+                        return response(['status' => false, 'message' => 'Failed to mark campaign as completed: ' . $e->getMessage()], 422);
+                    }
 
                 default:
                     return response(['status' => false, 'message' => 'Invalid action'], 422);

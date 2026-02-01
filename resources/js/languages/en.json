@@ -722,6 +722,9 @@
         "close": "Close",
         "cancel": "Cancel",
         "clear": "Clear",
+        "reset_progress": "Reset Progress",
+        "remove_campaign": "Remove Campaign",
+        "mark_completed": "Mark as Completed",
         "search": "Search",
         "filter": "Filter",
         "export": "Export",
@@ -939,6 +942,8 @@
         "set_order_count": "Set Order Count",
         "confirm_adjust_order_count": "Change order count from {current} to {new}?",
         "order_count_adjusted": "Order count adjusted successfully",
-        "order_count_unchanged": "Order count is already at this value."
+        "order_count_unchanged": "Order count is already at this value.",
+        "confirm_mark_completed": "Mark this campaign as completed? This will create a completion record.",
+        "campaign_marked_completed": "Campaign marked as completed successfully"
     }
 }

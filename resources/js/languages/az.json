@@ -926,6 +926,10 @@
         "set_order_count": "Sifariş Sayını Təyin Et",
         "confirm_adjust_order_count": "Sifariş sayını {current}-dən {new}-ə dəyişdirmək istəyirsiniz?",
         "order_count_adjusted": "Sifariş sayı uğurla dəyişdirildi",
-        "order_count_unchanged": "Sifariş sayı artıq bu dəyərdədir."
+        "order_count_unchanged": "Sifariş sayı artıq bu dəyərdədir.",
+        "confirm_mark_completed": "Bu kampaniyanı tamamlandı olaraq işarələmək istəyirsiniz? Bu, tamamlanma qeydi yaradacaq.",
+        "campaign_marked_completed": "Kampaniya uğurla tamamlandı olaraq işarələndi",
+        "confirm_mark_completed": "Bu kampaniyanı tamamlandı olaraq işarələmək istəyirsiniz? Bu, tamamlanma qeydi yaradacaq.",
+        "campaign_marked_completed": "Kampaniya uğurla tamamlandı olaraq işarələndi"
     }
 }

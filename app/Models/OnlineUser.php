@@ -135,6 +135,11 @@ class OnlineUser extends Model
             // Table might not exist
         }
 
+        // Auto-mark as completed if progress reaches required purchases
+        if (!$isCompleted && $orderCount >= $requiredPurchases && $orderCount > 0) {
+            $isCompleted = true;
+        }
+
         return [
             'type' => 'item',
             'current_progress' => $orderCount,
