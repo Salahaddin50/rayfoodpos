@@ -196,10 +196,17 @@ export default {
 
         settingPromise.then(res => {
             const globalState = this.$store.getters['globalState/lists'];
+            const siteDefaultLanguage = res?.data?.data?.site_default_language;
 
-            this.defaultLanguage = res?.data?.data?.site_default_language;
-            if (globalState?.language_id > 0) {
+            // Determine which language to use:
+            // 1. If globalState has a language_id (user previously selected a language), use it
+            // 2. Otherwise, always use the site default language
+            if (globalState?.language_id && globalState.language_id > 0) {
+                // User has explicitly selected a language, use it
                 this.defaultLanguage = globalState.language_id;
+            } else {
+                // No language selected, always use site default
+                this.defaultLanguage = siteDefaultLanguage;
             }
 
             // Load language list once (used by the language dropdown).
@@ -210,12 +217,28 @@ export default {
             // Load current language once (used by i18n + direction).
             const languageLoaded = this.language && typeof this.language === 'object' && Object.keys(this.language).length > 0;
             if (!languageLoaded && this.defaultLanguage) {
-            this.$store.dispatch('frontendLanguage/show', this.defaultLanguage).then(res => {
-                this.$i18n.locale = res.data.data.code;
-                this.$store.dispatch("globalState/init", {
-                    language_code: res.data.data.code
-                });
-            }).catch();
+            this.$store.dispatch('frontendLanguage/show', this.defaultLanguage).then(langRes => {
+                if (langRes.data && langRes.data.data && langRes.data.data.code) {
+                    this.$i18n.locale = langRes.data.data.code;
+                    this.$store.dispatch("globalState/init", {
+                        language_id: this.defaultLanguage,
+                        language_code: langRes.data.data.code
+                    });
+                }
+            }).catch(() => {
+                // Fallback to site default if language loading fails
+                if (siteDefaultLanguage && siteDefaultLanguage !== this.defaultLanguage) {
+                    this.$store.dispatch('frontendLanguage/show', siteDefaultLanguage).then(langRes => {
+                        if (langRes.data && langRes.data.data && langRes.data.data.code) {
+                            this.$i18n.locale = langRes.data.data.code;
+                            this.$store.dispatch("globalState/init", {
+                                language_id: siteDefaultLanguage,
+                                language_code: langRes.data.data.code
+                            });
+                        }
+                    }).catch();
+                }
+            });
             }
 
             // Only fetch table data for table orders, not online orders

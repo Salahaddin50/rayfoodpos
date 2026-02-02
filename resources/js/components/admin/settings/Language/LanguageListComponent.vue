@@ -229,6 +229,11 @@ export default {
                             alertService.success(this.$t("message.language_set_as_default") || "Language set as default successfully");
                             this.siteList(); // Refresh to get updated default language
                             this.list(); // Refresh language list
+                            
+                            // Refresh the admin page to apply the new default language
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 500);
                         })
                         .catch((err) => {
                             this.loading.isActive = false;
