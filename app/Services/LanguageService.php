@@ -222,4 +222,18 @@ class LanguageService
             throw new Exception(QueryExceptionLibrary::message($exception), 422);
         }
     }
+
+    /**
+     * Set language as default
+     * @throws Exception
+     */
+    public function setDefault(Language $language): void
+    {
+        try {
+            Settings::group('site')->set('site_default_language', $language->id);
+        } catch (Exception $exception) {
+            Log::info($exception->getMessage());
+            throw new Exception(QueryExceptionLibrary::message($exception), 422);
+        }
+    }
 }

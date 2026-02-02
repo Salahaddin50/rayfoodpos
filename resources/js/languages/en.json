@@ -726,6 +726,7 @@
         "remove_campaign": "Remove Campaign",
         "mark_completed": "Mark as Completed",
         "manage": "Manage",
+        "set_as_default": "Set as Default",
         "search": "Search",
         "filter": "Filter",
         "export": "Export",
@@ -945,6 +946,8 @@
         "order_count_adjusted": "Order count adjusted successfully",
         "order_count_unchanged": "Order count is already at this value.",
         "confirm_mark_completed": "Mark this campaign as completed? This will create a completion record.",
-        "campaign_marked_completed": "Campaign marked as completed successfully"
+        "campaign_marked_completed": "Campaign marked as completed successfully",
+        "confirm_set_default_language": "Set this language as default?",
+        "language_set_as_default": "Language set as default successfully"
     }
 }

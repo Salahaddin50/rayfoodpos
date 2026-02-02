@@ -48,6 +48,15 @@
                             <div class="flex justify-start items-center sm:items-start sm:justify-start gap-1.5">
                                 <SmViewComponent :link="'admin.settings.language.show'" :id="language.id" />
                                 <SmModalEditComponent @click="edit(language)" />
+                                <button 
+                                    v-if="site_default_language != language.id"
+                                    @click="setAsDefault(language.id)"
+                                    class="db-btn py-1.5 px-2.5 text-xs text-white bg-primary hover:bg-primary-dark transition-colors"
+                                    type="button"
+                                    :title="$t('button.set_as_default') || 'Set as Default'"
+                                >
+                                    <i class="lab lab-star lab-font-size-14"></i>
+                                </button>
                                 <SmDeleteComponent @click="destroy(language.id)"
                                     v-if="site_default_language != language.id && language.id !== 1" />
                             </div>
@@ -205,6 +214,28 @@ export default {
                 })
                 .catch((err) => {
                     this.loading.isActive = false;
+                });
+        },
+        setAsDefault: function (id) {
+            appService
+                .destroyConfirmation(this.$t("message.confirm_set_default_language") || "Set this language as default?")
+                .then(() => {
+                    this.loading.isActive = true;
+                    this.$store
+                        .dispatch("language/setDefault", id)
+                        .then((res) => {
+                            this.loading.isActive = false;
+                            alertService.success(this.$t("message.language_set_as_default") || "Language set as default successfully");
+                            this.siteList(); // Refresh to get updated default language
+                            this.list(); // Refresh language list
+                        })
+                        .catch((err) => {
+                            this.loading.isActive = false;
+                            alertService.error(err?.response?.data?.message || "Failed to set default language");
+                        });
+                })
+                .catch(() => {
+                    // User cancelled
                 });
         },
     },

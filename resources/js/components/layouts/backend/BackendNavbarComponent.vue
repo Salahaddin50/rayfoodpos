@@ -51,8 +51,8 @@
                         class="dropdown-group relative">
                         <button class="dropdown-btn flex items-center gap-2 h-9 px-3 rounded-lg bg-primary-light">
                             <img :src="language.image" alt="flag" class="w-4 h-4 rounded-full">
-                            <span class="hidden md:block whitespace-nowrap text-xs font-medium capitalize text-heading">
-                                {{ language.name }}
+                            <span class="hidden md:block whitespace-nowrap text-xs font-medium uppercase text-heading">
+                                {{ language.code }}
                             </span>
                         </button>
                         <ul v-if="languages.length > 0"
@@ -60,7 +60,7 @@
                             <li @click="changeLanguage(language.id, language.code)" v-for="language in languages"
                                 class="flex items-center gap-2 py-1.5 px-2.5 rounded-md cursor-pointer hover:bg-gray-100">
                                 <img :src="language.image" alt="flag" class="w-4 h-4 rounded-full">
-                                <span class="text-heading capitalize text-sm">{{ language.name }}</span>
+                                <span class="text-heading capitalize text-sm uppercase">{{ language.code }}</span>
                             </li>
                         </ul>
                     </div>

@@ -147,6 +147,18 @@ export const language = {
         reset: function (context) {
             context.commit("reset");
         },
+        setDefault: function (context, payload) {
+            return new Promise((resolve, reject) => {
+                axios
+                    .post(`admin/setting/language/${payload}/set-default`)
+                    .then((res) => {
+                        resolve(res);
+                    })
+                    .catch((err) => {
+                        reject(err);
+                    });
+            });
+        },
     },
     mutations: {
         lists: function (state, payload) {

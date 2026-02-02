@@ -300,6 +300,7 @@ Route::prefix('admin')->name('admin.')->middleware(['installed', 'apiKey', 'auth
             Route::get('/show/{language}', [LanguageController::class, 'show']);
             Route::match(['post', 'put', 'patch'], '/update/{language}', [LanguageController::class, 'update']);
             Route::delete('/{language}', [LanguageController::class, 'destroy']);
+            Route::post('/{language}/set-default', [LanguageController::class, 'setDefault']);
 
             Route::get('/file-list/{language:code}', [LanguageController::class, 'fileList']);
             Route::post('/file-text', [LanguageController::class, 'fileText']);

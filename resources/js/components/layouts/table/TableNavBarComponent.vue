@@ -16,14 +16,14 @@
                         <button
                             class="flex items-center justify-center gap-1.5 w-fit rounded-3xl capitalize text-sm font-medium h-8 px-3 border transition text-heading bg-white border-gray-200 dropdown-btn">
                             <img :src="language.image" alt="flag" class="w-4 h-4 rounded-full">
-                            <span class="whitespace-nowrap">{{ language.name }}</span>
+                            <span class="whitespace-nowrap uppercase">{{ language.code }}</span>
                         </button>
                         <ul v-if="languages.length > 0"
                             class="p-2 min-w-[180px] rounded-lg shadow-xl absolute top-14 ltr:right-0 rtl:left-0 z-10 border border-gray-200 bg-white transition-all duration-300 origin-top scale-y-0 dropdown-list">
                             <li @click="changeLanguage(language.id, language.code)" v-for="language in languages"
                                 class="flex items-center gap-2 py-1.5 px-2.5 rounded-md cursor-pointer hover:bg-gray-100">
                                 <img :src="language.image" alt="flag" class="w-4 h-4 rounded-full">
-                                <span class="text-heading capitalize text-sm">{{ language.name }}</span>
+                                <span class="text-heading capitalize text-sm uppercase">{{ language.code }}</span>
                             </li>
                         </ul>
                     </div>
@@ -80,14 +80,14 @@
                     <button
                         class="flex items-center justify-center gap-1.5 w-fit rounded-3xl capitalize text-sm font-medium h-8 px-3 border transition text-heading bg-white border-gray-200 dropdown-btn">
                         <img :src="language.image" alt="flag" class="w-4 h-4 rounded-full">
-                        <span class="whitespace-nowrap">{{ language.name }}</span>
+                        <span class="whitespace-nowrap uppercase">{{ language.code }}</span>
                     </button>
                     <ul v-if="languages.length > 0"
                         class="p-2 min-w-[180px] rounded-lg shadow-xl absolute top-14 ltr:right-0 rtl:left-0 z-10 border border-gray-200 bg-white transition-all duration-300 origin-top scale-y-0 dropdown-list">
                         <li @click="changeLanguage(language.id, language.code)" v-for="language in languages"
                             class="flex items-center gap-2 py-1.5 px-2.5 rounded-md cursor-pointer hover:bg-gray-100">
                             <img :src="language.image" alt="flag" class="w-4 h-4 rounded-full">
-                            <span class="text-heading capitalize text-sm">{{ language.name }}</span>
+                            <span class="text-heading capitalize text-sm uppercase">{{ language.code }}</span>
                         </li>
                     </ul>
                 </div>

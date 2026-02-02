@@ -700,6 +700,7 @@
         "reset_progress": "İrəliləyişi Sıfırla",
         "remove_campaign": "Kampaniyanı Sil",
         "manage": "İdarə et",
+        "set_as_default": "Varsayılan Olaraq Təyin Et",
         "update": "Yenilə",
         "edit": "Redaktə et",
         "delete": "Sil",
@@ -929,7 +930,7 @@
         "order_count_unchanged": "Sifariş sayı artıq bu dəyərdədir.",
         "confirm_mark_completed": "Bu kampaniyanı tamamlandı olaraq işarələmək istəyirsiniz? Bu, tamamlanma qeydi yaradacaq.",
         "campaign_marked_completed": "Kampaniya uğurla tamamlandı olaraq işarələndi",
-        "confirm_mark_completed": "Bu kampaniyanı tamamlandı olaraq işarələmək istəyirsiniz? Bu, tamamlanma qeydi yaradacaq.",
-        "campaign_marked_completed": "Kampaniya uğurla tamamlandı olaraq işarələndi"
+        "confirm_set_default_language": "Bu dili varsayılan olaraq təyin etmək istəyirsiniz?",
+        "language_set_as_default": "Dil uğurla varsayılan olaraq təyin edildi"
     }
 }

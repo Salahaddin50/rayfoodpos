@@ -233,13 +233,13 @@ class OnlineUserController extends Controller implements HasMiddleware
                     
                     // Directly set the manual order count
                     $onlineUser->campaign_manual_order_count = $desiredOrderCount;
-                    $saved = $onlineUser->save();
-                    
-                    if (!$saved) {
+                        $saved = $onlineUser->save();
+                        
+                        if (!$saved) {
                         \Log::error('Failed to save campaign_manual_order_count', [
-                            'online_user_id' => $onlineUser->id,
+                                'online_user_id' => $onlineUser->id,
                             'desired_order_count' => $desiredOrderCount,
-                        ]);
+                                ]);
                         return response(['status' => false, 'message' => 'Failed to save order count'], 422);
                     }
                     
