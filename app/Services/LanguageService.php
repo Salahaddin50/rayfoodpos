@@ -8,6 +8,7 @@ use App\Models\Language;
 use Illuminate\Http\Request;
 use App\Libraries\AppLibrary;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 use App\Http\Requests\LanguageRequest;
 use App\Http\Requests\PaginateRequest;
 use App\Libraries\QueryExceptionLibrary;
@@ -231,6 +232,8 @@ class LanguageService
     {
         try {
             Settings::group('site')->set('site_default_language', $language->id);
+            // Clear frontend settings cache to ensure new default is loaded
+            Cache::forget('frontend:setting');
         } catch (Exception $exception) {
             Log::info($exception->getMessage());
             throw new Exception(QueryExceptionLibrary::message($exception), 422);

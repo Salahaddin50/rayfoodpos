@@ -73,13 +73,31 @@ export default {
         this.applyThemeFromRoute(this.$route);
 
         this.$store.dispatch('frontendSetting/lists').then(res => {
-            this.$store.dispatch('frontendLanguage/show', res.data.data.site_default_language).then(res => {
-
-            }).catch();
-
-            this.$store.dispatch("globalState/init", {
-                branch_id: res.data.data.site_default_branch,
-                language_id: res.data.data.site_default_language
+            const defaultLanguageId = res.data.data.site_default_language;
+            this.$store.dispatch('frontendLanguage/show', defaultLanguageId).then(langRes => {
+                // Set i18n locale to default language code
+                if (langRes.data && langRes.data.data && langRes.data.data.code) {
+                    this.$i18n.locale = langRes.data.data.code;
+                    this.$store.dispatch("globalState/init", {
+                        branch_id: res.data.data.site_default_branch,
+                        language_id: defaultLanguageId,
+                        language_code: langRes.data.data.code
+                    });
+                } else {
+                    // Fallback if language not loaded
+                    this.$store.dispatch("globalState/init", {
+                        branch_id: res.data.data.site_default_branch,
+                        language_id: defaultLanguageId,
+                        language_code: 'en'
+                    });
+                }
+            }).catch(() => {
+                // Fallback if language loading fails
+                this.$store.dispatch("globalState/init", {
+                    branch_id: res.data.data.site_default_branch,
+                    language_id: defaultLanguageId,
+                    language_code: 'en'
+                });
             });
         }).catch();
 

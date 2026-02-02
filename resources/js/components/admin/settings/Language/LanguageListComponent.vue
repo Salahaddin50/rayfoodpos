@@ -49,13 +49,14 @@
                                 <SmViewComponent :link="'admin.settings.language.show'" :id="language.id" />
                                 <SmModalEditComponent @click="edit(language)" />
                                 <button 
-                                    v-if="site_default_language != language.id"
+                                    v-if="!site_default_language || site_default_language != language.id"
                                     @click="setAsDefault(language.id)"
-                                    class="db-btn py-1.5 px-2.5 text-xs text-white bg-primary hover:bg-primary-dark transition-colors"
+                                    class="db-btn py-1.5 px-2.5 text-xs text-white bg-primary hover:bg-primary-dark transition-colors flex items-center gap-1"
                                     type="button"
                                     :title="$t('button.set_as_default') || 'Set as Default'"
                                 >
-                                    <i class="lab lab-star lab-font-size-14"></i>
+                                    <i class="lab lab-settings lab-font-size-14"></i>
+                                    <span>{{ $t('button.set_as_default') || 'Set as Default' }}</span>
                                 </button>
                                 <SmDeleteComponent @click="destroy(language.id)"
                                     v-if="site_default_language != language.id && language.id !== 1" />
