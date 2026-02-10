@@ -1,5 +1,5 @@
 <template>
-    <LoadingComponent :props="loading" />
+    <!-- Header and greeting are shown immediately while data loads -->
     <div v-if="demo === 'true' || demo === 'TRUE' || demo === 'True' || demo === '1' || demo === 1"
         class="mb-4 bg-red-100 p-2 pl-4  rounded">
         <h2 class="mb-1">{{ $t('label.reminder') }}</h2>
@@ -10,6 +10,8 @@
         <h3 class="font-semibold text-[26px] leading-10 capitalize text-primary">{{ visitorMessage() }}</h3>
         <h4 class="font-medium text-[22px] leading-[34px] capitalize">{{ authInfo.name }}</h4>
     </div>
+    
+    <!-- Dashboard content loads progressively with individual loading states -->
     <!--========OVERVIEW START=============-->
     <OverviewComponent />
     <!--========OVERVIEW END=============-->
@@ -33,7 +35,6 @@
 </template>
 
 <script>
-import LoadingComponent from "../components/LoadingComponent";
 import OverviewComponent from "./OverviewComponent";
 import FeaturedItemsComponent from "./FeaturedItemsComponent";
 import MostPopularItemsComponent from "./MostPopularItemsComponent";
@@ -44,7 +45,6 @@ import ENV from "../../../config/env";
 export default {
     name: "DashboardComponent",
     components: {
-        LoadingComponent,
         OverviewComponent,
         FeaturedItemsComponent,
         MostPopularItemsComponent,
@@ -53,9 +53,6 @@ export default {
     },
     data() {
         return {
-            loading: {
-                isActive: false,
-            },
             demo: ENV.DEMO
         };
     },

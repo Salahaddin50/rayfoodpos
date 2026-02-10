@@ -102,28 +102,43 @@ export default {
         const startDate = new Date(date.getFullYear(), date.getMonth(), 1);
         const endDate = new Date(date.getFullYear(), date.getMonth() + 1, 0);
         this.date = [startDate, endDate];
-        this.totalSales();
-        this.totalOrders();
-        this.totalCustomers();
-        this.totalMenuItems();
+        // Optimized: Load all data in parallel instead of sequentially
+        this.loadAllData();
     },
     methods: {
+        loadAllData: function () {
+            this.loading.isActive = true;
+            const dateParams = {
+                first_date: this.first_date,
+                last_date: this.last_date,
+            };
+            
+            // Make all API calls in parallel
+            Promise.all([
+                this.$store.dispatch("dashboard/totalSales", dateParams),
+                this.$store.dispatch("dashboard/totalOrders", dateParams),
+                this.$store.dispatch("dashboard/totalCustomers", dateParams),
+                this.$store.dispatch("dashboard/totalMenuItems", dateParams),
+            ]).then((results) => {
+                this.total_sales = results[0].data.data.total_sales;
+                this.total_orders = results[1].data.data.total_orders;
+                this.total_customers = results[2].data.data.total_customers;
+                this.total_menu_items = results[3].data.data.total_menu_items;
+                this.loading.isActive = false;
+            }).catch((err) => {
+                this.loading.isActive = false;
+            });
+        },
         handleDate: function (e) {
             if (e) {
                 this.first_date = e[0];
                 this.last_date = e[1];
-                this.totalSales();
-                this.totalOrders();
-                this.totalCustomers();
-                this.totalMenuItems();
             } else {
                 this.first_date = null;
                 this.last_date = null;
-                this.totalSales();
-                this.totalOrders();
-                this.totalCustomers();
-                this.totalMenuItems();
             }
+            // Load all data in parallel when date changes
+            this.loadAllData();
         },
         totalSales: function () {
             this.loading.isActive = true;

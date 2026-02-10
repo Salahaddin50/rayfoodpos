@@ -20,7 +20,6 @@ class DashboardService
 
     public function salesSummary(Request $request)
     {
-        $order = new Order;
         if ($request->first_date && $request->last_date) {
             $first_date = Date('Y-m-d', strtotime($request->first_date));
             $last_date  = Date('Y-m-d', strtotime($request->last_date));
@@ -32,21 +31,35 @@ class DashboardService
         $date = date_diff(date_create($first_date), date_create($last_date), false);
         $date_diff = (int)$date->format("%a");
 
-        $total_sales     = AppLibrary::flatAmountFormat($order->whereDate('order_datetime', '>=', $first_date)->whereDate('order_datetime', '<=', $last_date)->where('payment_status', PaymentStatus::PAID)->sum('total'));
+        // Optimized: Single query to get total sales
+        $total_sales = AppLibrary::flatAmountFormat(
+            Order::whereDate('order_datetime', '>=', $first_date)
+                ->whereDate('order_datetime', '<=', $last_date)
+                ->where('payment_status', PaymentStatus::PAID)
+                ->sum('total')
+        );
 
+        // Optimized: Single query with GROUP BY instead of loop
+        $perDaySales = Order::whereDate('order_datetime', '>=', $first_date)
+            ->whereDate('order_datetime', '<=', $last_date)
+            ->where('payment_status', PaymentStatus::PAID)
+            ->selectRaw('DATE(order_datetime) as date, SUM(total) as total')
+            ->groupBy('date')
+            ->pluck('total', 'date')
+            ->toArray();
+
+        // Generate date range array
         $dateRangeArray = [];
         for ($currentDate = strtotime($first_date); $currentDate <= strtotime($last_date); $currentDate += (86400)) {
-
             $date = date('Y-m-d', $currentDate);
             $dateRangeArray[] = $date;
         }
 
+        // Map results to date range (fill missing dates with 0)
         $dateRangeValueArray = [];
-        for ($i = 0; $i <= count($dateRangeArray) - 1; $i++) {
-            $per_day     = AppLibrary::flatAmountFormat($order->whereDate('order_datetime', $dateRangeArray[$i])->where('payment_status', PaymentStatus::PAID)->sum('total'));
-            $dateRangeValueArray[] = floatval($per_day);
+        foreach ($dateRangeArray as $date) {
+            $dateRangeValueArray[] = floatval(AppLibrary::flatAmountFormat($perDaySales[$date] ?? 0));
         }
-
 
         $salesSummaryArray = [];
         if ($date_diff > 0) {
@@ -64,7 +77,6 @@ class DashboardService
 
     public function customerStates(Request $request)
     {
-        $order = new Order;
         if ($request->first_date && $request->last_date) {
             $first_date = Date('Y-m-d', strtotime($request->first_date));
             $last_date  = Date('Y-m-d', strtotime($request->last_date));
@@ -75,16 +87,19 @@ class DashboardService
 
         $timeArray = ["06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"];
 
-        $customerSateArray = [];
-        $totalCustomerArray = [];
-        $first_time = "";
-        $last_time = "";
-        for ($i = 0; $i <= count($timeArray) - 1; $i++) {
-            $first_time = date('H:i', strtotime($timeArray[$i]));
-            $last_time = date('H:i', strtotime($timeArray[$i] . ' +59 minutes'));
+        // Optimized: Single query to get all orders in date range with hour extracted
+        $ordersByHour = Order::whereDate('order_datetime', '>=', $first_date)
+            ->whereDate('order_datetime', '<=', $last_date)
+            ->selectRaw('HOUR(order_datetime) as hour, COUNT(*) as count')
+            ->groupBy('hour')
+            ->pluck('count', 'hour')
+            ->toArray();
 
-            $total_customer     = $order->whereDate('order_datetime', '>=', $first_date)->whereDate('order_datetime', '<=', $last_date)->whereTime('order_datetime', '>=', Carbon::parse($first_time))->whereTime('order_datetime', '<=', Carbon::parse($last_time))->get()->count();
-            $totalCustomerArray[] = $total_customer;
+        // Map results to time slots
+        $totalCustomerArray = [];
+        foreach ($timeArray as $timeSlot) {
+            $hour = (int)Carbon::parse($timeSlot)->format('H');
+            $totalCustomerArray[] = $ordersByHour[$hour] ?? 0;
         }
 
         $customerSateArray['total_customers'] = $totalCustomerArray;
