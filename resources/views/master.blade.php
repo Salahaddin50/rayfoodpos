@@ -92,6 +92,26 @@
     <script src="{{ asset('themes/default/js/dropdown.js') }}" defer></script>
     <script src="{{ asset('themes/default/js/apexcharts/apexcharts.min.js') }}" defer></script>
 
+    <!-- PWA Install Prompt -->
+    <div id="pwa-install-prompt" class="pwa-install-prompt" style="display: none;">
+        <div class="pwa-install-prompt-content">
+            <div class="pwa-install-prompt-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="currentColor"/>
+                    <path d="M2 17L12 22L22 17V12L12 17L2 12V17Z" fill="currentColor"/>
+                </svg>
+            </div>
+            <div class="pwa-install-prompt-text">
+                <div class="pwa-install-prompt-title">Install App</div>
+                <div class="pwa-install-prompt-description">Install our app for a better experience</div>
+            </div>
+            <div class="pwa-install-prompt-actions">
+                <button id="pwa-install-btn" class="pwa-install-btn">Install</button>
+                <button id="pwa-dismiss-btn" class="pwa-dismiss-btn">×</button>
+            </div>
+        </div>
+    </div>
+
     <!-- PWA Service Worker Registration -->
     <script>
         if ('serviceWorker' in navigator) {
@@ -105,6 +125,112 @@
                     });
             });
         }
+    </script>
+
+    <!-- PWA Install Prompt Script -->
+    <script>
+        (function() {
+            let deferredPrompt;
+            const installPrompt = document.getElementById('pwa-install-prompt');
+            const installBtn = document.getElementById('pwa-install-btn');
+            const dismissBtn = document.getElementById('pwa-dismiss-btn');
+            const STORAGE_KEY = 'pwa-install-dismissed';
+            const DISMISS_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+            // Check if user already dismissed the prompt
+            function shouldShowPrompt() {
+                const dismissed = localStorage.getItem(STORAGE_KEY);
+                if (!dismissed) return true;
+                
+                const dismissedTime = parseInt(dismissed, 10);
+                const now = Date.now();
+                return (now - dismissedTime) > DISMISS_DURATION;
+            }
+
+            // Show the install prompt
+            function showInstallPrompt() {
+                if (installPrompt && shouldShowPrompt()) {
+                    installPrompt.style.display = 'flex';
+                    setTimeout(() => {
+                        installPrompt.classList.add('show');
+                    }, 100);
+                }
+            }
+
+            // Hide the install prompt
+            function hideInstallPrompt() {
+                if (installPrompt) {
+                    installPrompt.classList.remove('show');
+                    setTimeout(() => {
+                        installPrompt.style.display = 'none';
+                    }, 300);
+                }
+            }
+
+            // Store dismissal in localStorage
+            function dismissPrompt() {
+                localStorage.setItem(STORAGE_KEY, Date.now().toString());
+                hideInstallPrompt();
+            }
+
+            // Listen for beforeinstallprompt event
+            window.addEventListener('beforeinstallprompt', (e) => {
+                // Prevent the default browser install prompt
+                e.preventDefault();
+                // Store the event for later use
+                deferredPrompt = e;
+                // Show our custom prompt
+                showInstallPrompt();
+            });
+
+            // Handle install button click
+            if (installBtn) {
+                installBtn.addEventListener('click', async () => {
+                    if (!deferredPrompt) {
+                        hideInstallPrompt();
+                        return;
+                    }
+
+                    // Show the native install prompt
+                    deferredPrompt.prompt();
+                    
+                    // Wait for user response
+                    const { outcome } = await deferredPrompt.userChoice;
+                    
+                    if (outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                        localStorage.removeItem(STORAGE_KEY); // Clear dismissal if installed
+                    } else {
+                        console.log('User dismissed the install prompt');
+                    }
+                    
+                    // Clear the deferredPrompt
+                    deferredPrompt = null;
+                    hideInstallPrompt();
+                });
+            }
+
+            // Handle dismiss button click
+            if (dismissBtn) {
+                dismissBtn.addEventListener('click', () => {
+                    dismissPrompt();
+                });
+            }
+
+            // Check if app is already installed
+            window.addEventListener('appinstalled', () => {
+                console.log('PWA was installed');
+                deferredPrompt = null;
+                hideInstallPrompt();
+                localStorage.removeItem(STORAGE_KEY);
+            });
+
+            // Check on page load if app is already installed
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                // App is already installed
+                console.log('App is already installed');
+            }
+        })();
     </script>
 </body>
 
