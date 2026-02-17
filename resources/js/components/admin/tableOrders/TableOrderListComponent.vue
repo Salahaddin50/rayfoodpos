@@ -535,90 +535,60 @@ export default {
                 .dispatch("tableOrder/lists", this.props.search)
                 .then((res) => {
                     this.loading.isActive = false;
-                    
+                    const freshOrders = res?.data?.data || [];
                     // Initialize previousOrderIds if not already set (first load)
-                    if (this.previousOrderIds.length === 0 && this.orders && this.orders.length > 0) {
-                        this.previousOrderIds = this.orders.map(order => order.id);
-                        // Get PENDING or PREPARED order IDs on first load
-                        const pendingOrPreparedOrders = this.orders.filter(order => 
-                            order.status === this.enums.orderStatusEnum.PENDING || 
+                    if (this.previousOrderIds.length === 0 && freshOrders.length > 0) {
+                        this.previousOrderIds = freshOrders.map(order => order.id);
+                        const pendingOrPreparedOrders = freshOrders.filter(order =>
+                            order.status === this.enums.orderStatusEnum.PENDING ||
                             order.status === this.enums.orderStatusEnum.PREPARED
                         );
                         this.previousPendingOrPreparedOrderIds = pendingOrPreparedOrders.map(order => order.id);
                         console.log('First load - initialized with', this.previousOrderIds.length, 'orders,', this.previousPendingOrPreparedOrderIds.length, 'with PENDING/PREPARED status');
                     } else {
                         // Check for new orders and play sound (only after first load)
-                        this.checkForNewOrders();
+                        this.checkForNewOrders(freshOrders);
                     }
                 })
                 .catch((err) => {
                     this.loading.isActive = false;
                 });
         },
-        checkForNewOrders: function () {
-            if (!this.orders || this.orders.length === 0) {
-                // If no orders, reset tracking
+        checkForNewOrders: function (freshOrders = null) {
+            const ordersToCheck = freshOrders || this.orders || [];
+            if (!ordersToCheck.length) {
                 this.previousOrderIds = [];
                 this.previousPendingOrPreparedOrderIds = [];
                 return;
             }
 
-            // Get current order IDs
-            const currentOrderIds = this.orders.map(order => order.id);
-            
-            // Get current orders with PENDING or PREPARED status
-            const pendingOrPreparedOrders = this.orders.filter(order => 
-                order.status === this.enums.orderStatusEnum.PENDING || 
+            const currentOrderIds = ordersToCheck.map(order => order.id);
+            const pendingOrPreparedOrders = ordersToCheck.filter(order =>
+                order.status === this.enums.orderStatusEnum.PENDING ||
                 order.status === this.enums.orderStatusEnum.PREPARED
             );
             const currentPendingOrPreparedOrderIds = pendingOrPreparedOrders.map(order => order.id);
-            
-            console.log('Current PENDING/PREPARED order IDs:', currentPendingOrPreparedOrderIds);
-            console.log('Previous PENDING/PREPARED order IDs:', this.previousPendingOrPreparedOrderIds);
-            console.log('All orders statuses:', this.orders.map(o => ({ id: o.id, serial: o.order_serial_no, status: o.status })));
-            
-            // Check if we have previous orders to compare
+
             if (this.previousOrderIds.length > 0) {
-                // Find new orders (orders that weren't in previous list)
                 const newOrderIds = currentOrderIds.filter(id => !this.previousOrderIds.includes(id));
-                
-                // Find orders that changed TO PENDING or PREPARED status (were not PENDING/PREPARED before, but are now)
-                const newPendingOrPreparedOrderIds = currentPendingOrPreparedOrderIds.filter(id => 
+                const newPendingOrPreparedOrderIds = currentPendingOrPreparedOrderIds.filter(id =>
                     !this.previousPendingOrPreparedOrderIds.includes(id)
                 );
-                
-                console.log('New order IDs found:', newOrderIds);
-                console.log('New PENDING/PREPARED order IDs (status changed):', newPendingOrPreparedOrderIds);
-                
-                // Play sound if:
-                // 1. New orders with PENDING or PREPARED status appeared, OR
-                // 2. Existing orders changed status TO PENDING or PREPARED
+
                 if (newPendingOrPreparedOrderIds.length > 0) {
-                    console.log('New PENDING/PREPARED orders detected (new orders or status changed) - playing sound');
                     this.playRingingSound();
                 } else if (newOrderIds.length > 0) {
-                    // Check if any of the new orders have PENDING or PREPARED status
-                    const newOrdersWithPendingOrPrepared = this.orders.filter(order => 
-                        newOrderIds.includes(order.id) && 
-                        (order.status === this.enums.orderStatusEnum.PENDING || 
+                    const newOrdersWithPendingOrPrepared = ordersToCheck.filter(order =>
+                        newOrderIds.includes(order.id) &&
+                        (order.status === this.enums.orderStatusEnum.PENDING ||
                          order.status === this.enums.orderStatusEnum.PREPARED)
                     );
-                    
                     if (newOrdersWithPendingOrPrepared.length > 0) {
-                        console.log('New orders with PENDING/PREPARED status detected:', newOrdersWithPendingOrPrepared.length);
                         this.playRingingSound();
-                    } else {
-                        console.log('New orders found but none have PENDING/PREPARED status');
                     }
-                } else {
-                    console.log('No new PENDING/PREPARED orders detected');
                 }
-            } else {
-                // First load - initialize tracking
-                console.log('First load - initializing order tracking');
             }
-            
-            // Update previous order IDs and PENDING/PREPARED order IDs for next comparison
+
             this.previousOrderIds = [...currentOrderIds];
             this.previousPendingOrPreparedOrderIds = [...currentPendingOrPreparedOrderIds];
         },

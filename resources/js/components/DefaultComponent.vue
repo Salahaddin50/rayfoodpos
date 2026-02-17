@@ -93,8 +93,8 @@ export default {
                 }
             }).catch(() => {
                 // Fallback if language loading fails
-                this.$store.dispatch("globalState/init", {
-                    branch_id: res.data.data.site_default_branch,
+            this.$store.dispatch("globalState/init", {
+                branch_id: res.data.data.site_default_branch,
                     language_id: defaultLanguageId,
                     language_code: 'en'
                 });

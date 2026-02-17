@@ -231,12 +231,12 @@ export default {
                     this.$store.dispatch('frontendLanguage/show', siteDefaultLanguage).then(langRes => {
                         if (langRes.data && langRes.data.data && langRes.data.data.code) {
                             this.$i18n.locale = langRes.data.data.code;
-                            this.$store.dispatch("globalState/init", {
+                this.$store.dispatch("globalState/init", {
                                 language_id: siteDefaultLanguage,
                                 language_code: langRes.data.data.code
-                            });
+                });
                         }
-                    }).catch();
+            }).catch();
                 }
             });
             }

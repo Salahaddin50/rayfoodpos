@@ -12,20 +12,17 @@ let config = {
 firebase.initializeApp(config);
 const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
-    const notif = payload.notification || {};
-    const data = payload.data || {};
-    const notificationTitle = notif.title || 'New order';
+    const notificationTitle = payload.notification?.title || 'New order';
+    const notificationBody = payload.notification?.body || '';
     const notificationOptions = {
-        body: notif.body || '',
+        body: notificationBody,
         icon: '/images/default/firebase-logo.png',
-        tag: data.topicName || 'fcm',
-        requireInteraction: false,
         silent: false,
         data: {
-            url: data.url || '/admin/table-orders'
+            url: payload.data?.url || '/admin/table-orders'
         }
     };
-    return self.registration.showNotification(notificationTitle, notificationOptions);
+    self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
 // Handle notification click

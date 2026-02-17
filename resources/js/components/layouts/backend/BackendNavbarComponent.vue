@@ -306,41 +306,35 @@ export default {
                 if (!messaging) return;
 
                 onMessage(messaging, (payload) => {
-                    try {
-                        const notif = payload?.notification || {};
-                        const data = payload?.data || {};
-                        const notificationTitle = notif.title || 'Notification';
-                        const notificationOptions = {
-                            body: notif.body || '',
-                            icon: '/images/default/firebase-logo.png',
-                            silent: false,
-                            data: {
-                                url: data.url || '/admin/table-orders'
-                            }
-                        };
-                        const notification = new Notification(notificationTitle, notificationOptions);
-
-                        // Handle foreground notification click
-                        notification.onclick = () => {
-                            const targetUrl = data.url || '/admin/table-orders';
-                            this.$router.push(targetUrl).catch(() => {
-                                window.location.href = targetUrl;
-                            });
-                            notification.close();
-                        };
-
-                        // New order: show in-app banner and play sound
-                        if (data.topicName === 'new-order-found' && this.orderNotification.permission) {
-                            this.orderNotificationStatus = true;
-                            this.orderNotificationMessage = notif.body || '';
-                            try {
-                                const audioUrl = this.setting?.notification_audio || '/audio/notification.mp3';
-                                const audio = new Audio(audioUrl);
-                                audio.play().catch(() => {});
-                            } catch (e) {}
+                    // Refresh permission in case it was loaded after mount
+                    this.orderPermissionCheck();
+                    const notificationTitle = payload.notification?.title || 'New order';
+                    const notificationBody = payload.notification?.body || '';
+                    const notificationOptions = {
+                        body: notificationBody,
+                        icon: '/images/default/firebase-logo.png',
+                        data: {
+                            url: payload.data?.url || '/admin/table-orders'
                         }
-                    } catch (err) {
-                        console.error('Push notification handler error:', err);
+                    };
+                    const notification = new Notification(notificationTitle, notificationOptions);
+                    
+                    // Handle foreground notification click
+                    notification.onclick = () => {
+                        const targetUrl = payload.data?.url || '/admin/table-orders';
+                        this.$router.push(targetUrl).catch(() => {
+                            window.location.href = targetUrl;
+                        });
+                        notification.close();
+                    };
+
+                    const topicName = payload.data?.topicName || payload.data?.topicname;
+                    if (topicName === 'new-order-found' && this.orderNotification.permission) {
+                        this.orderNotificationStatus = true;
+                        this.orderNotificationMessage = notificationBody;
+                        const audioPath = this.setting?.notification_audio || '/audio/notification.mp3';
+                        const audio = new Audio(audioPath);
+                        audio.play().catch(() => {});
                     }
                 });
                 
@@ -436,23 +430,7 @@ export default {
             const messaging = this.firebase.messaging;
             if (!messaging) return Promise.resolve();
 
-            const vapidKey = this.setting.notification_fcm_public_vapid_key;
-            // Use firebase-messaging-sw.js for the FCM subscription so push is handled there,
-            // not by the PWA sw.js (which has no push handler). Required after adding PWA install.
-            const getTokenWithFirebaseSw = (registration) => {
-                return getToken(messaging, {
-                    vapidKey,
-                    serviceWorkerRegistration: registration,
-                });
-            };
-
-            const ensureFirebaseSwThenGetToken = () => {
-                return navigator.serviceWorker
-                    .register('/firebase-messaging-sw.js')
-                    .then((registration) => getTokenWithFirebaseSw(registration));
-            };
-
-            return ensureFirebaseSwThenGetToken()
+            return getToken(messaging, { vapidKey: this.setting.notification_fcm_public_vapid_key })
                 .then((currentToken) => {
                     if (!currentToken) {
                         alertService.error('Failed to get notification token. Please refresh and try again.');
@@ -463,6 +441,7 @@ export default {
                             alertService.success('Notifications enabled.');
                         })
                         .catch((error) => {
+                            // Don't redirect here; global 401 handler already does correct admin-only behavior.
                             const msg = error?.response?.data?.message || 'Failed to save notification token.';
                             alertService.error(msg);
                         });
