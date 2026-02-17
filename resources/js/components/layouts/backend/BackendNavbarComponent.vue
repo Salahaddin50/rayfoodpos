@@ -436,7 +436,23 @@ export default {
             const messaging = this.firebase.messaging;
             if (!messaging) return Promise.resolve();
 
-            return getToken(messaging, { vapidKey: this.setting.notification_fcm_public_vapid_key })
+            const vapidKey = this.setting.notification_fcm_public_vapid_key;
+            // Use firebase-messaging-sw.js for the FCM subscription so push is handled there,
+            // not by the PWA sw.js (which has no push handler). Required after adding PWA install.
+            const getTokenWithFirebaseSw = (registration) => {
+                return getToken(messaging, {
+                    vapidKey,
+                    serviceWorkerRegistration: registration,
+                });
+            };
+
+            const ensureFirebaseSwThenGetToken = () => {
+                return navigator.serviceWorker
+                    .register('/firebase-messaging-sw.js')
+                    .then((registration) => getTokenWithFirebaseSw(registration));
+            };
+
+            return ensureFirebaseSwThenGetToken()
                 .then((currentToken) => {
                     if (!currentToken) {
                         alertService.error('Failed to get notification token. Please refresh and try again.');
@@ -447,7 +463,6 @@ export default {
                             alertService.success('Notifications enabled.');
                         })
                         .catch((error) => {
-                            // Don't redirect here; global 401 handler already does correct admin-only behavior.
                             const msg = error?.response?.data?.message || 'Failed to save notification token.';
                             alertService.error(msg);
                         });
