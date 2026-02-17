@@ -684,10 +684,18 @@ export default {
                                 messageParts.push(`Location: ${order.location_url}`);
                             }
                             const message = messageParts.join('\n');
-                            // Use country code from stored value; only fix Azerbaijan 9940 and local 0
                             let digits = (driver.whatsapp || '').replace(/\D/g, '');
-                            if (digits.startsWith('9940')) digits = '994' + digits.substring(4);
-                            else if (digits.startsWith('0') && digits.length <= 10) digits = '994' + digits.substring(1);
+                            if (digits) {
+                                const countryCodes = ['994', '966', '971', '91', '92', '90', '86', '81', '44', '49', '39', '34', '33', '7', '1'];
+                                for (const code of countryCodes) {
+                                    if (digits.startsWith(code + '0') && digits.length > code.length + 1) {
+                                        digits = code + digits.substring(code.length + 1);
+                                        break;
+                                    }
+                                }
+                                if (digits.startsWith('9940')) digits = '994' + digits.substring(4);
+                                else if (digits.startsWith('0') && digits.length <= 10) digits = '994' + digits.substring(1);
+                            }
                             whatsappLink = digits ? `https://wa.me/${digits}?text=${encodeURIComponent(message)}` : '';
                         }
                     }

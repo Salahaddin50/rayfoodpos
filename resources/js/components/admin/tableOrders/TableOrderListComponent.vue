@@ -807,18 +807,19 @@ export default {
         },
         formatWhatsAppNumber: function (number) {
             if (!number) return '';
-            // Use country code from stored value (from checkout dropdown). Only fix Azerbaijan-specific formats.
-            let digits = number.replace(/\D/g, '');
+            let digits = (number + '').replace(/\D/g, '');
             if (!digits) return number.trim();
-            // Azerbaijan: 9940XXXXXXXXX -> 994XXXXXXXXX
-            if (digits.startsWith('9940')) {
-                digits = '994' + digits.substring(4);
+            // Strip leading 0 after any known country code (same as backend): +860503531437 -> +86503531437, etc.
+            const countryCodes = ['994', '966', '971', '91', '92', '90', '86', '81', '44', '49', '39', '34', '33', '7', '1'];
+            for (const code of countryCodes) {
+                if (digits.startsWith(code + '0') && digits.length > code.length + 1) {
+                    digits = code + digits.substring(code.length + 1);
+                    break;
+                }
             }
-            // Azerbaijan local: leading 0 only (no country code stored) -> assume 994
-            else if (digits.startsWith('0') && digits.length <= 10) {
-                digits = '994' + digits.substring(1);
-            }
-            // Otherwise keep as-is (e.g. 966..., 971..., 90... from dropdown)
+            // Azerbaijan only: 9940 -> 994; or local 0 (no country stored, 10 digits) -> assume 994
+            if (digits.startsWith('9940')) digits = '994' + digits.substring(4);
+            else if (digits.startsWith('0') && digits.length <= 10) digits = '994' + digits.substring(1);
             return '+' + digits;
         },
         formatWhatsAppLink: function (number) {

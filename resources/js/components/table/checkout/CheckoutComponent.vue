@@ -46,6 +46,7 @@
                             <label for="whatsapp" class="db-field-label">{{ $t('label.whatsapp_number') }}</label>
                             <div class="flex gap-2">
                                 <select 
+                                    ref="countryCodeSelect"
                                     v-model="countryCode" 
                                     class="db-field-control w-32 flex-shrink-0"
                                     @change="updateWhatsAppNumber"
@@ -499,7 +500,9 @@ export default {
 
                 this.checkoutProps.form.dining_table_id = table.id;
                 this.checkoutProps.form.branch_id = table.branch_id;
-            this.checkoutProps.form.whatsapp_number = this.countryCode + this.phoneNumber;
+            const code = (this.$refs.countryCodeSelect && this.$refs.countryCodeSelect.value) || this.countryCode;
+            const phone = (this.phoneNumber || '').replace(/\D/g, '');
+            this.checkoutProps.form.whatsapp_number = code + phone;
             this.checkoutProps.form.subtotal = this.subtotal;
             
             // IMPORTANT: Do NOT send campaign discount in discount field
