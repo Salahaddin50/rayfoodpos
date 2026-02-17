@@ -511,9 +511,10 @@ export default {
         // Get audio file path from settings or use default
         const audioPath = this.setting?.notification_audio || '/audio/notification.mp3';
         
-        // Play sound twice with a small gap between
+        // Play sound three times for longer alert (0ms, 2s, 4s)
         this.playSoundOnce(audioPath, 0);
-        this.playSoundOnce(audioPath, 2000); // Play second time after 2 seconds
+        this.playSoundOnce(audioPath, 2000);
+        this.playSoundOnce(audioPath, 4000);
       } catch (error) {
         console.error('Error in playRingingSound:', error);
       }
@@ -529,11 +530,11 @@ export default {
             console.error('Could not play notification sound:', err);
           });
           
-          // Stop after 3 seconds
+          // Stop after 6 seconds (allows longer audio files to play)
           setTimeout(() => {
             audio.pause();
             audio.currentTime = 0;
-          }, 3000);
+          }, 6000);
         } catch (error) {
           console.error('Error playing sound:', error);
         }

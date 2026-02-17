@@ -333,8 +333,14 @@ export default {
                         this.orderNotificationStatus = true;
                         this.orderNotificationMessage = notificationBody;
                         const audioPath = this.setting?.notification_audio || '/audio/notification.mp3';
-                        const audio = new Audio(audioPath);
-                        audio.play().catch(() => {});
+                        // Play sound 3 times for longer alert (0ms, 2s, 4s)
+                        [0, 2000, 4000].forEach((delay) => {
+                            setTimeout(() => {
+                                const a = new Audio(audioPath);
+                                a.play().catch(() => {});
+                                setTimeout(() => { a.pause(); a.currentTime = 0; }, 6000);
+                            }, delay);
+                        });
                     }
                 });
                 

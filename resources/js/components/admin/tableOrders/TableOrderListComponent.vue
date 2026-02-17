@@ -604,9 +604,10 @@ export default {
                 // Get audio file path from settings or use default
                 const audioPath = this.setting?.notification_audio || '/audio/notification.mp3';
                 
-                // Play sound twice with a small gap between
+                // Play sound three times for longer alert (0ms, 2s, 4s)
                 this.playSoundOnce(audioPath, 0);
-                this.playSoundOnce(audioPath, 2000); // Play second time after 2 seconds
+                this.playSoundOnce(audioPath, 2000);
+                this.playSoundOnce(audioPath, 4000);
             } catch (error) {
                 console.error('Error in playRingingSound:', error);
             }
@@ -622,11 +623,11 @@ export default {
                         console.error('Could not play notification sound:', err);
                     });
                     
-                    // Stop after 3 seconds
+                    // Stop after 6 seconds (allows longer audio files to play)
                     setTimeout(() => {
                         audio.pause();
                         audio.currentTime = 0;
-                    }, 3000);
+                    }, 6000);
                 } catch (error) {
                     console.error('Error playing sound:', error);
                 }
@@ -806,34 +807,23 @@ export default {
         },
         formatWhatsAppNumber: function (number) {
             if (!number) return '';
-            
-            // Remove all non-digit characters
-            let phoneNumber = number.replace(/\D/g, '');
-            
-            // Handle case where number already has 994 followed by 0
-            // e.g., 9940503531437 should become 994503531437
-            if (phoneNumber.startsWith('9940')) {
-                phoneNumber = '994' + phoneNumber.substring(4);
+            // Use country code from stored value (from checkout dropdown). Only fix Azerbaijan-specific formats.
+            let digits = number.replace(/\D/g, '');
+            if (!digits) return number.trim();
+            // Azerbaijan: 9940XXXXXXXXX -> 994XXXXXXXXX
+            if (digits.startsWith('9940')) {
+                digits = '994' + digits.substring(4);
             }
-            // If starts with 0, replace with 994
-            else if (phoneNumber.startsWith('0')) {
-                phoneNumber = '994' + phoneNumber.substring(1);
-            } 
-            // If doesn't start with 994, add it
-            else if (!phoneNumber.startsWith('994')) {
-                phoneNumber = '994' + phoneNumber;
+            // Azerbaijan local: leading 0 only (no country code stored) -> assume 994
+            else if (digits.startsWith('0') && digits.length <= 10) {
+                digits = '994' + digits.substring(1);
             }
-            
-            // Return formatted with + sign
-            return '+' + phoneNumber;
+            // Otherwise keep as-is (e.g. 966..., 971..., 90... from dropdown)
+            return '+' + digits;
         },
         formatWhatsAppLink: function (number) {
             if (!number) return '#';
-            
-            // Get the formatted number without + sign for the URL
             const formattedNumber = this.formatWhatsAppNumber(number).replace('+', '');
-            
-            // Create WhatsApp link with empty message
             return `https://wa.me/${formattedNumber}`;
         },
         formatDistance: function (distance) {

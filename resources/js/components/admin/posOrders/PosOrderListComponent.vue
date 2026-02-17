@@ -527,9 +527,10 @@ export default {
                 // Get audio file path from settings or use default
                 const audioPath = this.setting?.notification_audio || '/audio/notification.mp3';
                 
-                // Play sound twice with a small gap between
+                // Play sound three times for longer alert (0ms, 2s, 4s)
                 this.playSoundOnce(audioPath, 0);
-                this.playSoundOnce(audioPath, 2000); // Play second time after 2 seconds
+                this.playSoundOnce(audioPath, 2000);
+                this.playSoundOnce(audioPath, 4000);
             } catch (error) {
                 console.error('Error in playRingingSound:', error);
             }
@@ -545,11 +546,11 @@ export default {
                         console.error('Could not play notification sound:', err);
                     });
                     
-                    // Stop after 3 seconds
+                    // Stop after 6 seconds (allows longer audio files to play)
                     setTimeout(() => {
                         audio.pause();
                         audio.currentTime = 0;
-                    }, 3000);
+                    }, 6000);
                 } catch (error) {
                     console.error('Error playing sound:', error);
                 }
@@ -683,17 +684,11 @@ export default {
                                 messageParts.push(`Location: ${order.location_url}`);
                             }
                             const message = messageParts.join('\n');
-                            
-                            // Format WhatsApp number for URL
-                            let phoneNumber = driver.whatsapp.replace(/\D/g, '');
-                            if (phoneNumber.startsWith('9940')) {
-                                phoneNumber = '994' + phoneNumber.substring(4);
-                            } else if (phoneNumber.startsWith('0')) {
-                                phoneNumber = '994' + phoneNumber.substring(1);
-                            } else if (!phoneNumber.startsWith('994')) {
-                                phoneNumber = '994' + phoneNumber;
-                            }
-                            whatsappLink = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+                            // Use country code from stored value; only fix Azerbaijan 9940 and local 0
+                            let digits = (driver.whatsapp || '').replace(/\D/g, '');
+                            if (digits.startsWith('9940')) digits = '994' + digits.substring(4);
+                            else if (digits.startsWith('0') && digits.length <= 10) digits = '994' + digits.substring(1);
+                            whatsappLink = digits ? `https://wa.me/${digits}?text=${encodeURIComponent(message)}` : '';
                         }
                     }
                     
