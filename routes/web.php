@@ -4,6 +4,7 @@ use App\Http\Controllers\Frontend\PaymentController;
 use App\Http\Controllers\Frontend\RootController;
 use App\Http\Controllers\Installer\InstallerController;
 use App\Http\PaymentGateways\Gateways\Paytm;
+use App\Libraries\AppLibrary;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -37,6 +38,12 @@ Route::get('/manifest.json', [RootController::class, 'manifest'])->name('manifes
 Route::get('/sw.js', function () {
     return response()->file(public_path('sw.js'), ['Content-Type' => 'application/javascript']);
 })->name('service-worker');
+Route::get('/firebase-messaging-sw.js', function () {
+    return response(AppLibrary::firebaseMessagingSwContent(), 200, [
+        'Content-Type' => 'application/javascript',
+        'Service-Worker-Allowed' => '/',
+    ]);
+})->middleware(['installed'])->name('firebase-messaging-sw');
 Route::get('/', [RootController::class, 'index'])->middleware(['installed'])->name('home');
 Route::prefix('payment')->name('payment.')->middleware(['installed'])->group(function () {
     Route::get('/{order}/pay', [PaymentController::class, 'index'])->name('index');
@@ -47,4 +54,4 @@ Route::prefix('payment')->name('payment.')->middleware(['installed'])->group(fun
     Route::get('/successful/{order}', [PaymentController::class, 'successful'])->name('successful');
 });
 
-Route::any('/{any}', [RootController::class, 'index'])->middleware(['installed'])->where(['any' => '^(?!manifest\.json|sw\.js).*']);
+Route::any('/{any}', [RootController::class, 'index'])->middleware(['installed'])->where(['any' => '^(?!manifest\.json|sw\.js|firebase-messaging-sw\.js).*']);

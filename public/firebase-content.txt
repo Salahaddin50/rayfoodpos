@@ -1,10 +1,27 @@
 firebase.initializeApp(config);
 const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
-    const notificationTitle = payload.notification.title;
+    const notificationTitle = payload.notification?.title || 'New order';
+    const notificationBody = payload.notification?.body || '';
     const notificationOptions = {
-        body: payload.notification.body,
-        icon: '/images/default/firebase-logo.png'
+        body: notificationBody,
+        icon: '/images/default/firebase-logo.png',
+        silent: false,
+        data: { url: payload.data?.url || '/admin/table-orders' }
     };
     self.registration.showNotification(notificationTitle, notificationOptions);
+});
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+    const urlToOpen = event.notification.data?.url || '/admin/table-orders';
+    const fullUrl = new URL(urlToOpen, self.location.origin).href;
+    event.waitUntil(clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+        for (let i = 0; i < clientList.length; i++) {
+            const client = clientList[i];
+            if (new URL(client.url).origin === self.location.origin) {
+                return client.focus().then(() => client.navigate(fullUrl));
+            }
+        }
+        return clients.openWindow(fullUrl);
+    }));
 });

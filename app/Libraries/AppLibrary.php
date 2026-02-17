@@ -340,6 +340,40 @@ class AppLibrary
         }
     }
 
+    /**
+     * Generate firebase-messaging-sw.js content using current notification settings.
+     * Used by the dynamic /firebase-messaging-sw.js route so SW always matches DB config.
+     */
+    public static function firebaseMessagingSwContent(): string
+    {
+        $cdn = public_path('firebase-cdn.txt');
+        $textContent = public_path('firebase-content.txt');
+        if (!File::exists($cdn) || !File::exists($textContent)) {
+            return File::exists(public_path('firebase-messaging-sw.js'))
+                ? File::get(public_path('firebase-messaging-sw.js'))
+                : '// Firebase config not available';
+        }
+        try {
+            $n = \Dipokhalder\Settings\Facades\Settings::group('notification')->all();
+            $config = 'let config = {
+        apiKey: "' . addslashes($n['notification_fcm_api_key'] ?? '') . '",
+        authDomain: "' . addslashes($n['notification_fcm_auth_domain'] ?? '') . '",
+        projectId: "' . addslashes($n['notification_fcm_project_id'] ?? '') . '",
+        storageBucket: "' . addslashes($n['notification_fcm_storage_bucket'] ?? '') . '",
+        messagingSenderId: "' . addslashes($n['notification_fcm_messaging_sender_id'] ?? '') . '",
+        appId: "' . addslashes($n['notification_fcm_app_id'] ?? '') . '",
+        measurementId: "' . addslashes($n['notification_fcm_measurement_id'] ?? '') . '"
+    };
+';
+            return File::get($cdn) . $config . File::get($textContent);
+        } catch (\Throwable $e) {
+            Log::warning('FCM: firebaseMessagingSwContent failed: ' . $e->getMessage());
+            return File::exists(public_path('firebase-messaging-sw.js'))
+                ? File::get(public_path('firebase-messaging-sw.js'))
+                : File::get($cdn) . 'let config = {};\n' . File::get($textContent);
+        }
+    }
+
     public static function defaultPermission($permissions)
     {
         $defaultPermission = (object)[];
