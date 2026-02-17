@@ -809,15 +809,24 @@ export default {
             if (!number) return '';
             let digits = (number + '').replace(/\D/g, '');
             if (!digits) return number.trim();
-            // Strip leading 0 after any known country code (same as backend): +860503531437 -> +86503531437, etc.
             const countryCodes = ['994', '966', '971', '91', '92', '90', '86', '81', '44', '49', '39', '34', '33', '7', '1'];
+            // Fix erroneous 994 prefix: 994971503531437 -> 971503531437 (dropdown was 994 but user typed full UAE number)
+            if (digits.startsWith('994') && digits.length > 6) {
+                const after994 = digits.substring(3);
+                for (const code of countryCodes) {
+                    if (code === '994') continue;
+                    if (after994.startsWith(code) && after994.length >= code.length + 6) {
+                        digits = after994;
+                        break;
+                    }
+                }
+            }
             for (const code of countryCodes) {
                 if (digits.startsWith(code + '0') && digits.length > code.length + 1) {
                     digits = code + digits.substring(code.length + 1);
                     break;
                 }
             }
-            // Azerbaijan only: 9940 -> 994; or local 0 (no country stored, 10 digits) -> assume 994
             if (digits.startsWith('9940')) digits = '994' + digits.substring(4);
             else if (digits.startsWith('0') && digits.length <= 10) digits = '994' + digits.substring(1);
             return '+' + digits;

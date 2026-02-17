@@ -423,12 +423,21 @@ export default {
         currencyFormat: function (amount, decimal, currency, position) {
             return appService.currencyFormat(amount, decimal, currency, position);
         },
+        buildWhatsAppNumber: function (selectedCode, phoneDigits) {
+            const codes = ['994', '966', '971', '91', '92', '90', '86', '81', '44', '49', '39', '34', '33', '7', '1'];
+            for (const code of codes) {
+                if (phoneDigits.startsWith(code) && phoneDigits.length >= code.length + 6) {
+                    let rest = phoneDigits.substring(code.length);
+                    if (rest.startsWith('0') && rest.length >= 6) rest = rest.substring(1);
+                    return '+' + code + rest;
+                }
+            }
+            return selectedCode + phoneDigits;
+        },
         updateWhatsAppNumber: function () {
-            // Remove any non-digit characters except leading +
             this.phoneNumber = this.phoneNumber.replace(/[^\d]/g, '');
-            // Combine country code with phone number
-            this.checkoutProps.form.whatsapp_number = this.countryCode + this.phoneNumber;
-            // Fetch campaign status when phone number changes
+            const code = (this.$refs.countryCodeSelect && this.$refs.countryCodeSelect.value) || this.countryCode;
+            this.checkoutProps.form.whatsapp_number = this.buildWhatsAppNumber(code, this.phoneNumber);
             this.fetchCampaignStatus();
         },
         fetchCampaignStatus: function () {
@@ -502,7 +511,7 @@ export default {
                 this.checkoutProps.form.branch_id = table.branch_id;
             const code = (this.$refs.countryCodeSelect && this.$refs.countryCodeSelect.value) || this.countryCode;
             const phone = (this.phoneNumber || '').replace(/\D/g, '');
-            this.checkoutProps.form.whatsapp_number = code + phone;
+            this.checkoutProps.form.whatsapp_number = this.buildWhatsAppNumber(code, phone);
             this.checkoutProps.form.subtotal = this.subtotal;
             
             // IMPORTANT: Do NOT send campaign discount in discount field

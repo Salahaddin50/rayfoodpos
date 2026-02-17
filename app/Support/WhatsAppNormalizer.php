@@ -16,6 +16,18 @@ class WhatsAppNormalizer
         $digits = preg_replace('/\D+/', '', $v) ?? '';
         if ($digits === '') return '';
 
+        // Fix erroneous 994 prefix: 994971503531437 → 971503531437 (e.g. user had AZ selected but typed full UAE number)
+        if (str_starts_with($digits, '994') && strlen($digits) > 6) {
+            $after994 = substr($digits, 3);
+            foreach (self::COUNTRY_CODES as $code) {
+                if ($code === '994') continue;
+                if (str_starts_with($after994, $code) && strlen($after994) >= strlen($code) + 6) {
+                    $digits = $after994;
+                    break;
+                }
+            }
+        }
+
         // Strip leading 0 after country code: +860503531437 → +86503531437, +9940503531437 → +994503531437
         foreach (self::COUNTRY_CODES as $code) {
             $len = strlen($code);

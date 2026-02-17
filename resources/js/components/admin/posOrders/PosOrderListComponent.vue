@@ -620,6 +620,31 @@ export default {
                 alertService.error(err.response.data.message);
             }
         },
+        formatWhatsAppNumber: function (number) {
+            if (!number) return '';
+            let digits = (number + '').replace(/\D/g, '');
+            if (!digits) return (number + '').trim();
+            const countryCodes = ['994', '966', '971', '91', '92', '90', '86', '81', '44', '49', '39', '34', '33', '7', '1'];
+            if (digits.startsWith('994') && digits.length > 6) {
+                const after994 = digits.substring(3);
+                for (const code of countryCodes) {
+                    if (code === '994') continue;
+                    if (after994.startsWith(code) && after994.length >= code.length + 6) {
+                        digits = after994;
+                        break;
+                    }
+                }
+            }
+            for (const code of countryCodes) {
+                if (digits.startsWith(code + '0') && digits.length > code.length + 1) {
+                    digits = code + digits.substring(code.length + 1);
+                    break;
+                }
+            }
+            if (digits.startsWith('9940')) digits = '994' + digits.substring(4);
+            else if (digits.startsWith('0') && digits.length <= 10) digits = '994' + digits.substring(1);
+            return '+' + digits;
+        },
         togglePaymentStatus: function (order) {
             try {
                 this.loading.isActive = true;
@@ -678,24 +703,13 @@ export default {
                                 messageParts.push(`Token Number: ${order.token}`);
                             }
                             if (order.whatsapp_number) {
-                                messageParts.push(`Client WhatsApp: ${order.whatsapp_number}`);
+                                messageParts.push(`Client WhatsApp: ${this.formatWhatsAppNumber(order.whatsapp_number)}`);
                             }
                             if (order.location_url) {
                                 messageParts.push(`Location: ${order.location_url}`);
                             }
                             const message = messageParts.join('\n');
-                            let digits = (driver.whatsapp || '').replace(/\D/g, '');
-                            if (digits) {
-                                const countryCodes = ['994', '966', '971', '91', '92', '90', '86', '81', '44', '49', '39', '34', '33', '7', '1'];
-                                for (const code of countryCodes) {
-                                    if (digits.startsWith(code + '0') && digits.length > code.length + 1) {
-                                        digits = code + digits.substring(code.length + 1);
-                                        break;
-                                    }
-                                }
-                                if (digits.startsWith('9940')) digits = '994' + digits.substring(4);
-                                else if (digits.startsWith('0') && digits.length <= 10) digits = '994' + digits.substring(1);
-                            }
+                            const digits = this.formatWhatsAppNumber(driver.whatsapp).replace(/\D/g, '');
                             whatsappLink = digits ? `https://wa.me/${digits}?text=${encodeURIComponent(message)}` : '';
                         }
                     }
