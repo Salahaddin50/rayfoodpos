@@ -36,26 +36,39 @@ class FirebaseService
             $failureCount = 0;
 
             foreach ($fcmTokens as $fcmToken) {
+                // FCM v1 API: all "data" values must be strings; "notification" image must be string or omitted
+                $title = (string) ($data->title ?? '');
+                $body = (string) ($data->description ?? '');
+                $image = isset($data->image) && $data->image !== null && $data->image !== '' ? (string) $data->image : '';
+                $url = isset($data->url) && $data->url !== null && $data->url !== '' ? (string) $data->url : ($topicName === 'new-order-found' ? '/admin/table-orders' : '');
+
+                $notificationPayload = [
+                    'title' => $title,
+                    'body' => $body,
+                ];
+                if ($image !== '') {
+                    $notificationPayload['image'] = $image;
+                }
 
                 $payload = [
                     'message' => [
                         'token' => $fcmToken,
-                        'notification' => [
-                            'title' => $data->title,
-                            'body' => $data->description,
-                            'image' => $data->image ?? null,
-                        ],
+                        'notification' => $notificationPayload,
                         'data' => [
-                            'title' => $data->title,
-                            'body' => $data->description,
+                            'title' => $title,
+                            'body' => $body,
                             'sound' => 'default',
-                            'image' => $data->image ?? null,
+                            'image' => $image,
                             'topicName' => $topicName,
+                            'url' => $url,
                         ],
                         'webpush' => [
-                            "headers" => [
-                                "Urgency" => "high"
-                            ]
+                            'headers' => [
+                                'Urgency' => 'high',
+                            ],
+                            'notification' => [
+                                'sound' => 'default',
+                            ],
                         ],
                     ],
                 ];

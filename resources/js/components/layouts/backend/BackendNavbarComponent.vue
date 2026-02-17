@@ -306,30 +306,41 @@ export default {
                 if (!messaging) return;
 
                 onMessage(messaging, (payload) => {
-                    const notificationTitle = payload.notification.title;
-                    const notificationOptions = {
-                        body: payload.notification.body,
-                        icon: '/images/default/firebase-logo.png',
-                        data: {
-                            url: payload.data?.url || '/admin/table-orders'
-                        }
-                    };
-                    const notification = new Notification(notificationTitle, notificationOptions);
-                    
-                    // Handle foreground notification click
-                    notification.onclick = () => {
-                        const targetUrl = payload.data?.url || '/admin/table-orders';
-                        this.$router.push(targetUrl).catch(() => {
-                            window.location.href = targetUrl;
-                        });
-                        notification.close();
-                    };
+                    try {
+                        const notif = payload?.notification || {};
+                        const data = payload?.data || {};
+                        const notificationTitle = notif.title || 'Notification';
+                        const notificationOptions = {
+                            body: notif.body || '',
+                            icon: '/images/default/firebase-logo.png',
+                            silent: false,
+                            data: {
+                                url: data.url || '/admin/table-orders'
+                            }
+                        };
+                        const notification = new Notification(notificationTitle, notificationOptions);
 
-                    if (payload.data.topicName === 'new-order-found' && this.orderNotification.permission) {
-                        this.orderNotificationStatus = true;
-                        this.orderNotificationMessage = payload.notification.body;
-                        const audio = new Audio(this.setting.notification_audio);
-                        audio.play();
+                        // Handle foreground notification click
+                        notification.onclick = () => {
+                            const targetUrl = data.url || '/admin/table-orders';
+                            this.$router.push(targetUrl).catch(() => {
+                                window.location.href = targetUrl;
+                            });
+                            notification.close();
+                        };
+
+                        // New order: show in-app banner and play sound
+                        if (data.topicName === 'new-order-found' && this.orderNotification.permission) {
+                            this.orderNotificationStatus = true;
+                            this.orderNotificationMessage = notif.body || '';
+                            try {
+                                const audioUrl = this.setting?.notification_audio || '/audio/notification.mp3';
+                                const audio = new Audio(audioUrl);
+                                audio.play().catch(() => {});
+                            } catch (e) {}
+                        }
+                    } catch (err) {
+                        console.error('Push notification handler error:', err);
                     }
                 });
                 

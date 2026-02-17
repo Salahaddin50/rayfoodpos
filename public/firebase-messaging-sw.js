@@ -12,15 +12,20 @@ let config = {
 firebase.initializeApp(config);
 const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
-    const notificationTitle = payload.notification.title;
+    const notif = payload.notification || {};
+    const data = payload.data || {};
+    const notificationTitle = notif.title || 'New order';
     const notificationOptions = {
-        body: payload.notification.body,
+        body: notif.body || '',
         icon: '/images/default/firebase-logo.png',
+        tag: data.topicName || 'fcm',
+        requireInteraction: false,
+        silent: false,
         data: {
-            url: payload.data?.url || '/admin/table-orders'
+            url: data.url || '/admin/table-orders'
         }
     };
-    self.registration.showNotification(notificationTitle, notificationOptions);
+    return self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
 // Handle notification click
