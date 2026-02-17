@@ -228,7 +228,36 @@ export default {
                 alertService.error(err);
             }
         },
-        sendTestPush: function () {
+        sendTestPush: async function () {
+            if (!('Notification' in window)) {
+                alertService.error('This browser does not support notifications.');
+                return;
+            }
+            if (Notification.permission === 'denied') {
+                alertService.error('Notifications are blocked. Please allow notifications for this site in your browser settings.');
+                return;
+            }
+            if (Notification.permission === 'default') {
+                try {
+                    const permission = await Notification.requestPermission();
+                    if (permission !== 'granted') {
+                        alertService.error('Notification permission was not granted.');
+                        return;
+                    }
+                } catch (e) {
+                    alertService.error('Failed to request notification permission.');
+                    return;
+                }
+            }
+            try {
+                new Notification('Test Notification', {
+                    body: 'Your browser notification permission is working.',
+                    icon: '/images/default/firebase-logo.png'
+                });
+            } catch (e) {
+                alertService.error('Could not show local notification: ' + (e?.message || 'unknown error'));
+                return;
+            }
             this.loading.isActive = true;
             this.$store.dispatch('notification/testPush').then((res) => {
                 this.loading.isActive = false;
@@ -236,7 +265,11 @@ export default {
             }).catch((err) => {
                 this.loading.isActive = false;
                 const msg = err?.response?.data?.message || err?.message || 'Failed to send test notification.';
-                alertService.error(msg);
+                if (msg.includes('No device token') || msg.includes('device token')) {
+                    alertService.error('Enable notifications first: Click your profile (top-right) → "Enable notifications", then try again.');
+                } else {
+                    alertService.error(msg);
+                }
             });
         },
     },
