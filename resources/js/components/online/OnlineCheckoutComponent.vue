@@ -48,6 +48,7 @@
                                     v-model="countryCode" 
                                     class="db-field-control w-32 flex-shrink-0"
                                     :class="errors.whatsapp_number ? 'invalid' : ''"
+                                    @change="updateWhatsAppNumber"
                                 >
                                     <option v-for="country in countryCodes" :key="country.code" :value="country.dial_code">
                                         {{ country.flag }} {{ country.dial_code }}
@@ -852,6 +853,7 @@ export default {
 
             this.loading.isActive = true;
 
+            this.checkoutProps.form.whatsapp_number = this.countryCode + this.phoneNumber;
             this.checkoutProps.form.branch_id = parseInt(this.$route.params.branchId);
             this.checkoutProps.form.subtotal = this.subtotal;
             this.checkoutProps.form.delivery_charge = this.pickupCost; // Store pickup cost in delivery_charge field
