@@ -13,8 +13,12 @@
     <meta name="apple-mobile-web-app-title" content="{{ Settings::group('company')->get('company_name') }}">
 
 
-    <!-- PWA MANIFEST -->
-    <link rel="manifest" href="{{ route('manifest') }}">
+    <!-- PWA MANIFEST (admin vs main app by URL path) -->
+    @php
+        $pathSegment = explode('/', request()->path())[0] ?? '';
+        $isAdminPwa = $pathSegment === 'admin';
+    @endphp
+    <link rel="manifest" href="{{ route('manifest') }}{{ $isAdminPwa ? '?context=admin' : '' }}">
 
     <!-- FONTS -->
     <link rel="stylesheet" href="{{ asset('themes/default/fonts/fontawesome/fontawesome.css') }}">
@@ -102,8 +106,8 @@
                 </svg>
             </div>
             <div class="pwa-install-prompt-text">
-                <div class="pwa-install-prompt-title">Install App</div>
-                <div class="pwa-install-prompt-description">Install our app for a better experience</div>
+                <div class="pwa-install-prompt-title">{{ $isAdminPwa ? 'Install Admin Panel' : 'Install App' }}</div>
+                <div class="pwa-install-prompt-description">{{ $isAdminPwa ? 'Add the admin panel to your home screen' : 'Install our app for a better experience' }}</div>
             </div>
             <div class="pwa-install-prompt-actions">
                 <button id="pwa-install-btn" class="pwa-install-btn">Install</button>
@@ -112,13 +116,17 @@
         </div>
     </div>
 
-    <!-- PWA Service Worker Registration -->
+    <!-- PWA Service Worker Registration (admin scope vs app scope) -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/sw.js')
+                var pathSegment = window.location.pathname.split('/')[1] || '';
+                var isAdmin = pathSegment === 'admin';
+                var swUrl = isAdmin ? '/sw-admin.js' : '/sw.js';
+                var options = isAdmin ? { scope: '/admin/' } : {};
+                navigator.serviceWorker.register(swUrl, options)
                     .then(function(registration) {
-                        console.log('ServiceWorker registration successful');
+                        console.log('ServiceWorker registration successful', isAdmin ? '(admin)' : '');
                     })
                     .catch(function(err) {
                         console.log('ServiceWorker registration failed: ', err);

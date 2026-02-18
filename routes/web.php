@@ -38,6 +38,9 @@ Route::get('/manifest.json', [RootController::class, 'manifest'])->name('manifes
 Route::get('/sw.js', function () {
     return response()->file(public_path('sw.js'), ['Content-Type' => 'application/javascript']);
 })->name('service-worker');
+Route::get('/sw-admin.js', function () {
+    return response()->file(public_path('sw-admin.js'), ['Content-Type' => 'application/javascript']);
+})->name('service-worker-admin');
 Route::get('/firebase-messaging-sw.js', function () {
     return response(AppLibrary::firebaseMessagingSwContent(), 200, [
         'Content-Type' => 'application/javascript',
@@ -54,4 +57,4 @@ Route::prefix('payment')->name('payment.')->middleware(['installed'])->group(fun
     Route::get('/successful/{order}', [PaymentController::class, 'successful'])->name('successful');
 });
 
-Route::any('/{any}', [RootController::class, 'index'])->middleware(['installed'])->where(['any' => '^(?!manifest\.json|sw\.js|firebase-messaging-sw\.js).*']);
+Route::any('/{any}', [RootController::class, 'index'])->middleware(['installed'])->where(['any' => '^(?!manifest\.json|sw\.js|sw-admin\.js|firebase-messaging-sw\.js).*']);

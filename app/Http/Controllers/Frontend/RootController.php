@@ -28,8 +28,26 @@ class RootController extends Controller
             $companyName = 'Restaurant POS';
         }
 
-        // Always use local assets for PWA icons to ensure they're accessible
         $iconBase = asset('images/theme/theme-favicon-logo.png');
+        $isAdmin = request()->query('context') === 'admin';
+
+        if ($isAdmin) {
+            return response()->json([
+                'name' => $companyName . ' Admin',
+                'short_name' => $companyName . ' Admin',
+                'description' => 'Admin Panel',
+                'start_url' => '/admin/dashboard',
+                'display' => 'standalone',
+                'background_color' => '#ffffff',
+                'theme_color' => '#696cff',
+                'orientation' => 'portrait-primary',
+                'icons' => [
+                    ['src' => asset('favicon.ico'), 'sizes' => '48x48', 'type' => 'image/x-icon'],
+                    ['src' => $iconBase, 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'any maskable'],
+                    ['src' => $iconBase, 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'any maskable']
+                ]
+            ]);
+        }
 
         return response()->json([
             'name' => $companyName,
