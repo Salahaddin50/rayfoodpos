@@ -329,11 +329,11 @@ export default {
                     };
 
                     const topicName = payload.data?.topicName || payload.data?.topicname;
-                    if (topicName === 'new-order-found' && this.orderNotification.permission) {
+                    if (topicName === 'new-order-found') {
                         this.orderNotificationStatus = true;
                         this.orderNotificationMessage = notificationBody;
+                        this.orderNotification.url = payload.data?.url || 'table-orders';
                         const audioPath = this.setting?.notification_audio || '/audio/notification.mp3';
-                        // Play sound 3 times for longer alert (0ms, 2s, 4s)
                         [0, 2000, 4000].forEach((delay) => {
                             setTimeout(() => {
                                 const a = new Audio(audioPath);
@@ -530,14 +530,14 @@ export default {
             }
         },
         orderPermissionCheck: function () {
+            this.orderNotification.permission = false;
             const permissions = this.$store.getters.authPermission;
-            if (permissions.length > 0) {
+            if (Array.isArray(permissions) && permissions.length > 0) {
                 _.forEach(permissions, (permission) => {
-                    if (permission.name === 'table-orders') {
-                        if (permission.access === true) {
-                            this.orderNotification.permission = true;
-                            this.orderNotification.url = permission.url;
-                        }
+                    const name = permission?.name;
+                    if ((name === 'table-orders' || name === 'table_orders') && permission.access === true) {
+                        this.orderNotification.permission = true;
+                        this.orderNotification.url = permission.url || '/admin/table-orders';
                     }
                 });
             }
