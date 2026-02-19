@@ -317,16 +317,14 @@ export default {
                             url: payload.data?.url || '/admin/table-orders'
                         }
                     };
-                    const notification = new Notification(notificationTitle, notificationOptions);
-                    
-                    // Handle foreground notification click
-                    notification.onclick = () => {
-                        const targetUrl = payload.data?.url || '/admin/table-orders';
-                        this.$router.push(targetUrl).catch(() => {
-                            window.location.href = targetUrl;
+                    // PWA-safe: use service worker to show notification (new Notification() is illegal in PWA)
+                    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                        navigator.serviceWorker.controller.postMessage({
+                            type: 'SHOW_NOTIFICATION',
+                            title: notificationTitle,
+                            options: notificationOptions
                         });
-                        notification.close();
-                    };
+                    }
 
                     const topicName = payload.data?.topicName || payload.data?.topicname;
                     if (topicName === 'new-order-found') {

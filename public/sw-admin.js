@@ -35,3 +35,29 @@ self.addEventListener('activate', (event) => {
     })
   );
 });
+
+// Show notification from page (PWA-safe: no "new Notification()" in window)
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SHOW_NOTIFICATION' && event.data.title) {
+    const options = event.data.options || {};
+    self.registration.showNotification(event.data.title, options).catch(() => {});
+  }
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url;
+  if (url) {
+    const fullUrl = new URL(url, self.location.origin).href;
+    event.waitUntil(
+      clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+        for (let i = 0; i < clientList.length; i++) {
+          if (new URL(clientList[i].url).origin === self.location.origin) {
+            return clientList[i].focus().then(() => clientList[i].navigate(fullUrl));
+          }
+        }
+        return clients.openWindow(fullUrl);
+      })
+    );
+  }
+});

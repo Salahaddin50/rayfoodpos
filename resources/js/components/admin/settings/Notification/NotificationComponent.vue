@@ -249,14 +249,16 @@ export default {
                     return;
                 }
             }
-            try {
-                new Notification('Test Notification', {
-                    body: 'Your browser notification permission is working.',
-                    icon: '/images/default/firebase-logo.png'
+            // PWA-safe: ask service worker to show notification (new Notification() is illegal in PWA)
+            if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({
+                    type: 'SHOW_NOTIFICATION',
+                    title: 'Test Notification',
+                    options: {
+                        body: 'Your browser notification permission is working.',
+                        icon: '/images/default/firebase-logo.png'
+                    }
                 });
-            } catch (e) {
-                alertService.error('Could not show local notification: ' + (e?.message || 'unknown error'));
-                return;
             }
             this.loading.isActive = true;
             this.$store.dispatch('notification/testPush').then((res) => {
