@@ -27,13 +27,18 @@
         <default-component />
     </div>
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @if (file_exists(public_path('build/manifest.json')))
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @else
+        <link rel="stylesheet" href="{{ asset('build/assets/app.css') }}">
+        <script type="module" src="{{ asset('build/assets/app.js') }}"></script>
+    @endif
 
     <script>
-        const APP_URL = "{{ env('VITE_HOST') }}";
-        const APP_KEY = "{{ env('VITE_API_KEY') }}";
-        const GOOGLE_TOKEN = "{{ env('VITE_GOOGLE_MAP_KEY') }}";
-        const APP_DEMO = "{{ env('VITE_DEMO') }}";
+        const APP_URL = "{{ config('app.url', '') }}";
+        const APP_KEY = "{{ config('app.key', '') }}";
+        const GOOGLE_TOKEN = "{{ env('VITE_GOOGLE_MAP_KEY', '') }}";
+        const APP_DEMO = "{{ env('VITE_DEMO', '') }}";
     </script>
 
     <script src="{{ asset('themes/default/js/drawer.js') }}" defer></script>
