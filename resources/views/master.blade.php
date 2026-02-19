@@ -22,8 +22,8 @@
     <meta name="apple-mobile-web-app-title" content="{{ $companyName }}">
 
 
-    <!-- PWA MANIFEST (admin vs main app by URL path) -->
-    <link rel="manifest" href="{{ route('manifest') }}{{ $isAdminPwa ? '?context=admin' : '' }}">
+    <!-- PWA MANIFEST (admin vs main app by URL path) - use url() to avoid route() issues -->
+    <link rel="manifest" href="{{ url('/manifest.json') }}{{ $isAdminPwa ? '?context=admin' : '' }}">
 
     <!-- FONTS -->
     <link rel="stylesheet" href="{{ asset('themes/default/fonts/fontawesome/fontawesome.css') }}">
@@ -40,7 +40,7 @@
     <title>{{ $companyName }}</title>
 
     <!-- FAV ICON -->
-    <link rel="icon" type="image" href="{{ $favicon ?? '' }}">
+    <link rel="icon" type="image" href="{{ $favicon }}">
 
 
     @if (!blank($analytics))

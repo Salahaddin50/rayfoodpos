@@ -32,15 +32,10 @@ class RootController extends Controller
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            try {
-                return response()->view('master-fallback', [
-                    'companyName' => 'Restaurant POS',
-                    'pathSegment' => request()->path() ? explode('/', request()->path())[0] ?? '' : '',
-                ], 200);
-            } catch (\Throwable $fallbackException) {
-                \Illuminate\Support\Facades\Log::error('RootController::master-fallback failed', ['message' => $fallbackException->getMessage()]);
-                return response('<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Loading</title></head><body><div id="app">Loading...</div><script>setTimeout(function(){ window.location.reload(); }, 3000);</script></body></html>', 200, ['Content-Type' => 'text/html; charset=UTF-8']);
-            }
+            return response()->view('master-fallback', [
+                'companyName' => 'Restaurant POS',
+                'pathSegment' => request()->path() ? explode('/', request()->path())[0] ?? '' : '',
+            ], 200);
         }
     }
 
@@ -48,12 +43,24 @@ class RootController extends Controller
     {
         try {
             $companyName = Settings::group('company')->get('company_name') ?? 'Restaurant POS';
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $companyName = 'Restaurant POS';
         }
 
-        $iconBase = asset('images/theme/theme-favicon-logo.png');
+        try {
+            $iconBase = asset('images/theme/theme-favicon-logo.png');
+            $faviconSrc = asset('favicon.ico');
+        } catch (\Throwable $e) {
+            $iconBase = url('/images/theme/theme-favicon-logo.png');
+            $faviconSrc = url('/favicon.ico');
+        }
+
         $isAdmin = request()->query('context') === 'admin';
+        $icons = [
+            ['src' => $faviconSrc, 'sizes' => '48x48', 'type' => 'image/x-icon'],
+            ['src' => $iconBase, 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'any maskable'],
+            ['src' => $iconBase, 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'any maskable'],
+        ];
 
         if ($isAdmin) {
             return response()->json([
@@ -65,11 +72,7 @@ class RootController extends Controller
                 'background_color' => '#ffffff',
                 'theme_color' => '#696cff',
                 'orientation' => 'portrait-primary',
-                'icons' => [
-                    ['src' => asset('favicon.ico'), 'sizes' => '48x48', 'type' => 'image/x-icon'],
-                    ['src' => $iconBase, 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'any maskable'],
-                    ['src' => $iconBase, 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'any maskable']
-                ]
+                'icons' => $icons,
             ]);
         }
 
@@ -82,25 +85,7 @@ class RootController extends Controller
             'background_color' => '#ffffff',
             'theme_color' => '#696cff',
             'orientation' => 'portrait-primary',
-            'icons' => [
-                [
-                    'src' => asset('favicon.ico'),
-                    'sizes' => '48x48',
-                    'type' => 'image/x-icon'
-                ],
-                [
-                    'src' => $iconBase,
-                    'sizes' => '192x192',
-                    'type' => 'image/png',
-                    'purpose' => 'any maskable'
-                ],
-                [
-                    'src' => $iconBase,
-                    'sizes' => '512x512',
-                    'type' => 'image/png',
-                    'purpose' => 'any maskable'
-                ]
-            ]
+            'icons' => $icons,
         ]);
     }
 }
