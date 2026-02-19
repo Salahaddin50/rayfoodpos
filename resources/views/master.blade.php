@@ -10,14 +10,19 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="{{ Settings::group('company')->get('company_name') }}">
-
-
-    <!-- PWA MANIFEST (admin vs main app by URL path) -->
     @php
+        try {
+            $companyName = \Dipokhalder\Settings\Facades\Settings::group('company')->get('company_name') ?? 'Restaurant POS';
+        } catch (\Throwable $e) {
+            $companyName = 'Restaurant POS';
+        }
         $pathSegment = explode('/', request()->path())[0] ?? '';
         $isAdminPwa = $pathSegment === 'admin';
     @endphp
+    <meta name="apple-mobile-web-app-title" content="{{ $companyName }}">
+
+
+    <!-- PWA MANIFEST (admin vs main app by URL path) -->
     <link rel="manifest" href="{{ route('manifest') }}{{ $isAdminPwa ? '?context=admin' : '' }}">
 
     <!-- FONTS -->
@@ -32,7 +37,7 @@
     
     <!-- PAGE TITLE -->
 
-    <title>{{ Settings::group('company')->get('company_name') }}</title>
+    <title>{{ $companyName }}</title>
 
     <!-- FAV ICON -->
     <link rel="icon" type="image" href="{{ $favicon }}">

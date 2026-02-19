@@ -14,9 +14,17 @@ class RootController extends Controller
 
     public function index(): \Illuminate\Contracts\View\Factory | \Illuminate\Contracts\View\View | \Illuminate\Contracts\Foundation\Application
     {
-        $analytics =  Analytic::with('analyticSections')->where(['status' => Status::ACTIVE])->get();
-        $themeFavicon = ThemeSetting::where(['key' => 'theme_favicon_logo'])->first();
-        $favIcon = $themeFavicon?->faviconLogo ?? null;
+        try {
+            $analytics = Analytic::with('analyticSections')->where(['status' => Status::ACTIVE])->get();
+        } catch (\Throwable $e) {
+            $analytics = collect();
+        }
+        try {
+            $themeFavicon = ThemeSetting::where(['key' => 'theme_favicon_logo'])->first();
+            $favIcon = $themeFavicon?->faviconLogo ?? null;
+        } catch (\Throwable $e) {
+            $favIcon = null;
+        }
         return view('master', ['analytics' => $analytics, 'favicon' => $favIcon]);
     }
 
