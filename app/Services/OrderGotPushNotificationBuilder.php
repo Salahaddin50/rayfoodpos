@@ -79,21 +79,20 @@ class OrderGotPushNotificationBuilder
             if (count($fcmTokenArray) > 0) {
                 try {
                     $notificationAlert = NotificationAlert::where(['language' => 'admin_and_branch_manager_new_order_message'])->first();
-                    $title = 'New Order Notification';
-                    $description = 'You have a new order.';
-                    if ($notificationAlert && $notificationAlert->push_notification == SwitchBox::ON && !blank($notificationAlert->push_notification_message)) {
-                        $description = $notificationAlert->push_notification_message;
-                    }
+                    $pushEnabled = $notificationAlert && $notificationAlert->push_notification == SwitchBox::ON;
+                    $message = $pushEnabled && !blank($notificationAlert->push_notification_message ?? null)
+                        ? $notificationAlert->push_notification_message
+                        : 'New order #' . ($this->order->order_serial_no ?? $this->orderId) . ' received.';
                     $pushNotification = (object)[
-                        'title'       => $title,
-                        'description' => $description,
+                        'title'       => 'New Order Notification',
+                        'description' => $message,
                         'order_id'    => $this->orderId,
-                        'url'         => '/admin/table-orders',
+                        'url'         => '/admin/table-orders/show/' . $this->orderId,
                     ];
                     $firebase = new FirebaseService();
                     $firebase->sendNotification($pushNotification, $fcmTokenArray, 'new-order-found');
                 } catch (Exception $e) {
-                    Log::warning('OrderGotPushNotificationBuilder: ' . $e->getMessage());
+                    Log::info($e->getMessage());
                 }
             }
 

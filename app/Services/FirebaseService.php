@@ -37,31 +37,26 @@ class FirebaseService
 
             foreach ($fcmTokens as $fcmToken) {
 
-                // FCM data payload: all values must be strings
-                $dataPayload = [
-                    'title'     => (string) ($data->title ?? ''),
-                    'body'      => (string) ($data->description ?? ''),
-                    'sound'     => 'default',
-                    'image'     => (string) ($data->image ?? ''),
-                    'topicName' => (string) $topicName,
-                ];
-                if (!empty($data->url)) {
-                    $dataPayload['url'] = (string) $data->url;
-                }
-
                 $payload = [
                     'message' => [
                         'token' => $fcmToken,
                         'notification' => [
-                            'title' => $data->title ?? 'Notification',
-                            'body'  => $data->description ?? '',
+                            'title' => $data->title,
+                            'body' => $data->description,
                             'image' => $data->image ?? null,
                         ],
-                        'data' => $dataPayload,
+                        'data' => [
+                            'title' => (string) ($data->title ?? ''),
+                            'body' => (string) ($data->description ?? ''),
+                            'sound' => 'default',
+                            'image' => (string) ($data->image ?? ''),
+                            'topicName' => (string) $topicName,
+                            'url' => (string) ($data->url ?? '/admin/table-orders'),
+                        ],
                         'webpush' => [
-                            'headers' => [
-                                'Urgency' => 'high',
-                            ],
+                            "headers" => [
+                                "Urgency" => "high"
+                            ]
                         ],
                     ],
                 ];
