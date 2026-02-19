@@ -40,7 +40,7 @@
     <title>{{ $companyName }}</title>
 
     <!-- FAV ICON -->
-    <link rel="icon" type="image" href="{{ $favicon }}">
+    <link rel="icon" type="image" href="{{ $favicon ?? '' }}">
 
 
     @if (!blank($analytics))

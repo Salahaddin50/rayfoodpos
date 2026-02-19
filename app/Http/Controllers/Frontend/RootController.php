@@ -32,10 +32,15 @@ class RootController extends Controller
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            return response()->view('master-fallback', [
-                'companyName' => 'Restaurant POS',
-                'pathSegment' => request()->path() ? explode('/', request()->path())[0] ?? '' : '',
-            ], 200);
+            try {
+                return response()->view('master-fallback', [
+                    'companyName' => 'Restaurant POS',
+                    'pathSegment' => request()->path() ? explode('/', request()->path())[0] ?? '' : '',
+                ], 200);
+            } catch (\Throwable $fallbackException) {
+                \Illuminate\Support\Facades\Log::error('RootController::master-fallback failed', ['message' => $fallbackException->getMessage()]);
+                return response('<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Loading</title></head><body><div id="app">Loading...</div><script>setTimeout(function(){ window.location.reload(); }, 3000);</script></body></html>', 200, ['Content-Type' => 'text/html; charset=UTF-8']);
+            }
         }
     }
 
