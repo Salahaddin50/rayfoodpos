@@ -152,7 +152,7 @@
                 {{ orderNotificationMessage }}
                 <span class="block">{{ $t('message.please_check_your_order_list') }}</span>
             </h3>
-            <router-link @click.prevent="closeOrderNotificationModal" :to="{ path: '/admin/' + orderNotification.url }"
+            <router-link @click.prevent="closeOrderNotificationModal" :to="{ path: (orderNotification.url && orderNotification.url.startsWith('/')) ? orderNotification.url : '/admin/' + (orderNotification.url || 'table-orders') }"
                 class="db-btn h-[38px] shadow-[0px_6px_10px_rgba(23,_114,_255,_0.24)] bg-primary text-white">
                 {{ $t('button.let_me_check') }}
             </router-link>
@@ -329,7 +329,7 @@ export default {
                     if (topicName === 'new-order-found') {
                         this.orderNotificationStatus = true;
                         this.orderNotificationMessage = notificationBody;
-                        this.orderNotification.url = payload.data?.url || 'table-orders';
+                        this.orderNotification.url = payload.data?.url || '/admin/table-orders';
                         const audioPath = this.setting?.notification_audio || '/audio/notification.mp3';
                         [0, 2000, 4000].forEach((delay) => {
                             setTimeout(() => {

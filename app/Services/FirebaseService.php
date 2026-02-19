@@ -37,6 +37,18 @@ class FirebaseService
 
             foreach ($fcmTokens as $fcmToken) {
 
+                // FCM data payload values must all be strings
+                $dataPayload = [
+                    'title'     => (string) ($data->title ?? ''),
+                    'body'      => (string) ($data->description ?? ''),
+                    'sound'     => 'default',
+                    'image'     => (string) ($data->image ?? ''),
+                    'topicName' => (string) $topicName,
+                ];
+                if (isset($data->url)) {
+                    $dataPayload['url'] = (string) $data->url;
+                }
+
                 $payload = [
                     'message' => [
                         'token' => $fcmToken,
@@ -45,13 +57,7 @@ class FirebaseService
                             'body' => $data->description,
                             'image' => $data->image ?? null,
                         ],
-                        'data' => [
-                            'title' => $data->title,
-                            'body' => $data->description,
-                            'sound' => 'default',
-                            'image' => $data->image ?? null,
-                            'topicName' => $topicName,
-                        ],
+                        'data' => $dataPayload,
                         'webpush' => [
                             "headers" => [
                                 "Urgency" => "high"
