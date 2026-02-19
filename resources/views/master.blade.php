@@ -22,8 +22,8 @@
     <meta name="apple-mobile-web-app-title" content="{{ $companyName }}">
 
 
-    <!-- PWA MANIFEST (admin vs main app by URL path) - use url() to avoid route() issues -->
-    <link rel="manifest" href="{{ url('/manifest.json') }}{{ $isAdminPwa ? '?context=admin' : '' }}">
+    <!-- PWA MANIFEST (admin vs main app by URL path) -->
+    <link rel="manifest" href="{{ route('manifest') }}{{ $isAdminPwa ? '?context=admin' : '' }}">
 
     <!-- FONTS -->
     <link rel="stylesheet" href="{{ asset('themes/default/fonts/fontawesome/fontawesome.css') }}">
@@ -88,7 +88,14 @@
         @endforeach
     @endif
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @php
+        $viteManifest = public_path('build/manifest.json');
+    @endphp
+    @if (\Illuminate\Support\Facades\File::exists($viteManifest))
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @else
+        {{-- Vite manifest missing: run "npm run build" to fix. Page loads without app bundle to avoid 500. --}}
+    @endif
 
     <script>
         const APP_URL = "{{ env('VITE_HOST') }}";

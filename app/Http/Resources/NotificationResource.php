@@ -25,28 +25,21 @@ class NotificationResource extends JsonResource
      */
     public function toArray($request): array
     {
-        $info = $this->info ?? [];
-        $setting = $this->notificationFile('notification_fcm_json_file');
-
         return [
-            "notification_fcm_api_key"             => $info['notification_fcm_api_key'] ?? '',
-            "notification_fcm_public_vapid_key"    => $info['notification_fcm_public_vapid_key'] ?? '',
-            "notification_fcm_auth_domain"         => $info['notification_fcm_auth_domain'] ?? '',
-            "notification_fcm_project_id"          => $info['notification_fcm_project_id'] ?? '',
-            "notification_fcm_storage_bucket"      => $info['notification_fcm_storage_bucket'] ?? '',
-            "notification_fcm_messaging_sender_id" => $info['notification_fcm_messaging_sender_id'] ?? '',
-            "notification_fcm_app_id"              => $info['notification_fcm_app_id'] ?? '',
-            "notification_fcm_measurement_id"      => $info['notification_fcm_measurement_id'] ?? '',
-            "notification_fcm_json_file"           => $setting?->file ?? '',
+            "notification_fcm_api_key"             => $this->info['notification_fcm_api_key'],
+            "notification_fcm_public_vapid_key"    => $this->info['notification_fcm_public_vapid_key'],
+            "notification_fcm_auth_domain"         => $this->info['notification_fcm_auth_domain'],
+            "notification_fcm_project_id"          => $this->info['notification_fcm_project_id'],
+            "notification_fcm_storage_bucket"      => $this->info['notification_fcm_storage_bucket'],
+            "notification_fcm_messaging_sender_id" => $this->info['notification_fcm_messaging_sender_id'],
+            "notification_fcm_app_id"              => $this->info['notification_fcm_app_id'],
+            "notification_fcm_measurement_id"      => $this->info['notification_fcm_measurement_id'],
+            "notification_fcm_json_file"           => $this->notificationFile('notification_fcm_json_file')->file,
         ];
     }
 
     public function notificationFile($key)
     {
-        try {
-            return NotificationSetting::where(['key' => $key])->first();
-        } catch (\Throwable $e) {
-            return null;
-        }
+        return NotificationSetting::where(['key' => $key])->first();
     }
 }

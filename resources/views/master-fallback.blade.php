@@ -27,7 +27,9 @@
         <default-component />
     </div>
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @if (\Illuminate\Support\Facades\File::exists(public_path('build/manifest.json')))
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @endif
 
     <script>
         const APP_URL = "{{ env('VITE_HOST') }}";

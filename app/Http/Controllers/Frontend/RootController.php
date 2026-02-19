@@ -43,24 +43,12 @@ class RootController extends Controller
     {
         try {
             $companyName = Settings::group('company')->get('company_name') ?? 'Restaurant POS';
-        } catch (\Throwable $e) {
+        } catch (\Exception $e) {
             $companyName = 'Restaurant POS';
         }
 
-        try {
-            $iconBase = asset('images/theme/theme-favicon-logo.png');
-            $faviconSrc = asset('favicon.ico');
-        } catch (\Throwable $e) {
-            $iconBase = url('/images/theme/theme-favicon-logo.png');
-            $faviconSrc = url('/favicon.ico');
-        }
-
+        $iconBase = asset('images/theme/theme-favicon-logo.png');
         $isAdmin = request()->query('context') === 'admin';
-        $icons = [
-            ['src' => $faviconSrc, 'sizes' => '48x48', 'type' => 'image/x-icon'],
-            ['src' => $iconBase, 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'any maskable'],
-            ['src' => $iconBase, 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'any maskable'],
-        ];
 
         if ($isAdmin) {
             return response()->json([
@@ -72,7 +60,11 @@ class RootController extends Controller
                 'background_color' => '#ffffff',
                 'theme_color' => '#696cff',
                 'orientation' => 'portrait-primary',
-                'icons' => $icons,
+                'icons' => [
+                    ['src' => asset('favicon.ico'), 'sizes' => '48x48', 'type' => 'image/x-icon'],
+                    ['src' => $iconBase, 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'any maskable'],
+                    ['src' => $iconBase, 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'any maskable']
+                ]
             ]);
         }
 
@@ -85,7 +77,25 @@ class RootController extends Controller
             'background_color' => '#ffffff',
             'theme_color' => '#696cff',
             'orientation' => 'portrait-primary',
-            'icons' => $icons,
+            'icons' => [
+                [
+                    'src' => asset('favicon.ico'),
+                    'sizes' => '48x48',
+                    'type' => 'image/x-icon'
+                ],
+                [
+                    'src' => $iconBase,
+                    'sizes' => '192x192',
+                    'type' => 'image/png',
+                    'purpose' => 'any maskable'
+                ],
+                [
+                    'src' => $iconBase,
+                    'sizes' => '512x512',
+                    'type' => 'image/png',
+                    'purpose' => 'any maskable'
+                ]
+            ]
         ]);
     }
 }
