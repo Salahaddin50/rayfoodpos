@@ -317,13 +317,30 @@ export default {
                             url: payload.data?.url || '/admin/table-orders'
                         }
                     };
-                    // PWA-safe: use service worker to show notification (new Notification() is illegal in PWA)
-                    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-                        navigator.serviceWorker.controller.postMessage({
-                            type: 'SHOW_NOTIFICATION',
-                            title: notificationTitle,
-                            options: notificationOptions
-                        });
+                    // Show order notification: service worker (required in PWA) + fallback to Notification() on desktop
+                    if (navigator.serviceWorker) {
+                        const send = (worker) => {
+                            if (worker) worker.postMessage({
+                                type: 'SHOW_NOTIFICATION',
+                                title: notificationTitle,
+                                options: notificationOptions
+                            });
+                        };
+                        if (navigator.serviceWorker.controller) {
+                            send(navigator.serviceWorker.controller);
+                        } else {
+                            navigator.serviceWorker.ready.then((reg) => { send(reg.active); });
+                        }
+                    }
+                    try {
+                        const notif = new Notification(notificationTitle, notificationOptions);
+                        notif.onclick = () => {
+                            const targetUrl = payload.data?.url || '/admin/table-orders';
+                            this.$router.push(targetUrl).catch(() => { window.location.href = targetUrl; });
+                            notif.close();
+                        };
+                    } catch (e) {
+                        // PWA/mobile: constructor not allowed; SW above will show it and handle click
                     }
 
                     const topicName = payload.data?.topicName || payload.data?.topicname;

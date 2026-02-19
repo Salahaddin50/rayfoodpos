@@ -249,16 +249,26 @@ export default {
                     return;
                 }
             }
-            // PWA-safe: ask service worker to show notification (new Notification() is illegal in PWA)
-            if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-                navigator.serviceWorker.controller.postMessage({
-                    type: 'SHOW_NOTIFICATION',
-                    title: 'Test Notification',
-                    options: {
-                        body: 'Your browser notification permission is working.',
-                        icon: '/images/default/firebase-logo.png'
-                    }
-                });
+            // Show test notification: service worker (required in PWA) + fallback to Notification() where allowed (desktop)
+            const title = 'Test Notification';
+            const options = {
+                body: 'Your browser notification permission is working.',
+                icon: '/images/default/firebase-logo.png'
+            };
+            if (navigator.serviceWorker) {
+                const send = (worker) => {
+                    if (worker) worker.postMessage({ type: 'SHOW_NOTIFICATION', title, options });
+                };
+                if (navigator.serviceWorker.controller) {
+                    send(navigator.serviceWorker.controller);
+                } else {
+                    navigator.serviceWorker.ready.then((reg) => { send(reg.active); });
+                }
+            }
+            try {
+                new Notification(title, options);
+            } catch (e) {
+                // PWA/mobile: constructor not allowed; SW above will show it
             }
             this.loading.isActive = true;
             this.$store.dispatch('notification/testPush').then((res) => {
