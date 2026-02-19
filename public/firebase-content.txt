@@ -1,5 +1,13 @@
 firebase.initializeApp(config);
 const messaging = firebase.messaging();
+// Show notification from page (test button + foreground order popup)
+self.addEventListener('message', (event) => {
+    if (event.data && event.data.type === 'SHOW_NOTIFICATION' && event.data.title) {
+        var opts = event.data.options || {};
+        if (typeof opts.silent === 'undefined') opts.silent = false;
+        self.registration.showNotification(event.data.title, opts).catch(function() {});
+    }
+});
 messaging.onBackgroundMessage((payload) => {
     const notificationTitle = payload.notification?.title || 'New order';
     const notificationBody = payload.notification?.body || '';
