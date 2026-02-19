@@ -32,10 +32,28 @@ class RootController extends Controller
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            return response()->view('master-fallback', [
-                'companyName' => 'Restaurant POS',
-                'pathSegment' => request()->path() ? explode('/', request()->path())[0] ?? '' : '',
-            ], 200);
+            try {
+                $pathSegment = '';
+                if (function_exists('request') && request()) {
+                    $path = request()->path();
+                    if (is_string($path)) {
+                        $pathSegment = explode('/', $path)[0] ?? '';
+                    }
+                }
+                return response()->view('master-fallback', [
+                    'companyName' => 'Restaurant POS',
+                    'pathSegment' => $pathSegment,
+                ], 200);
+            } catch (\Throwable $e2) {
+                \Illuminate\Support\Facades\Log::error('RootController::index fallback view failed', [
+                    'message' => $e2->getMessage(),
+                ]);
+                return response()->make(
+                    '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Loading</title></head><body><div id="app">Loading...</div><script>setTimeout(function(){ window.location.reload(); }, 1000);</script></body></html>',
+                    200,
+                    ['Content-Type' => 'text/html; charset=UTF-8']
+                );
+            }
         }
     }
 

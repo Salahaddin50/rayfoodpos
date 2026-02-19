@@ -16,7 +16,11 @@
         } catch (\Throwable $e) {
             $companyName = 'Restaurant POS';
         }
-        $pathSegment = explode('/', request()->path())[0] ?? '';
+        try {
+            $pathSegment = is_string(request()->path()) ? (explode('/', request()->path())[0] ?? '') : '';
+        } catch (\Throwable $e) {
+            $pathSegment = '';
+        }
         $isAdminPwa = $pathSegment === 'admin';
     @endphp
     <meta name="apple-mobile-web-app-title" content="{{ $companyName }}">
