@@ -317,30 +317,13 @@ export default {
                             url: payload.data?.url || '/admin/table-orders'
                         }
                     };
-                    // Show order notification: service worker (required in PWA) + fallback to Notification() on desktop
-                    if (navigator.serviceWorker) {
-                        const send = (worker) => {
-                            if (worker) worker.postMessage({
-                                type: 'SHOW_NOTIFICATION',
-                                title: notificationTitle,
-                                options: notificationOptions
-                            });
-                        };
-                        if (navigator.serviceWorker.controller) {
-                            send(navigator.serviceWorker.controller);
-                        } else {
-                            navigator.serviceWorker.ready.then((reg) => { send(reg.active); });
-                        }
-                    }
-                    try {
-                        const notif = new Notification(notificationTitle, notificationOptions);
-                        notif.onclick = () => {
-                            const targetUrl = payload.data?.url || '/admin/table-orders';
-                            this.$router.push(targetUrl).catch(() => { window.location.href = targetUrl; });
-                            notif.close();
-                        };
-                    } catch (e) {
-                        // PWA/mobile: constructor not allowed; SW above will show it and handle click
+                    // PWA-safe: use service worker to show notification (new Notification() is illegal in PWA)
+                    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                        navigator.serviceWorker.controller.postMessage({
+                            type: 'SHOW_NOTIFICATION',
+                            title: notificationTitle,
+                            options: notificationOptions
+                        });
                     }
 
                     const topicName = payload.data?.topicName || payload.data?.topicname;
@@ -451,7 +434,23 @@ export default {
             const messaging = this.firebase.messaging;
             if (!messaging) return Promise.resolve();
 
-            return getToken(messaging, { vapidKey: this.setting.notification_fcm_public_vapid_key })
+            // Use firebase-messaging-sw.js for FCM so push is received by the SW that has onBackgroundMessage.
+            // On /admin/ the controlling SW is sw-admin.js; getToken() would otherwise use that and push would never show.
+            const getFcmSwRegistration = () => {
+                return navigator.serviceWorker.getRegistrations().then((regs) => {
+                    const fcmReg = regs.find((r) => r.active && r.active.scriptURL && r.active.scriptURL.includes('firebase-messaging-sw'));
+                    if (fcmReg) return fcmReg;
+                    return navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
+                });
+            };
+
+            return getFcmSwRegistration()
+                .then((swRegistration) => {
+                    return getToken(messaging, {
+                        vapidKey: this.setting.notification_fcm_public_vapid_key,
+                        serviceWorkerRegistration: swRegistration,
+                    });
+                })
                 .then((currentToken) => {
                     if (!currentToken) {
                         alertService.error('Failed to get notification token. Please refresh and try again.');
@@ -462,13 +461,19 @@ export default {
                             alertService.success('Notifications enabled.');
                         })
                         .catch((error) => {
-                            // Don't redirect here; global 401 handler already does correct admin-only behavior.
                             const msg = error?.response?.data?.message || 'Failed to save notification token.';
                             alertService.error(msg);
                         });
                 })
-                .catch(() => {
-                    alertService.error('Failed to get notification token. Please refresh and try again.');
+                .catch((err) => {
+                    const msg = err?.message || '';
+                    if (msg.includes('messaging/permission-blocked') || msg.includes('permission-blocked')) {
+                        alertService.error('Notifications are blocked. Please allow notifications for this site in browser settings.');
+                    } else if (msg.includes('messaging/failed-service-worker-registration') || msg.includes('service worker')) {
+                        alertService.error('Push setup failed. Ensure Firebase config is saved and refresh the page, then try again.');
+                    } else {
+                        alertService.error('Failed to get notification token. Please refresh and try again.');
+                    }
                 });
         },
         textShortener: function (text, number = 30) {

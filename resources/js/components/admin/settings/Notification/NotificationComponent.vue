@@ -122,6 +122,9 @@
                             <i class="lab lab-notification"></i>
                             <span>Send test push</span>
                         </button>
+                        <p class="text-sm text-gray-500 mt-2">
+                            Enable notifications from your profile (top right) first. If test push still fails, disable then re-enable notifications there.
+                        </p>
                     </div>
                 </div>
             </form>
@@ -249,26 +252,16 @@ export default {
                     return;
                 }
             }
-            // Show test notification: service worker (required in PWA) + fallback to Notification() where allowed (desktop)
-            const title = 'Test Notification';
-            const options = {
-                body: 'Your browser notification permission is working.',
-                icon: '/images/default/firebase-logo.png'
-            };
-            if (navigator.serviceWorker) {
-                const send = (worker) => {
-                    if (worker) worker.postMessage({ type: 'SHOW_NOTIFICATION', title, options });
-                };
-                if (navigator.serviceWorker.controller) {
-                    send(navigator.serviceWorker.controller);
-                } else {
-                    navigator.serviceWorker.ready.then((reg) => { send(reg.active); });
-                }
-            }
-            try {
-                new Notification(title, options);
-            } catch (e) {
-                // PWA/mobile: constructor not allowed; SW above will show it
+            // PWA-safe: ask service worker to show notification (new Notification() is illegal in PWA)
+            if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({
+                    type: 'SHOW_NOTIFICATION',
+                    title: 'Test Notification',
+                    options: {
+                        body: 'Your browser notification permission is working.',
+                        icon: '/images/default/firebase-logo.png'
+                    }
+                });
             }
             this.loading.isActive = true;
             this.$store.dispatch('notification/testPush').then((res) => {

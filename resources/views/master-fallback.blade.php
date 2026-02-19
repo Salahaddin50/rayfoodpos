@@ -1,12 +1,5 @@
 <!DOCTYPE html>
-@php
-    try {
-        $htmlLang = str_replace('_', '-', app()->getLocale());
-    } catch (\Throwable $e) {
-        $htmlLang = 'en';
-    }
-@endphp
-<html lang="{{ $htmlLang }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
     <meta charset="UTF-8">
