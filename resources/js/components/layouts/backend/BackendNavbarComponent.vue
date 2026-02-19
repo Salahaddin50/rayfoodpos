@@ -289,18 +289,21 @@ export default {
 
 
         window.setTimeout(() => {
-            // Initialize Firebase messaging, but DO NOT request browser permission automatically.
-            // Many browsers block Notification.requestPermission() unless triggered by a user gesture.
+            // Initialize Firebase messaging and request notifications by default when possible.
             if (this.$store.getters.authStatus && this.isWebPushConfigured()) {
                 this.initFirebaseMessaging();
 
-                // If user already granted permission, register token silently.
-                if (this.getNotificationPermission() === 'granted') {
-                    this.registerWebPushToken();
+                const permission = this.getNotificationPermission();
+                if (permission === 'granted') {
+                    // Already granted: register token silently (no popup on failure).
+                    this.registerWebPushToken(true);
+                    this.webPush.canEnable = false;
+                } else if (permission === 'default') {
+                    // Not asked yet: request permission automatically so user can enable by default.
+                    this.requestNotificationPermissionByDefault();
+                } else {
+                    this.webPush.canEnable = true;
                 }
-
-                // Show "Enable notifications" button only if permission is not granted.
-                this.webPush.canEnable = this.getNotificationPermission() !== 'granted';
 
                 const messaging = this.firebase.messaging;
                 if (!messaging) return;
@@ -393,6 +396,20 @@ export default {
                 this.firebase.messaging = null;
             }
         },
+        /** Request permission automatically after login (when permission is still "default"). */
+        requestNotificationPermissionByDefault() {
+            if (!('Notification' in window) || this.getNotificationPermission() !== 'default') return;
+            const messaging = this.firebase.messaging;
+            if (!messaging) return;
+            Notification.requestPermission().then((permission) => {
+                this.webPush.canEnable = permission !== 'granted';
+                if (permission === 'granted') {
+                    this.registerWebPushToken(true);
+                }
+            }).catch(() => {
+                this.webPush.canEnable = true;
+            });
+        },
         enableWebPush() {
             if (this.webPush.registering) return;
             if (!this.isWebPushConfigured()) {
@@ -429,7 +446,7 @@ export default {
                 alertService.error('Notification permission request failed.');
             });
         },
-        registerWebPushToken() {
+        registerWebPushToken(silent = false) {
             const messaging = this.firebase.messaging;
             if (!messaging) return Promise.resolve();
 
@@ -443,21 +460,22 @@ export default {
                 });
             }).then((currentToken) => {
                     if (!currentToken) {
-                        alertService.error('Failed to get notification token. Please refresh and try again.');
+                        if (!silent) alertService.error('Failed to get notification token. Please refresh and try again.');
                         return;
                     }
                     return axios.post('/frontend/device-token/web', { token: currentToken })
                         .then(() => {
-                            alertService.success('Notifications enabled.');
+                            if (!silent) alertService.success('Notifications enabled.');
                         })
                         .catch((error) => {
-                            // Don't redirect here; global 401 handler already does correct admin-only behavior.
-                            const msg = error?.response?.data?.message || 'Failed to save notification token.';
-                            alertService.error(msg);
+                            if (!silent) {
+                                const msg = error?.response?.data?.message || 'Failed to save notification token.';
+                                alertService.error(msg);
+                            }
                         });
                 })
                 .catch(() => {
-                    alertService.error('Failed to get notification token. Please refresh and try again.');
+                    if (!silent) alertService.error('Failed to get notification token. Please refresh and try again.');
                 });
         },
         textShortener: function (text, number = 30) {
