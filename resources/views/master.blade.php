@@ -45,10 +45,11 @@
 
     @if (!blank($analytics))
         @foreach ($analytics as $analytic)
-            @if (!blank($analytic->analyticSections))
-                @foreach ($analytic->analyticSections as $section)
-                    @if ($section->section == \App\Enums\AnalyticSection::HEAD)
-                        {!! $section->data !!}
+            @php $sections = $analytic->analyticSections ?? collect(); @endphp
+            @if (!blank($sections))
+                @foreach ($sections as $section)
+                    @if (isset($section->section) && $section->section == \App\Enums\AnalyticSection::HEAD)
+                        {!! $section->data ?? '' !!}
                     @endif
                 @endforeach
             @endif
@@ -59,10 +60,11 @@
 <body>
     @if (!blank($analytics))
         @foreach ($analytics as $analytic)
-            @if (!blank($analytic->analyticSections))
-                @foreach ($analytic->analyticSections as $section)
-                    @if ($section->section == \App\Enums\AnalyticSection::BODY)
-                        {!! $section->data !!}
+            @php $sections = $analytic->analyticSections ?? collect(); @endphp
+            @if (!blank($sections))
+                @foreach ($sections as $section)
+                    @if (isset($section->section) && $section->section == \App\Enums\AnalyticSection::BODY)
+                        {!! $section->data ?? '' !!}
                     @endif
                 @endforeach
             @endif
@@ -75,10 +77,11 @@
 
     @if (!blank($analytics))
         @foreach ($analytics as $analytic)
-            @if (!blank($analytic->analyticSections))
-                @foreach ($analytic->analyticSections as $section)
-                    @if ($section->section == \App\Enums\AnalyticSection::FOOTER)
-                        {!! $section->data !!}
+            @php $sections = $analytic->analyticSections ?? collect(); @endphp
+            @if (!blank($sections))
+                @foreach ($sections as $section)
+                    @if (isset($section->section) && $section->section == \App\Enums\AnalyticSection::FOOTER)
+                        {!! $section->data ?? '' !!}
                     @endif
                 @endforeach
             @endif

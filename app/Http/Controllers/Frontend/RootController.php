@@ -12,20 +12,31 @@ use Dipokhalder\Settings\Facades\Settings;
 class RootController extends Controller
 {
 
-    public function index(): \Illuminate\Contracts\View\Factory | \Illuminate\Contracts\View\View | \Illuminate\Contracts\Foundation\Application
+    public function index(): \Illuminate\Contracts\View\Factory | \Illuminate\Contracts\View\View | \Illuminate\Contracts\Foundation\Application | \Illuminate\Http\Response
     {
         try {
-            $analytics = Analytic::with('analyticSections')->where(['status' => Status::ACTIVE])->get();
+            try {
+                $analytics = Analytic::with('analyticSections')->where(['status' => Status::ACTIVE])->get();
+            } catch (\Throwable $e) {
+                $analytics = collect();
+            }
+            try {
+                $themeFavicon = ThemeSetting::where(['key' => 'theme_favicon_logo'])->first();
+                $favIcon = $themeFavicon?->faviconLogo ?? null;
+            } catch (\Throwable $e) {
+                $favIcon = null;
+            }
+            return view('master', ['analytics' => $analytics, 'favicon' => $favIcon]);
         } catch (\Throwable $e) {
-            $analytics = collect();
+            \Illuminate\Support\Facades\Log::error('RootController::index failed', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return response()->view('master-fallback', [
+                'companyName' => 'Restaurant POS',
+                'pathSegment' => request()->path() ? explode('/', request()->path())[0] ?? '' : '',
+            ], 200);
         }
-        try {
-            $themeFavicon = ThemeSetting::where(['key' => 'theme_favicon_logo'])->first();
-            $favIcon = $themeFavicon?->faviconLogo ?? null;
-        } catch (\Throwable $e) {
-            $favIcon = null;
-        }
-        return view('master', ['analytics' => $analytics, 'favicon' => $favIcon]);
     }
 
     public function manifest(): \Illuminate\Http\JsonResponse
