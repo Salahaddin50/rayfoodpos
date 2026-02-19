@@ -11,6 +11,16 @@ let config = {
  };
 firebase.initializeApp(config);
 const messaging = firebase.messaging();
+
+// Show notification from page (test button + foreground order popup); PWA-safe (no new Notification() in window)
+self.addEventListener('message', (event) => {
+    if (event.data?.type === 'SHOW_NOTIFICATION' && event.data.title) {
+        const options = event.data.options || {};
+        if (typeof options.silent === 'undefined') options.silent = false;
+        self.registration.showNotification(event.data.title, options).catch(() => {});
+    }
+});
+
 messaging.onBackgroundMessage((payload) => {
     const notificationTitle = payload.notification?.title || 'New order';
     const notificationBody = payload.notification?.body || '';
