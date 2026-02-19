@@ -318,12 +318,11 @@ export default {
                         }
                     };
                     // PWA-safe: use service worker to show notification (new Notification() is illegal in PWA)
-                    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-                        navigator.serviceWorker.controller.postMessage({
-                            type: 'SHOW_NOTIFICATION',
-                            title: notificationTitle,
-                            options: notificationOptions
-                        });
+                    if (navigator.serviceWorker) {
+                        navigator.serviceWorker.ready.then((reg) => {
+                            const worker = reg.active || reg.installing || reg.waiting;
+                            if (worker) worker.postMessage({ type: 'SHOW_NOTIFICATION', title: notificationTitle, options: notificationOptions });
+                        }).catch(() => {});
                     }
 
                     const topicName = payload.data?.topicName || payload.data?.topicname;
@@ -434,24 +433,15 @@ export default {
             const messaging = this.firebase.messaging;
             if (!messaging) return Promise.resolve();
 
-            // Use firebase-messaging-sw.js for FCM so push is received by the SW that has onBackgroundMessage.
-            // On /admin/ the controlling SW is sw-admin.js; getToken() would otherwise use that and push would never show.
-            const getFcmSwRegistration = () => {
-                return navigator.serviceWorker.getRegistrations().then((regs) => {
-                    const fcmReg = regs.find((r) => r.active && r.active.scriptURL && r.active.scriptURL.includes('firebase-messaging-sw'));
-                    if (fcmReg) return fcmReg;
-                    return navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
-                });
-            };
+            // Must use firebase-messaging-sw.js for FCM; with multiple SWs (sw-admin.js), getToken needs explicit registration
+            const swRegPromise = navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
 
-            return getFcmSwRegistration()
-                .then((swRegistration) => {
-                    return getToken(messaging, {
-                        vapidKey: this.setting.notification_fcm_public_vapid_key,
-                        serviceWorkerRegistration: swRegistration,
-                    });
-                })
-                .then((currentToken) => {
+            return swRegPromise.then((reg) => {
+                return getToken(messaging, {
+                    vapidKey: this.setting.notification_fcm_public_vapid_key,
+                    serviceWorkerRegistration: reg
+                });
+            }).then((currentToken) => {
                     if (!currentToken) {
                         alertService.error('Failed to get notification token. Please refresh and try again.');
                         return;
@@ -461,19 +451,13 @@ export default {
                             alertService.success('Notifications enabled.');
                         })
                         .catch((error) => {
+                            // Don't redirect here; global 401 handler already does correct admin-only behavior.
                             const msg = error?.response?.data?.message || 'Failed to save notification token.';
                             alertService.error(msg);
                         });
                 })
-                .catch((err) => {
-                    const msg = err?.message || '';
-                    if (msg.includes('messaging/permission-blocked') || msg.includes('permission-blocked')) {
-                        alertService.error('Notifications are blocked. Please allow notifications for this site in browser settings.');
-                    } else if (msg.includes('messaging/failed-service-worker-registration') || msg.includes('service worker')) {
-                        alertService.error('Push setup failed. Ensure Firebase config is saved and refresh the page, then try again.');
-                    } else {
-                        alertService.error('Failed to get notification token. Please refresh and try again.');
-                    }
+                .catch(() => {
+                    alertService.error('Failed to get notification token. Please refresh and try again.');
                 });
         },
         textShortener: function (text, number = 30) {
