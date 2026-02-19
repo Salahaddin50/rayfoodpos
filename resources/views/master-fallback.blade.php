@@ -27,31 +27,13 @@
         <default-component />
     </div>
 
-    @php
-        $manifestPath = public_path('build/manifest.json');
-        $manifestExists = file_exists($manifestPath);
-        $buildCss = null;
-        $buildJs = null;
-        if ($manifestExists) {
-            $m = @json_decode(file_get_contents($manifestPath), true);
-            if ($m) {
-                $buildJs = $m['resources/js/app.js']['file'] ?? null;
-                $buildCss = $m['resources/css/app.css']['file'] ?? ($m['resources/js/app.js']['css'][0] ?? null);
-            }
-        }
-    @endphp
-    @if ($manifestExists && $buildJs)
-        <link rel="stylesheet" href="{{ asset('build/'.$buildCss) }}" type="text/css">
-        <script type="module" src="{{ asset('build/'.$buildJs) }}"></script>
-    @else
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @endif
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <script>
-        const APP_URL = "{{ config('app.url', '') }}";
-        const APP_KEY = "{{ config('app.key', '') }}";
-        const GOOGLE_TOKEN = "{{ env('VITE_GOOGLE_MAP_KEY', '') }}";
-        const APP_DEMO = "{{ env('VITE_DEMO', '') }}";
+        const APP_URL = "{{ env('VITE_HOST') }}";
+        const APP_KEY = "{{ env('VITE_API_KEY') }}";
+        const GOOGLE_TOKEN = "{{ env('VITE_GOOGLE_MAP_KEY') }}";
+        const APP_DEMO = "{{ env('VITE_DEMO') }}";
     </script>
 
     <script src="{{ asset('themes/default/js/drawer.js') }}" defer></script>

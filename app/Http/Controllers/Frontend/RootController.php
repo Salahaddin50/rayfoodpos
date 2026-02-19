@@ -26,28 +26,16 @@ class RootController extends Controller
             } catch (\Throwable $e) {
                 $favIcon = null;
             }
-            // Render view inside try so exceptions from view (e.g. @vite when manifest missing) are caught
-            $html = view('master', ['analytics' => $analytics, 'favicon' => $favIcon])->render();
-            return response($html, 200, ['Content-Type' => 'text/html; charset=UTF-8']);
+            return view('master', ['analytics' => $analytics, 'favicon' => $favIcon]);
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('RootController::index failed', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            try {
-                $path = request()->path();
-                $pathSegment = $path ? (explode('/', $path)[0] ?? '') : '';
-                $html = view('master-fallback', [
-                    'companyName' => 'Restaurant POS',
-                    'pathSegment' => $pathSegment,
-                ])->render();
-                return response($html, 200, ['Content-Type' => 'text/html; charset=UTF-8']);
-            } catch (\Throwable $fallbackException) {
-                \Illuminate\Support\Facades\Log::error('RootController::master-fallback failed', [
-                    'message' => $fallbackException->getMessage(),
-                ]);
-                return response('<html><head><meta charset="UTF-8"><title>Loading</title></head><body><div id="app">Loading...</div><script>setTimeout(function(){ window.location.reload(); }, 2000);</script></body></html>', 200, ['Content-Type' => 'text/html; charset=UTF-8']);
-            }
+            return response()->view('master-fallback', [
+                'companyName' => 'Restaurant POS',
+                'pathSegment' => request()->path() ? explode('/', request()->path())[0] ?? '' : '',
+            ], 200);
         }
     }
 
