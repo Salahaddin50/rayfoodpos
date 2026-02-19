@@ -27,11 +27,24 @@
         <default-component />
     </div>
 
-    @if (file_exists(public_path('build/manifest.json')))
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @php
+        $manifestPath = public_path('build/manifest.json');
+        $manifestExists = file_exists($manifestPath);
+        $buildCss = null;
+        $buildJs = null;
+        if ($manifestExists) {
+            $m = @json_decode(file_get_contents($manifestPath), true);
+            if ($m) {
+                $buildJs = $m['resources/js/app.js']['file'] ?? null;
+                $buildCss = $m['resources/css/app.css']['file'] ?? ($m['resources/js/app.js']['css'][0] ?? null);
+            }
+        }
+    @endphp
+    @if ($manifestExists && $buildJs)
+        <link rel="stylesheet" href="{{ asset('build/'.$buildCss) }}" type="text/css">
+        <script type="module" src="{{ asset('build/'.$buildJs) }}"></script>
     @else
-        <link rel="stylesheet" href="{{ asset('build/assets/app.css') }}">
-        <script type="module" src="{{ asset('build/assets/app.js') }}"></script>
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
     @endif
 
     <script>

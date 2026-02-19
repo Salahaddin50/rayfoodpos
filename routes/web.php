@@ -47,6 +47,23 @@ Route::get('/firebase-messaging-sw.js', function () {
         'Service-Worker-Allowed' => '/',
     ]);
 })->middleware(['installed'])->name('firebase-messaging-sw');
+// Serve Vite build assets (CSS/JS) with correct MIME type so they are not caught by SPA catch-all
+Route::get('/build/{path}', function (string $path) {
+    $path = str_replace(['..', '\\'], ['', '/'], $path);
+    $file = public_path('build/' . $path);
+    $buildDir = realpath(public_path('build'));
+    if (!$buildDir || !\Illuminate\Support\Facades\File::exists($file) || !\Illuminate\Support\Facades\File::isFile($file) || strpos(realpath($file), $buildDir) !== 0) {
+        abort(404);
+    }
+    $mime = match (strtolower(pathinfo($path, PATHINFO_EXTENSION))) {
+        'css' => 'text/css',
+        'js' => 'application/javascript',
+        'mjs' => 'application/javascript',
+        default => \Illuminate\Support\Facades\File::mimeType($file),
+    };
+    return response()->file($file, ['Content-Type' => $mime]);
+})->where('path', '.*')->middleware(['installed']);
+
 Route::get('/', [RootController::class, 'index'])->middleware(['installed'])->name('home');
 Route::prefix('payment')->name('payment.')->middleware(['installed'])->group(function () {
     Route::get('/{order}/pay', [PaymentController::class, 'index'])->name('index');
