@@ -20,16 +20,14 @@ class NotificationService
         $this->envService = $envEditor;
     }
 
-    /**
-     * @throws Exception
-     */
-    public function list()
+    public function list(): array
     {
         try {
-            return Settings::group('notification')->all();
-        } catch (Exception $exception) {
-            Log::info($exception->getMessage());
-            throw new Exception(QueryExceptionLibrary::message($exception), 422);
+            $data = Settings::group('notification')->all();
+            return is_array($data) ? $data : [];
+        } catch (\Throwable $exception) {
+            Log::warning('NotificationService::list failed: ' . $exception->getMessage());
+            return [];
         }
     }
 

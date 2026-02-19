@@ -43,6 +43,10 @@ class NotificationResource extends JsonResource
 
     public function notificationFile($key)
     {
-        return NotificationSetting::where(['key' => $key])->first();
+        try {
+            return NotificationSetting::where(['key' => $key])->first();
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 }

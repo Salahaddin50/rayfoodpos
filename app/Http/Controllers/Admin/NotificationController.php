@@ -31,12 +31,27 @@ class NotificationController extends AdminController
         ];
     }
 
-    public function index(): \Illuminate\Http\Response | NotificationResource | \Illuminate\Contracts\Foundation\Application | \Illuminate\Contracts\Routing\ResponseFactory
+    public function index(): \Illuminate\Http\JsonResponse | NotificationResource
     {
         try {
-            return new NotificationResource($this->notificationService->list());
-        } catch (Exception $exception) {
-            return response(['status' => false, 'message' => $exception->getMessage()], 422);
+            $data = $this->notificationService->list();
+            return new NotificationResource($data);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('NotificationController::index failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json([
+                'status' => true,
+                'data' => [
+                    'notification_fcm_api_key' => '',
+                    'notification_fcm_public_vapid_key' => '',
+                    'notification_fcm_auth_domain' => '',
+                    'notification_fcm_project_id' => '',
+                    'notification_fcm_storage_bucket' => '',
+                    'notification_fcm_messaging_sender_id' => '',
+                    'notification_fcm_app_id' => '',
+                    'notification_fcm_measurement_id' => '',
+                    'notification_fcm_json_file' => '',
+                ],
+            ], 200);
         }
     }
 
