@@ -37,29 +37,27 @@ class FirebaseService
 
             foreach ($fcmTokens as $fcmToken) {
 
-                $notification = [
-                    'title' => $data->title ?? 'Notification',
-                    'body' => $data->description ?? '',
+                // FCM data values must be strings; include url for notification click
+                $url = !empty($data->url) ? (string) $data->url : '/admin/table-orders';
+                $notificationPayload = [
+                    'title' => (string) ($data->title ?? ''),
+                    'body' => (string) ($data->description ?? ''),
                 ];
                 if (!empty($data->image)) {
-                    $notification['image'] = (string) $data->image;
+                    $notificationPayload['image'] = (string) $data->image;
                 }
                 $payload = [
                     'message' => [
                         'token' => $fcmToken,
-                        'notification' => $notification,
+                        'notification' => $notificationPayload,
                         'data' => [
                             'title' => (string) ($data->title ?? ''),
                             'body' => (string) ($data->description ?? ''),
-                            'sound' => 'default',
-                            'image' => (string) ($data->image ?? ''),
+                            'url' => $url,
                             'topicName' => (string) $topicName,
-                            'url' => (string) ($data->url ?? '/admin/table-orders'),
                         ],
                         'webpush' => [
-                            "headers" => [
-                                "Urgency" => "high"
-                            ]
+                            'headers' => ['Urgency' => 'high'],
                         ],
                     ],
                 ];
