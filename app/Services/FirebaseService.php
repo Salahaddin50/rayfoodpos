@@ -37,14 +37,17 @@ class FirebaseService
 
             foreach ($fcmTokens as $fcmToken) {
 
+                $notification = [
+                    'title' => $data->title ?? 'Notification',
+                    'body' => $data->description ?? '',
+                ];
+                if (!empty($data->image)) {
+                    $notification['image'] = (string) $data->image;
+                }
                 $payload = [
                     'message' => [
                         'token' => $fcmToken,
-                        'notification' => [
-                            'title' => $data->title,
-                            'body' => $data->description,
-                            'image' => $data->image ?? null,
-                        ],
+                        'notification' => $notification,
                         'data' => [
                             'title' => (string) ($data->title ?? ''),
                             'body' => (string) ($data->description ?? ''),

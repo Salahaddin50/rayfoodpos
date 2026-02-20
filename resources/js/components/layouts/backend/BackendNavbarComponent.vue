@@ -282,78 +282,20 @@ export default {
             }).catch();
 
             this.loading.isActive = false;
+
+            // Initialize Firebase after settings are loaded (short delay for auth to settle)
+            this.initPushNotificationsWhenReady();
         }).catch((err) => {
             this.loading.isActive = false;
+            this.initPushNotificationsWhenReady();
         });
 
-
-
+        // Fallback: if frontendSetting never resolves, try init after 8 sec
         window.setTimeout(() => {
-            // Initialize Firebase messaging and request notifications by default when possible.
-            if (this.$store.getters.authStatus && this.isWebPushConfigured()) {
-                this.initFirebaseMessaging();
-
-                const permission = this.getNotificationPermission();
-                if (permission === 'granted') {
-                    // Already granted: register token silently (no popup on failure).
-                    this.registerWebPushToken(true);
-                    this.webPush.canEnable = false;
-                } else if (permission === 'default') {
-                    // Not asked yet: request permission automatically so user can enable by default.
-                    this.requestNotificationPermissionByDefault();
-                } else {
-                    this.webPush.canEnable = true;
-                }
-
-                const messaging = this.firebase.messaging;
-                if (!messaging) return;
-
-                onMessage(messaging, (payload) => {
-                    // Refresh permission in case it was loaded after mount
-                    this.orderPermissionCheck();
-                    const notificationTitle = payload.notification?.title || 'New order';
-                    const notificationBody = payload.notification?.body || '';
-                    const notificationOptions = {
-                        body: notificationBody,
-                        icon: '/images/default/firebase-logo.png',
-                        data: {
-                            url: payload.data?.url || '/admin/table-orders'
-                        }
-                    };
-                    // PWA-safe: use service worker to show notification (new Notification() is illegal in PWA)
-                    if (navigator.serviceWorker) {
-                        navigator.serviceWorker.ready.then((reg) => {
-                            const worker = reg.active || reg.installing || reg.waiting;
-                            if (worker) worker.postMessage({ type: 'SHOW_NOTIFICATION', title: notificationTitle, options: notificationOptions });
-                        }).catch(() => {});
-                    }
-
-                    const topicName = payload.data?.topicName || payload.data?.topicname;
-                    if (topicName === 'new-order-found') {
-                        this.orderNotificationStatus = true;
-                        this.orderNotificationMessage = notificationBody;
-                        this.orderNotification.url = payload.data?.url || 'table-orders';
-                        const audioPath = this.setting?.notification_audio || '/audio/notification.mp3';
-                        [0, 2000, 4000].forEach((delay) => {
-                            setTimeout(() => {
-                                const a = new Audio(audioPath);
-                                a.play().catch(() => {});
-                                setTimeout(() => { a.pause(); a.currentTime = 0; }, 6000);
-                            }, delay);
-                        });
-                    }
-                });
-                
-                // Listen for navigation messages from service worker
-                navigator.serviceWorker.addEventListener('message', (event) => {
-                    if (event.data.type === 'NAVIGATE' && event.data.url) {
-                        this.$router.push(event.data.url).catch(() => {
-                            window.location.href = event.data.url;
-                        });
-                    }
-                });
+            if (!this.firebase.initialized && this.$store.getters.authStatus && this.isWebPushConfigured()) {
+                this.initPushNotificationsWhenReady();
             }
-        }, 5000);
+        }, 8000);
     },
     methods: {
         getNotificationPermission() {
@@ -395,6 +337,71 @@ export default {
                 this.firebase.initialized = false;
                 this.firebase.messaging = null;
             }
+        },
+        initPushNotificationsWhenReady() {
+            if (!this.$store.getters.authStatus || !this.isWebPushConfigured()) return;
+            if (this.firebase.initialized && this.firebase.messaging) return;
+
+            this.initFirebaseMessaging();
+            const messaging = this.firebase.messaging;
+            if (!messaging) return;
+
+            const permission = this.getNotificationPermission();
+            if (permission === 'granted') {
+                this.registerWebPushToken(true);
+                this.webPush.canEnable = false;
+            } else if (permission === 'default') {
+                this.requestNotificationPermissionByDefault();
+            } else {
+                this.webPush.canEnable = true;
+            }
+
+            const isPWA = window.matchMedia('(display-mode: standalone)').matches || !!window.navigator.standalone;
+            onMessage(messaging, (payload) => {
+                this.orderPermissionCheck();
+                const notificationTitle = payload.notification?.title || 'New order';
+                const notificationBody = payload.notification?.body || '';
+                const notificationOptions = {
+                    body: notificationBody,
+                    icon: '/images/default/firebase-logo.png',
+                    data: { url: payload.data?.url || '/admin/table-orders' }
+                };
+                if (navigator.serviceWorker) {
+                    navigator.serviceWorker.ready.then((reg) => {
+                        const worker = reg.active || reg.installing || reg.waiting;
+                        if (worker) worker.postMessage({ type: 'SHOW_NOTIFICATION', title: notificationTitle, options: notificationOptions });
+                    }).catch(() => {});
+                }
+                // Desktop fallback: new Notification() when not PWA (SW may not handle message)
+                if (!isPWA && Notification.permission === 'granted') {
+                    setTimeout(() => {
+                        try { new Notification(notificationTitle, notificationOptions); } catch (e) { /* ignore */ }
+                    }, 200);
+                }
+
+                const topicName = payload.data?.topicName || payload.data?.topicname;
+                if (topicName === 'new-order-found') {
+                    this.orderNotificationStatus = true;
+                    this.orderNotificationMessage = notificationBody;
+                    this.orderNotification.url = payload.data?.url || 'table-orders';
+                    const audioPath = this.setting?.notification_audio || '/audio/notification.mp3';
+                    [0, 2000, 4000].forEach((delay) => {
+                        setTimeout(() => {
+                            const a = new Audio(audioPath);
+                            a.play().catch(() => {});
+                            setTimeout(() => { a.pause(); a.currentTime = 0; }, 6000);
+                        }, delay);
+                    });
+                }
+            });
+
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                if (event.data?.type === 'NAVIGATE' && event.data.url) {
+                    this.$router.push(event.data.url).catch(() => {
+                        window.location.href = event.data.url;
+                    });
+                }
+            });
         },
         /** Request permission automatically after login (when permission is still "default"). */
         requestNotificationPermissionByDefault() {
@@ -450,10 +457,8 @@ export default {
             const messaging = this.firebase.messaging;
             if (!messaging) return Promise.resolve();
 
-            // Must use firebase-messaging-sw.js for FCM; with multiple SWs (sw-admin.js), getToken needs explicit registration
             const swRegPromise = navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
-
-            return swRegPromise.then((reg) => {
+            return swRegPromise.then((reg) => (reg.ready ? reg.ready : Promise.resolve(reg)).then(() => reg)).then((reg) => {
                 return getToken(messaging, {
                     vapidKey: this.setting.notification_fcm_public_vapid_key,
                     serviceWorkerRegistration: reg
