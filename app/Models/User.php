@@ -69,6 +69,7 @@ class User extends Authenticatable implements HasMedia
         'is_guest'          => 'integer',
         'status'            => 'integer',
         'email_verified_at' => 'datetime',
+        'web_tokens'        => 'array',
     ];
 
     /**

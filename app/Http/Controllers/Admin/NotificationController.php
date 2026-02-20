@@ -56,10 +56,14 @@ class NotificationController extends AdminController
     public function testPush(Request $request): JsonResponse
     {
         $user = $request->user();
-        $tokens = array_values(array_filter([
-            $user->web_token ?? null,
-            $user->device_token ?? null,
-        ]));
+        $webTokens = array_filter(array_merge(
+            !empty($user->web_token) ? [$user->web_token] : [],
+            is_array($user->web_tokens ?? null) ? $user->web_tokens : []
+        ));
+        $tokens = array_values(array_unique(array_filter(array_merge(
+            $webTokens,
+            [$user->device_token ?? null]
+        ))));
 
         if (empty($tokens)) {
             return new JsonResponse([

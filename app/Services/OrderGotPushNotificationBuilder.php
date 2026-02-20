@@ -34,25 +34,26 @@ class OrderGotPushNotificationBuilder
 
             $i             = 0;
             $fcmTokenArray = [];
+            $addWebTokens = function ($users) use (&$fcmTokenArray, &$i) {
+                foreach ($users as $u) {
+                    $tokens = array_filter(array_merge(
+                        !empty($u->web_token) ? [$u->web_token] : [],
+                        is_array($u->web_tokens) ? $u->web_tokens : []
+                    ));
+                    foreach (array_unique($tokens) as $t) {
+                        $fcmTokenArray[$i] = $t;
+                        $i++;
+                    }
+                }
+            };
             if (!blank($fcmWebDeviceTokenAllAdmins)) {
-                foreach ($fcmWebDeviceTokenAllAdmins as $fcmWebDeviceTokenAllAdmin) {
-                    $fcmTokenArray[$i] = $fcmWebDeviceTokenAllAdmin->web_token;
-                    $i++;
-                }
+                $addWebTokens($fcmWebDeviceTokenAllAdmins);
             }
-
             if (!blank($fcmWebDeviceTokenBranchAdmins)) {
-                foreach ($fcmWebDeviceTokenBranchAdmins as $fcmWebDeviceTokenBranchAdmin) {
-                    $fcmTokenArray[$i] = $fcmWebDeviceTokenBranchAdmin->web_token;
-                    $i++;
-                }
+                $addWebTokens($fcmWebDeviceTokenBranchAdmins);
             }
-
             if (!blank($fcmWebDeviceTokenBranchManagers)) {
-                foreach ($fcmWebDeviceTokenBranchManagers as $fcmWebDeviceTokenBranchManager) {
-                    $fcmTokenArray[$i] = $fcmWebDeviceTokenBranchManager->web_token;
-                    $i++;
-                }
+                $addWebTokens($fcmWebDeviceTokenBranchManagers);
             }
 
             if (!blank($fcmMobileDeviceTokenAllAdmins)) {
@@ -91,7 +92,11 @@ class OrderGotPushNotificationBuilder
                     $firebase = new FirebaseService();
                     $firebase->sendNotification($pushNotification, $fcmTokenArray, "new-order-found");
                 } catch (Exception $e) {
-                    Log::warning('OrderGotPushNotification failed: ' . $e->getMessage());
+                    Log::error('OrderGotPushNotification failed', [
+                        'order_id' => $this->orderId,
+                        'message' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString(),
+                    ]);
                 }
             }
 

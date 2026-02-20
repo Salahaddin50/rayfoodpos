@@ -11,11 +11,15 @@ class SendOrderGotPushNotification
 {
     public function handle(SendOrderGotPush $event)
     {
-        try{
+        try {
             $orderPushNotificationBuilderService = new OrderGotPushNotificationBuilder($event->info['order_id']);
             $orderPushNotificationBuilderService->send();
-        } catch(\Throwable $e) {
-            Log::info($e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('SendOrderGotPushNotification failed', [
+                'order_id' => $event->info['order_id'] ?? null,
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
         }
     }
 }
