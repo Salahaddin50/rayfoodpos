@@ -373,12 +373,14 @@ export default {
                     return;
                 }
                 console.log('Initializing Firebase...');
+                const senderIdFromAppId = String(this.setting.notification_fcm_app_id || '').split(':')[1] || '';
                 const firebaseConfig = {
                     apiKey: this.setting.notification_fcm_api_key,
                     authDomain: this.setting.notification_fcm_auth_domain,
                     projectId: this.setting.notification_fcm_project_id,
                     storageBucket: this.setting.notification_fcm_storage_bucket,
-                    messagingSenderId: this.setting.notification_fcm_messaging_sender_id,
+                    // Keep sender id consistent with app id to avoid browser subscribe failures.
+                    messagingSenderId: senderIdFromAppId || this.setting.notification_fcm_messaging_sender_id,
                     appId: this.setting.notification_fcm_app_id,
                     measurementId: this.setting.notification_fcm_measurement_id || undefined,
                 };
@@ -429,6 +431,31 @@ export default {
                 alertService.error('Notification permission request failed.');
             });
         },
+        waitForSwActivation(registration) {
+            if (registration.active) return Promise.resolve(registration);
+            return new Promise((resolve, reject) => {
+                const sw = registration.installing || registration.waiting;
+                if (!sw) return reject(new Error('No service worker instance to activate'));
+                const timeout = setTimeout(() => reject(new Error('FCM service worker activation timed out')), 15000);
+                sw.addEventListener('statechange', function onStateChange() {
+                    if (sw.state === 'activated') {
+                        sw.removeEventListener('statechange', onStateChange);
+                        clearTimeout(timeout);
+                        resolve(registration);
+                    } else if (sw.state === 'redundant') {
+                        sw.removeEventListener('statechange', onStateChange);
+                        clearTimeout(timeout);
+                        reject(new Error('FCM service worker became redundant'));
+                    }
+                });
+            });
+        },
+        getFcmServiceWorkerRegistration() {
+            // Use a dedicated scope for FCM to avoid conflicts with /admin sw-admin.js.
+            return navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+                scope: '/firebase-cloud-messaging-push-scope'
+            }).then((registration) => this.waitForSwActivation(registration));
+        },
         registerWebPushToken() {
             const messaging = this.firebase.messaging;
             if (!messaging) {
@@ -436,7 +463,7 @@ export default {
                 return Promise.resolve();
             }
 
-            const vapidKey = (this.setting.notification_fcm_public_vapid_key || '').trim();
+            const vapidKey = (this.setting.notification_fcm_public_vapid_key || '').replace(/\s+/g, '').trim();
             const senderId = this.setting.notification_fcm_messaging_sender_id;
             console.log('VAPID key length:', vapidKey.length, '| starts with:', vapidKey.substring(0, 5));
             console.log('Sender ID:', senderId);
@@ -446,13 +473,23 @@ export default {
                 return Promise.resolve();
             }
 
-            console.log('Calling getToken (Firebase will handle SW internally)...');
-            return getToken(messaging, {
-                vapidKey: vapidKey
+            const appIdSender = String(this.setting.notification_fcm_app_id || '').split(':')[1] || '';
+            if (appIdSender && String(senderId) !== String(appIdSender)) {
+                alertService.error('Messaging Sender ID does not match App ID. Please save matching Firebase values in Notification settings.');
+                return Promise.reject(new Error('Sender ID mismatch with App ID'));
+            }
+
+            console.log('Registering dedicated FCM service worker...');
+            return this.getFcmServiceWorkerRegistration().then((registration) => {
+                console.log('Calling getToken with explicit FCM service worker...');
+                return getToken(messaging, {
+                    vapidKey: vapidKey,
+                    serviceWorkerRegistration: registration
+                });
             }).then((currentToken) => {
                     if (!currentToken) {
                         alertService.error('Failed to get notification token.');
-                        return;
+                        return Promise.reject(new Error('Empty FCM token'));
                     }
                     console.log('FCM token received:', currentToken.substring(0, 20) + '...');
                     return axios.post('/frontend/device-token/web', { token: currentToken })
@@ -480,6 +517,7 @@ export default {
                     } else {
                         alertService.error('Failed to enable notifications: ' + (error.message || 'Unknown error'));
                     }
+                    return Promise.reject(error);
                 });
         },
         handleOrderNotification(title, body, url, topicName) {

@@ -277,19 +277,27 @@ export default {
                 
                 // Also show local notification to confirm browser permission works
                 if (navigator.serviceWorker) {
-                    navigator.serviceWorker.ready.then((reg) => {
-                        reg.showNotification('Test Notification (Local)', { 
-                            body: 'Your browser notification permission is working.', 
-                            icon: '/images/default/firebase-logo.png',
-                            badge: '/images/default/firebase-logo.png',
-                            requireInteraction: true,
-                            tag: 'test-notification'
-                        }).catch((err) => {
+                    navigator.serviceWorker.getRegistration('/firebase-cloud-messaging-push-scope')
+                        .then((reg) => reg || navigator.serviceWorker.getRegistration('/admin/'))
+                        .then((reg) => {
+                            if (reg && reg.active && typeof reg.showNotification === 'function') {
+                                return reg.showNotification('Test Notification (Local)', {
+                                    body: 'Your browser notification permission is working.',
+                                    icon: '/images/default/firebase-logo.png',
+                                    badge: '/images/default/firebase-logo.png',
+                                    requireInteraction: true,
+                                    tag: 'test-notification'
+                                });
+                            }
+                            // Fallback when SW registration is not active yet.
+                            return Promise.resolve(new Notification('Test Notification (Local)', {
+                                body: 'Your browser notification permission is working.',
+                                icon: '/images/default/firebase-logo.png'
+                            }));
+                        })
+                        .catch((err) => {
                             console.error('Local test notification error:', err);
                         });
-                    }).catch((err) => {
-                        console.error('Service worker not ready:', err);
-                    });
                 }
             }).catch((err) => {
                 this.loading.isActive = false;
