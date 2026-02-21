@@ -212,6 +212,10 @@ export default {
             webPush: {
                 canEnable: false,
                 registering: false,
+            },
+            orderPolling: {
+                timer: null,
+                lastOrderId: null,
             }
         }
     },
@@ -289,94 +293,57 @@ export default {
 
 
         window.setTimeout(() => {
-            // Initialize Firebase messaging, but DO NOT request browser permission automatically.
-            // Many browsers block Notification.requestPermission() unless triggered by a user gesture.
-            if (this.$store.getters.authStatus && this.isWebPushConfigured()) {
-                console.log('Initializing Firebase messaging...');
+            if (!this.$store.getters.authStatus) return;
+            
+            // Try Firebase push notifications
+            let pushWorking = false;
+            if (this.isWebPushConfigured()) {
                 this.initFirebaseMessaging();
-
-                // If user already granted permission, register token silently.
                 const permission = this.getNotificationPermission();
-                console.log('Notification permission:', permission);
                 
                 if (permission === 'granted') {
-                    console.log('Permission granted, registering token...');
-                    this.registerWebPushToken();
+                    this.registerWebPushToken().then(() => {
+                        pushWorking = true;
+                    }).catch(() => {
+                        console.log('Push failed, polling fallback active');
+                    });
                 }
 
-                // Show "Enable notifications" button only if permission is not granted.
                 this.webPush.canEnable = permission !== 'granted';
 
                 const messaging = this.firebase.messaging;
-                if (!messaging) {
-                    console.error('Firebase messaging not initialized');
-                    return;
+                if (messaging) {
+                    onMessage(messaging, (payload) => {
+                        this.handleOrderNotification(
+                            payload.notification?.title || 'New order',
+                            payload.notification?.body || '',
+                            payload.data?.url || '/admin/table-orders',
+                            payload.data?.topicName || payload.data?.topicname
+                        );
+                    });
                 }
+            }
 
-                console.log('Setting up onMessage listener...');
-                onMessage(messaging, (payload) => {
-                    console.log('Foreground notification received:', payload);
-                    // Refresh permission in case it was loaded after mount
-                    this.orderPermissionCheck();
-                    const notificationTitle = payload.notification?.title || 'New order';
-                    const notificationBody = payload.notification?.body || '';
-                    const notificationUrl = payload.data?.url || '/admin/table-orders';
-                    const notificationOptions = {
-                        body: notificationBody,
-                        icon: '/images/default/firebase-logo.png',
-                        badge: '/images/default/firebase-logo.png',
-                        requireInteraction: true,
-                        data: {
-                            url: notificationUrl
-                        }
-                    };
-                    
-                    // Show notification via service worker (PWA-safe, works on both mobile and desktop)
-                    if (navigator.serviceWorker) {
-                        navigator.serviceWorker.ready.then((reg) => {
-                            reg.showNotification(notificationTitle, notificationOptions).catch((err) => {
-                                console.error('Service worker notification error:', err);
-                                // Fallback: try posting message to service worker
-                                const worker = reg.active || reg.installing || reg.waiting;
-                                if (worker) worker.postMessage({ type: 'SHOW_NOTIFICATION', title: notificationTitle, options: notificationOptions });
-                            });
-                        }).catch((err) => {
-                            console.error('Service worker ready error:', err);
-                        });
-                    }
-
-                    const topicName = payload.data?.topicName || payload.data?.topicname;
-                    console.log('Topic name:', topicName);
-                    if (topicName === 'new-order-found') {
-                        this.orderNotificationStatus = true;
-                        this.orderNotificationMessage = notificationBody;
-                        this.orderNotification.url = payload.data?.url || 'table-orders';
-                        const audioPath = this.setting?.notification_audio || '/audio/notification.mp3';
-                        [0, 2000, 4000].forEach((delay) => {
-                            setTimeout(() => {
-                                const a = new Audio(audioPath);
-                                a.play().catch((err) => {
-                                    console.warn('Audio play failed:', err);
-                                });
-                                setTimeout(() => { a.pause(); a.currentTime = 0; }, 6000);
-                            }, delay);
-                        });
-                    }
-                });
-                
-                // Listen for navigation messages from service worker
+            // Always start order polling as reliable fallback
+            this.startOrderPolling();
+            
+            // Listen for navigation messages from service worker
+            if (navigator.serviceWorker) {
                 navigator.serviceWorker.addEventListener('message', (event) => {
-                    console.log('Message from service worker:', event.data);
-                    if (event.data.type === 'NAVIGATE' && event.data.url) {
+                    if (event.data?.type === 'NAVIGATE' && event.data.url) {
                         this.$router.push(event.data.url).catch(() => {
                             window.location.href = event.data.url;
                         });
                     }
                 });
-            } else {
-                console.log('Firebase not configured or user not authenticated');
             }
         }, 5000);
+    },
+    beforeUnmount() {
+        if (this.orderPolling.timer) {
+            clearInterval(this.orderPolling.timer);
+            this.orderPolling.timer = null;
+        }
     },
     methods: {
         getNotificationPermission() {
@@ -514,6 +481,93 @@ export default {
                         alertService.error('Failed to enable notifications: ' + (error.message || 'Unknown error'));
                     }
                 });
+        },
+        handleOrderNotification(title, body, url, topicName) {
+            this.orderPermissionCheck();
+            
+            // Show browser notification
+            if ('Notification' in window && Notification.permission === 'granted') {
+                try {
+                    new Notification(title, {
+                        body: body,
+                        icon: '/images/default/firebase-logo.png',
+                        requireInteraction: true,
+                    });
+                } catch (e) {
+                    // Fallback for PWA where new Notification() is blocked
+                    if (navigator.serviceWorker) {
+                        navigator.serviceWorker.ready.then((reg) => {
+                            if (reg.active) {
+                                reg.showNotification(title, {
+                                    body: body,
+                                    icon: '/images/default/firebase-logo.png',
+                                    requireInteraction: true,
+                                    data: { url: url }
+                                }).catch(() => {});
+                            }
+                        }).catch(() => {});
+                    }
+                }
+            }
+
+            // Show in-app modal and play audio
+            if (topicName === 'new-order-found' || topicName === 'order-polling') {
+                this.orderNotificationStatus = true;
+                this.orderNotificationMessage = body;
+                this.orderNotification.url = url?.replace('/admin/', '') || 'table-orders';
+                const audioPath = this.setting?.notification_audio || '/audio/notification.mp3';
+                [0, 2000, 4000].forEach((delay) => {
+                    setTimeout(() => {
+                        const a = new Audio(audioPath);
+                        a.play().catch(() => {});
+                        setTimeout(() => { a.pause(); a.currentTime = 0; }, 6000);
+                    }, delay);
+                });
+            }
+        },
+        startOrderPolling() {
+            if (this.orderPolling.timer) return;
+            
+            // Get the latest order ID first as baseline
+            axios.get('/admin/table-order', {
+                params: { paginate: 1, per_page: 1, order_column: 'id', order_by: 'desc' }
+            }).then((res) => {
+                const orders = res.data?.data || [];
+                if (orders.length > 0) {
+                    this.orderPolling.lastOrderId = orders[0].id;
+                }
+                console.log('Order polling started, baseline order ID:', this.orderPolling.lastOrderId);
+            }).catch(() => {
+                console.log('Order polling started without baseline');
+            });
+
+            this.orderPolling.timer = setInterval(() => {
+                this.pollForNewOrders();
+            }, 15000);
+        },
+        pollForNewOrders() {
+            axios.get('/admin/table-order', {
+                params: { paginate: 1, per_page: 5, order_column: 'id', order_by: 'desc' }
+            }).then((res) => {
+                const orders = res.data?.data || [];
+                if (orders.length === 0) return;
+                
+                const latestId = orders[0].id;
+                if (this.orderPolling.lastOrderId !== null && latestId > this.orderPolling.lastOrderId) {
+                    const newCount = orders.filter(o => o.id > this.orderPolling.lastOrderId).length;
+                    const message = newCount === 1 
+                        ? 'New order #' + (orders[0].order_serial_no || latestId)
+                        : newCount + ' new orders received';
+                    
+                    this.handleOrderNotification(
+                        'New Order Notification',
+                        message,
+                        '/admin/table-orders',
+                        'new-order-found'
+                    );
+                }
+                this.orderPolling.lastOrderId = latestId;
+            }).catch(() => {});
         },
         textShortener: function (text, number = 30) {
             return appService.textShortener(text, number);
