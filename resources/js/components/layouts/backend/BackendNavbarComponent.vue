@@ -420,17 +420,6 @@ export default {
                 this.firebase.messaging = getMessaging();
                 this.firebase.initialized = true;
                 console.log('Firebase initialized successfully');
-                
-                // Send config to service worker for consistency
-                if (navigator.serviceWorker?.controller) {
-                    console.log('Sending config to service worker');
-                    navigator.serviceWorker.controller.postMessage({
-                        type: 'INIT_FIREBASE',
-                        config: firebaseConfig
-                    });
-                } else {
-                    console.log('No service worker controller yet');
-                }
             } catch (e) {
                 console.error('Firebase initialization error:', e);
                 this.firebase.initialized = false;
