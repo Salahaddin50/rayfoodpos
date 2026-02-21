@@ -473,6 +473,25 @@ export default {
                 alertService.error('Notification permission request failed.');
             });
         },
+        waitForSwActive(reg, maxWait) {
+            if (reg.active) return Promise.resolve(reg);
+            return new Promise((resolve, reject) => {
+                const sw = reg.installing || reg.waiting;
+                if (!sw) return reject(new Error('No service worker installing or waiting'));
+                const timeout = setTimeout(() => reject(new Error('Service worker activation timed out')), maxWait || 10000);
+                sw.addEventListener('statechange', function onStateChange() {
+                    if (sw.state === 'activated') {
+                        sw.removeEventListener('statechange', onStateChange);
+                        clearTimeout(timeout);
+                        resolve(reg);
+                    } else if (sw.state === 'redundant') {
+                        sw.removeEventListener('statechange', onStateChange);
+                        clearTimeout(timeout);
+                        reject(new Error('Service worker became redundant'));
+                    }
+                });
+            });
+        },
         registerWebPushToken() {
             const messaging = this.firebase.messaging;
             if (!messaging) {
@@ -481,42 +500,13 @@ export default {
             }
 
             console.log('Starting token registration process...');
-            
-            // Check if firebase-messaging-sw.js is already registered
-            return navigator.serviceWorker.getRegistrations().then((registrations) => {
-                console.log('Found', registrations.length, 'existing service worker(s)');
-                const firebaseSW = registrations.find(reg => reg.active?.scriptURL?.includes('firebase-messaging-sw.js'));
-                
-                if (firebaseSW) {
-                    console.log('Firebase service worker already registered, using existing registration');
-                    return firebaseSW;
-                }
-                
-                // Only unregister non-firebase service workers to prevent conflicts
-                const unregisterPromises = registrations
-                    .filter(reg => !reg.active?.scriptURL?.includes('firebase-messaging-sw.js'))
-                    .map(reg => {
-                        console.log('Unregistering non-firebase SW:', reg.scope);
-                        return reg.unregister().catch(err => console.warn('Failed to unregister:', err));
-                    });
-                
-                return Promise.all(unregisterPromises).then(() => {
-                    console.log('Registering firebase-messaging-sw.js...');
-                    return navigator.serviceWorker.register('/firebase-messaging-sw.js', { 
-                        scope: '/',
-                        updateViaCache: 'none' 
-                    });
-                });
+
+            return navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' })
+            .then((reg) => {
+                console.log('SW registered, state:', reg.active ? 'active' : reg.installing ? 'installing' : 'waiting');
+                return this.waitForSwActive(reg, 10000);
             }).then((reg) => {
-                console.log('Service worker registered, waiting for ready state...');
-                return navigator.serviceWorker.ready.then(() => {
-                    console.log('Service worker ready');
-                    return reg;
-                });
-            }).then((reg) => {
-                console.log('Getting FCM token with VAPID key...');
-                console.log('VAPID key length:', this.setting.notification_fcm_public_vapid_key?.length);
-                
+                console.log('SW active, getting FCM token...');
                 return getToken(messaging, {
                     vapidKey: this.setting.notification_fcm_public_vapid_key,
                     serviceWorkerRegistration: reg
@@ -528,28 +518,19 @@ export default {
                         return;
                     }
                     console.log('FCM token received:', currentToken.substring(0, 20) + '...');
-                    console.log('Saving token to backend...');
                     return axios.post('/frontend/device-token/web', { token: currentToken })
                         .then(() => {
                             console.log('Token saved successfully');
                             alertService.success('Notifications enabled.');
                         })
                         .catch((error) => {
-                            console.error('Error saving token:', error);
                             const msg = error?.response?.data?.message || 'Failed to save notification token.';
                             alertService.error(msg);
                         });
                 })
                 .catch((error) => {
                     console.error('Token registration error:', error);
-                    
-                    if (error.code === 'messaging/permission-blocked') {
-                        alertService.error('Notification permission is blocked. Please enable it in browser settings.');
-                    } else if (error.message?.includes('push service')) {
-                        alertService.error('Firebase Cloud Messaging error. Please check: 1) Firebase project has Cloud Messaging enabled, 2) VAPID key is correct, 3) Try refreshing the page.');
-                    } else {
-                        alertService.error('Failed to enable notifications: ' + (error.message || 'Unknown error'));
-                    }
+                    alertService.error('Failed to enable notifications: ' + (error.message || 'Unknown error'));
                 });
         },
         textShortener: function (text, number = 30) {
