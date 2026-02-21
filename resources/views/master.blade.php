@@ -88,14 +88,7 @@
         @endforeach
     @endif
 
-    @php
-        $viteManifest = public_path('build/manifest.json');
-    @endphp
-    @if (\Illuminate\Support\Facades\File::exists($viteManifest))
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @else
-        {{-- Vite manifest missing: run "npm run build" to fix. Page loads without app bundle to avoid 500. --}}
-    @endif
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <script>
         const APP_URL = "{{ env('VITE_HOST') }}";

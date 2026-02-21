@@ -249,28 +249,30 @@ export default {
                     return;
                 }
             }
-            const title = 'Test Notification';
-            const options = { body: 'Your browser notification permission is working.', icon: '/images/default/firebase-logo.png' };
-            const isPWA = window.matchMedia('(display-mode: standalone)').matches || !!window.navigator.standalone;
-            // PWA: must use service worker (new Notification() is not allowed in PWA)
-            if (navigator.serviceWorker) {
-                navigator.serviceWorker.ready.then((reg) => {
-                    const worker = reg.active || reg.installing || reg.waiting;
-                    if (worker) worker.postMessage({ type: 'SHOW_NOTIFICATION', title, options });
-                }).catch(() => {});
-            }
-            // Desktop (non-PWA): fallback so the popup always appears; many desktop browsers use a different SW that may not handle the message
-            if (!isPWA) {
-                setTimeout(() => {
-                    try {
-                        new Notification(title, options);
-                    } catch (e) { /* ignore if not allowed */ }
-                }, 300);
-            }
+            
             this.loading.isActive = true;
+            
+            // Send test notification via backend (will trigger actual push notification)
             this.$store.dispatch('notification/testPush').then((res) => {
                 this.loading.isActive = false;
                 alertService.success(res.data.message || 'Test notification sent.');
+                
+                // Also show local notification to confirm browser permission works
+                if (navigator.serviceWorker) {
+                    navigator.serviceWorker.ready.then((reg) => {
+                        reg.showNotification('Test Notification (Local)', { 
+                            body: 'Your browser notification permission is working.', 
+                            icon: '/images/default/firebase-logo.png',
+                            badge: '/images/default/firebase-logo.png',
+                            requireInteraction: true,
+                            tag: 'test-notification'
+                        }).catch((err) => {
+                            console.error('Local test notification error:', err);
+                        });
+                    }).catch((err) => {
+                        console.error('Service worker not ready:', err);
+                    });
+                }
             }).catch((err) => {
                 this.loading.isActive = false;
                 const msg = err?.response?.data?.message || err?.message || 'Failed to send test notification.';

@@ -25,6 +25,11 @@ class OrderGotPushNotificationBuilder
     public function send(): void
     {
         if (!blank($this->order)) {
+            \Log::info('OrderGotPushNotification: Starting notification process', [
+                'order_id' => $this->orderId,
+                'branch_id' => $this->order->branch_id
+            ]);
+            
             $fcmWebDeviceTokenAllAdmins         = User::role(Role::ADMIN)->where(['branch_id' => 0])->whereNotNull('web_token')->get();
             $fcmWebDeviceTokenBranchAdmins      = User::role(Role::ADMIN)->where(['branch_id' => $this->order->branch_id])->whereNotNull('web_token')->get();
             $fcmWebDeviceTokenBranchManagers    = User::role(Role::BRANCH_MANAGER)->where(['branch_id' => $this->order->branch_id])->whereNotNull('web_token')->get();
@@ -77,6 +82,12 @@ class OrderGotPushNotificationBuilder
                 }
             }
 
+            \Log::info('OrderGotPushNotification: Collected tokens', [
+                'order_id' => $this->orderId,
+                'token_count' => count($fcmTokenArray),
+                'tokens_preview' => array_map(function($t) { return substr($t, 0, 20) . '...'; }, array_slice($fcmTokenArray, 0, 3))
+            ]);
+
             if (count($fcmTokenArray) > 0) {
                 try {
                     $notificationAlert = NotificationAlert::where(['language' => 'admin_and_branch_manager_new_order_message'])->first();
@@ -89,8 +100,19 @@ class OrderGotPushNotificationBuilder
                         'order_id'   => (string) $this->orderId,
                         'url'        => '/admin/table-orders/show/' . $this->orderId,
                     ];
+                    
+                    \Log::info('OrderGotPushNotification: Sending notification', [
+                        'order_id' => $this->orderId,
+                        'title' => $pushNotification->title,
+                        'message' => $pushNotification->description
+                    ]);
+                    
                     $firebase = new FirebaseService();
                     $firebase->sendNotification($pushNotification, $fcmTokenArray, "new-order-found");
+                    
+                    \Log::info('OrderGotPushNotification: Notification sent successfully', [
+                        'order_id' => $this->orderId
+                    ]);
                 } catch (Exception $e) {
                     Log::error('OrderGotPushNotification failed', [
                         'order_id' => $this->orderId,
@@ -98,6 +120,11 @@ class OrderGotPushNotificationBuilder
                         'trace' => $e->getTraceAsString(),
                     ]);
                 }
+            } else {
+                \Log::warning('OrderGotPushNotification: No tokens found', [
+                    'order_id' => $this->orderId,
+                    'branch_id' => $this->order->branch_id
+                ]);
             }
 
         }

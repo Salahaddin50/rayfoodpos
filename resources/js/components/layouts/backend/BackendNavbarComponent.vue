@@ -282,20 +282,101 @@ export default {
             }).catch();
 
             this.loading.isActive = false;
-
-            // Initialize Firebase after settings are loaded (short delay for auth to settle)
-            this.initPushNotificationsWhenReady();
         }).catch((err) => {
             this.loading.isActive = false;
-            this.initPushNotificationsWhenReady();
         });
 
-        // Fallback: if frontendSetting never resolves, try init after 8 sec
+
+
         window.setTimeout(() => {
-            if (!this.firebase.initialized && this.$store.getters.authStatus && this.isWebPushConfigured()) {
-                this.initPushNotificationsWhenReady();
+            // Initialize Firebase messaging, but DO NOT request browser permission automatically.
+            // Many browsers block Notification.requestPermission() unless triggered by a user gesture.
+            if (this.$store.getters.authStatus && this.isWebPushConfigured()) {
+                console.log('Initializing Firebase messaging...');
+                this.initFirebaseMessaging();
+
+                // If user already granted permission, register token silently.
+                const permission = this.getNotificationPermission();
+                console.log('Notification permission:', permission);
+                
+                if (permission === 'granted') {
+                    console.log('Permission granted, registering token...');
+                    this.registerWebPushToken();
+                }
+
+                // Show "Enable notifications" button only if permission is not granted.
+                this.webPush.canEnable = permission !== 'granted';
+
+                const messaging = this.firebase.messaging;
+                if (!messaging) {
+                    console.error('Firebase messaging not initialized');
+                    return;
+                }
+
+                console.log('Setting up onMessage listener...');
+                onMessage(messaging, (payload) => {
+                    console.log('Foreground notification received:', payload);
+                    // Refresh permission in case it was loaded after mount
+                    this.orderPermissionCheck();
+                    const notificationTitle = payload.notification?.title || 'New order';
+                    const notificationBody = payload.notification?.body || '';
+                    const notificationUrl = payload.data?.url || '/admin/table-orders';
+                    const notificationOptions = {
+                        body: notificationBody,
+                        icon: '/images/default/firebase-logo.png',
+                        badge: '/images/default/firebase-logo.png',
+                        requireInteraction: true,
+                        data: {
+                            url: notificationUrl
+                        }
+                    };
+                    
+                    // Show notification via service worker (PWA-safe, works on both mobile and desktop)
+                    if (navigator.serviceWorker) {
+                        navigator.serviceWorker.ready.then((reg) => {
+                            reg.showNotification(notificationTitle, notificationOptions).catch((err) => {
+                                console.error('Service worker notification error:', err);
+                                // Fallback: try posting message to service worker
+                                const worker = reg.active || reg.installing || reg.waiting;
+                                if (worker) worker.postMessage({ type: 'SHOW_NOTIFICATION', title: notificationTitle, options: notificationOptions });
+                            });
+                        }).catch((err) => {
+                            console.error('Service worker ready error:', err);
+                        });
+                    }
+
+                    const topicName = payload.data?.topicName || payload.data?.topicname;
+                    console.log('Topic name:', topicName);
+                    if (topicName === 'new-order-found') {
+                        this.orderNotificationStatus = true;
+                        this.orderNotificationMessage = notificationBody;
+                        this.orderNotification.url = payload.data?.url || 'table-orders';
+                        const audioPath = this.setting?.notification_audio || '/audio/notification.mp3';
+                        [0, 2000, 4000].forEach((delay) => {
+                            setTimeout(() => {
+                                const a = new Audio(audioPath);
+                                a.play().catch((err) => {
+                                    console.warn('Audio play failed:', err);
+                                });
+                                setTimeout(() => { a.pause(); a.currentTime = 0; }, 6000);
+                            }, delay);
+                        });
+                    }
+                });
+                
+                // Listen for navigation messages from service worker
+                navigator.serviceWorker.addEventListener('message', (event) => {
+                    console.log('Message from service worker:', event.data);
+                    if (event.data.type === 'NAVIGATE' && event.data.url) {
+                        this.$router.push(event.data.url).catch(() => {
+                            window.location.href = event.data.url;
+                        });
+                    }
+                });
+            } else {
+                console.log('Firebase not configured or user not authenticated');
             }
-        }, 8000);
+        }, 5000);
     },
     methods: {
         getNotificationPermission() {
@@ -320,8 +401,12 @@ export default {
         },
         initFirebaseMessaging() {
             try {
-                if (this.firebase.initialized) return;
-                initializeApp({
+                if (this.firebase.initialized) {
+                    console.log('Firebase already initialized');
+                    return;
+                }
+                console.log('Initializing Firebase...');
+                const firebaseConfig = {
                     apiKey: this.setting.notification_fcm_api_key,
                     authDomain: this.setting.notification_fcm_auth_domain,
                     projectId: this.setting.notification_fcm_project_id,
@@ -329,93 +414,28 @@ export default {
                     messagingSenderId: this.setting.notification_fcm_messaging_sender_id,
                     appId: this.setting.notification_fcm_app_id,
                     measurementId: this.setting.notification_fcm_measurement_id || undefined,
-                });
+                };
+                console.log('Firebase config:', { projectId: firebaseConfig.projectId, appId: firebaseConfig.appId });
+                initializeApp(firebaseConfig);
                 this.firebase.messaging = getMessaging();
                 this.firebase.initialized = true;
+                console.log('Firebase initialized successfully');
+                
+                // Send config to service worker for consistency
+                if (navigator.serviceWorker?.controller) {
+                    console.log('Sending config to service worker');
+                    navigator.serviceWorker.controller.postMessage({
+                        type: 'INIT_FIREBASE',
+                        config: firebaseConfig
+                    });
+                } else {
+                    console.log('No service worker controller yet');
+                }
             } catch (e) {
-                // keep silent; user can still use admin without push
+                console.error('Firebase initialization error:', e);
                 this.firebase.initialized = false;
                 this.firebase.messaging = null;
             }
-        },
-        initPushNotificationsWhenReady() {
-            if (!this.$store.getters.authStatus || !this.isWebPushConfigured()) return;
-            if (this.firebase.initialized && this.firebase.messaging) return;
-
-            this.initFirebaseMessaging();
-            const messaging = this.firebase.messaging;
-            if (!messaging) return;
-
-            const permission = this.getNotificationPermission();
-            if (permission === 'granted') {
-                this.registerWebPushToken(true);
-                this.webPush.canEnable = false;
-            } else if (permission === 'default') {
-                this.requestNotificationPermissionByDefault();
-            } else {
-                this.webPush.canEnable = true;
-            }
-
-            const isPWA = window.matchMedia('(display-mode: standalone)').matches || !!window.navigator.standalone;
-            onMessage(messaging, (payload) => {
-                this.orderPermissionCheck();
-                const notificationTitle = payload.notification?.title || 'New order';
-                const notificationBody = payload.notification?.body || '';
-                const notificationOptions = {
-                    body: notificationBody,
-                    icon: '/images/default/firebase-logo.png',
-                    data: { url: payload.data?.url || '/admin/table-orders' }
-                };
-                if (navigator.serviceWorker) {
-                    navigator.serviceWorker.ready.then((reg) => {
-                        const worker = reg.active || reg.installing || reg.waiting;
-                        if (worker) worker.postMessage({ type: 'SHOW_NOTIFICATION', title: notificationTitle, options: notificationOptions });
-                    }).catch(() => {});
-                }
-                // Desktop fallback: new Notification() when not PWA (SW may not handle message)
-                if (!isPWA && Notification.permission === 'granted') {
-                    setTimeout(() => {
-                        try { new Notification(notificationTitle, notificationOptions); } catch (e) { /* ignore */ }
-                    }, 200);
-                }
-
-                const topicName = payload.data?.topicName || payload.data?.topicname;
-                if (topicName === 'new-order-found') {
-                    this.orderNotificationStatus = true;
-                    this.orderNotificationMessage = notificationBody;
-                    this.orderNotification.url = payload.data?.url || 'table-orders';
-                    const audioPath = this.setting?.notification_audio || '/audio/notification.mp3';
-                    [0, 2000, 4000].forEach((delay) => {
-                        setTimeout(() => {
-                            const a = new Audio(audioPath);
-                            a.play().catch(() => {});
-                            setTimeout(() => { a.pause(); a.currentTime = 0; }, 6000);
-                        }, delay);
-                    });
-                }
-            });
-
-            navigator.serviceWorker.addEventListener('message', (event) => {
-                if (event.data?.type === 'NAVIGATE' && event.data.url) {
-                    this.$router.push(event.data.url).catch(() => {
-                        window.location.href = event.data.url;
-                    });
-                }
-            });
-        },
-        /** Request permission automatically after login (when permission is still "default"). */
-        requestNotificationPermissionByDefault() {
-            if (!('Notification' in window) || this.getNotificationPermission() !== 'default') return;
-            const messaging = this.firebase.messaging;
-            if (!messaging) return;
-            Notification.requestPermission().then((permission) => {
-                this.webPush.canEnable = permission !== 'granted';
-                if (permission === 'granted') {
-                    this.registerWebPushToken(true);
-                }
-            }).catch(() => {
-                this.webPush.canEnable = true;
-            });
         },
         enableWebPush() {
             if (this.webPush.registering) return;
@@ -453,34 +473,65 @@ export default {
                 alertService.error('Notification permission request failed.');
             });
         },
-        registerWebPushToken(silent = false) {
+        registerWebPushToken() {
             const messaging = this.firebase.messaging;
-            if (!messaging) return Promise.resolve();
+            if (!messaging) {
+                console.error('Firebase messaging not available');
+                return Promise.resolve();
+            }
 
-            const swRegPromise = navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
-            return swRegPromise.then((reg) => (reg.ready ? reg.ready : Promise.resolve(reg)).then(() => reg)).then((reg) => {
+            console.log('Starting token registration process...');
+            
+            // First, unregister any existing service workers to prevent conflicts
+            return navigator.serviceWorker.getRegistrations().then((registrations) => {
+                console.log('Found', registrations.length, 'existing service worker(s)');
+                const unregisterPromises = registrations.map(reg => {
+                    console.log('Unregistering:', reg.scope);
+                    return reg.unregister();
+                });
+                return Promise.all(unregisterPromises);
+            }).then(() => {
+                console.log('Registering firebase-messaging-sw.js...');
+                // Register firebase-messaging-sw.js with root scope
+                return navigator.serviceWorker.register('/firebase-messaging-sw.js', { 
+                    scope: '/',
+                    updateViaCache: 'none' 
+                });
+            }).then((reg) => {
+                console.log('Service worker registered, waiting for ready state...');
+                // Wait for service worker to be ready
+                return navigator.serviceWorker.ready.then(() => {
+                    console.log('Service worker ready');
+                    return reg;
+                });
+            }).then((reg) => {
+                console.log('Getting FCM token...');
                 return getToken(messaging, {
                     vapidKey: this.setting.notification_fcm_public_vapid_key,
                     serviceWorkerRegistration: reg
                 });
             }).then((currentToken) => {
                     if (!currentToken) {
-                        if (!silent) alertService.error('Failed to get notification token. Please refresh and try again.');
+                        console.error('No FCM token received');
+                        alertService.error('Failed to get notification token. Please refresh and try again.');
                         return;
                     }
+                    console.log('FCM token received:', currentToken.substring(0, 20) + '...');
+                    console.log('Saving token to backend...');
                     return axios.post('/frontend/device-token/web', { token: currentToken })
                         .then(() => {
-                            if (!silent) alertService.success('Notifications enabled.');
+                            console.log('Token saved successfully');
+                            alertService.success('Notifications enabled.');
                         })
                         .catch((error) => {
-                            if (!silent) {
-                                const msg = error?.response?.data?.message || 'Failed to save notification token.';
-                                alertService.error(msg);
-                            }
+                            console.error('Error saving token:', error);
+                            const msg = error?.response?.data?.message || 'Failed to save notification token.';
+                            alertService.error(msg);
                         });
                 })
-                .catch(() => {
-                    if (!silent) alertService.error('Failed to get notification token. Please refresh and try again.');
+                .catch((error) => {
+                    console.error('Token registration error:', error);
+                    alertService.error('Failed to get notification token. Please refresh and try again.');
                 });
         },
         textShortener: function (text, number = 30) {
