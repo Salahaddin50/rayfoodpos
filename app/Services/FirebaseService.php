@@ -23,7 +23,7 @@ class FirebaseService
         try {
             $notification = Settings::group('notification')->all();
 
-            $url = 'https://fcm.googleapis.com/v1/projects/' . $notification['notification_fcm_project_id'] . '/messages:send';
+            $fcmUrl = 'https://fcm.googleapis.com/v1/projects/' . $notification['notification_fcm_project_id'] . '/messages:send';
             $accessToken = $this->getAccessToken();
 
             $client  = new Client();
@@ -38,7 +38,7 @@ class FirebaseService
             foreach ($fcmTokens as $fcmToken) {
 
                 // FCM data values must be strings; include url for notification click
-                $url = !empty($data->url) ? (string) $data->url : '/admin/table-orders';
+                $targetUrl = !empty($data->url) ? (string) $data->url : '/admin/table-orders';
                 $notificationPayload = [
                     'title' => (string) ($data->title ?? ''),
                     'body' => (string) ($data->description ?? ''),
@@ -53,7 +53,7 @@ class FirebaseService
                         'data' => [
                             'title' => (string) ($data->title ?? ''),
                             'body' => (string) ($data->description ?? ''),
-                            'url' => $url,
+                            'url' => $targetUrl,
                             'topicName' => (string) $topicName,
                         ],
                         'webpush' => [
@@ -63,7 +63,7 @@ class FirebaseService
                 ];
 
                 try {
-                    $response = $client->post($url, [
+                    $response = $client->post($fcmUrl, [
                         'headers' => $headers,
                         "body"    => json_encode($payload)
                     ]);
