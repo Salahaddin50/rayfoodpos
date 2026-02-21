@@ -462,25 +462,6 @@ export default {
                 alertService.error('Notification permission request failed.');
             });
         },
-        waitForSwActive(reg, maxWait) {
-            if (reg.active) return Promise.resolve(reg);
-            return new Promise((resolve, reject) => {
-                const sw = reg.installing || reg.waiting;
-                if (!sw) return reject(new Error('No service worker installing or waiting'));
-                const timeout = setTimeout(() => reject(new Error('Service worker activation timed out')), maxWait || 10000);
-                sw.addEventListener('statechange', function onStateChange() {
-                    if (sw.state === 'activated') {
-                        sw.removeEventListener('statechange', onStateChange);
-                        clearTimeout(timeout);
-                        resolve(reg);
-                    } else if (sw.state === 'redundant') {
-                        sw.removeEventListener('statechange', onStateChange);
-                        clearTimeout(timeout);
-                        reject(new Error('Service worker became redundant'));
-                    }
-                });
-            });
-        },
         registerWebPushToken() {
             const messaging = this.firebase.messaging;
             if (!messaging) {
@@ -488,22 +469,22 @@ export default {
                 return Promise.resolve();
             }
 
-            console.log('Starting token registration process...');
+            const vapidKey = (this.setting.notification_fcm_public_vapid_key || '').trim();
+            const senderId = this.setting.notification_fcm_messaging_sender_id;
+            console.log('VAPID key length:', vapidKey.length, '| starts with:', vapidKey.substring(0, 5));
+            console.log('Sender ID:', senderId);
+            
+            if (!vapidKey || vapidKey.length < 50) {
+                alertService.error('VAPID key is missing or too short. Go to Firebase Console > Project Settings > Cloud Messaging > Web Push certificates and copy the Key pair.');
+                return Promise.resolve();
+            }
 
-            return navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' })
-            .then((reg) => {
-                console.log('SW registered, state:', reg.active ? 'active' : reg.installing ? 'installing' : 'waiting');
-                return this.waitForSwActive(reg, 10000);
-            }).then((reg) => {
-                console.log('SW active, getting FCM token...');
-                return getToken(messaging, {
-                    vapidKey: this.setting.notification_fcm_public_vapid_key,
-                    serviceWorkerRegistration: reg
-                });
+            console.log('Calling getToken (Firebase will handle SW internally)...');
+            return getToken(messaging, {
+                vapidKey: vapidKey
             }).then((currentToken) => {
                     if (!currentToken) {
-                        console.error('No FCM token received');
-                        alertService.error('Failed to get notification token. Check Firebase configuration.');
+                        alertService.error('Failed to get notification token.');
                         return;
                     }
                     console.log('FCM token received:', currentToken.substring(0, 20) + '...');
@@ -519,7 +500,19 @@ export default {
                 })
                 .catch((error) => {
                     console.error('Token registration error:', error);
-                    alertService.error('Failed to enable notifications: ' + (error.message || 'Unknown error'));
+                    if (error.message?.includes('push service')) {
+                        console.error('=== PUSH SERVICE ERROR DIAGNOSTIC ===');
+                        console.error('This means Firebase/FCM rejected the subscription.');
+                        console.error('VAPID key used (first 10 chars):', vapidKey.substring(0, 10));
+                        console.error('Sender ID:', senderId);
+                        console.error('Check: Firebase Console > Project Settings > Cloud Messaging');
+                        console.error('1. Web Push certificates section must have a key pair');
+                        console.error('2. The VAPID key in your app settings must match that key');
+                        console.error('3. Cloud Messaging API must be enabled');
+                        alertService.error('Firebase rejected the push subscription. Your VAPID key (Web Push certificate) does not match your Firebase project. Please verify in Firebase Console > Project Settings > Cloud Messaging.');
+                    } else {
+                        alertService.error('Failed to enable notifications: ' + (error.message || 'Unknown error'));
+                    }
                 });
         },
         textShortener: function (text, number = 30) {
