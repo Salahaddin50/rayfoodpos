@@ -252,6 +252,24 @@ export default {
             
             this.loading.isActive = true;
             
+            // Validate Firebase config before testing
+            const requiredFields = [
+                'notification_fcm_api_key',
+                'notification_fcm_auth_domain', 
+                'notification_fcm_project_id',
+                'notification_fcm_storage_bucket',
+                'notification_fcm_messaging_sender_id',
+                'notification_fcm_app_id',
+                'notification_fcm_public_vapid_key'
+            ];
+            
+            const missing = requiredFields.filter(field => !this.form[field]);
+            if (missing.length > 0) {
+                this.loading.isActive = false;
+                alertService.error('Missing Firebase config: ' + missing.join(', '));
+                return;
+            }
+            
             // Send test notification via backend (will trigger actual push notification)
             this.$store.dispatch('notification/testPush').then((res) => {
                 this.loading.isActive = false;

@@ -482,30 +482,41 @@ export default {
 
             console.log('Starting token registration process...');
             
-            // First, unregister any existing service workers to prevent conflicts
+            // Check if firebase-messaging-sw.js is already registered
             return navigator.serviceWorker.getRegistrations().then((registrations) => {
                 console.log('Found', registrations.length, 'existing service worker(s)');
-                const unregisterPromises = registrations.map(reg => {
-                    console.log('Unregistering:', reg.scope);
-                    return reg.unregister();
-                });
-                return Promise.all(unregisterPromises);
-            }).then(() => {
-                console.log('Registering firebase-messaging-sw.js...');
-                // Register firebase-messaging-sw.js with root scope
-                return navigator.serviceWorker.register('/firebase-messaging-sw.js', { 
-                    scope: '/',
-                    updateViaCache: 'none' 
+                const firebaseSW = registrations.find(reg => reg.active?.scriptURL?.includes('firebase-messaging-sw.js'));
+                
+                if (firebaseSW) {
+                    console.log('Firebase service worker already registered, using existing registration');
+                    return firebaseSW;
+                }
+                
+                // Only unregister non-firebase service workers to prevent conflicts
+                const unregisterPromises = registrations
+                    .filter(reg => !reg.active?.scriptURL?.includes('firebase-messaging-sw.js'))
+                    .map(reg => {
+                        console.log('Unregistering non-firebase SW:', reg.scope);
+                        return reg.unregister().catch(err => console.warn('Failed to unregister:', err));
+                    });
+                
+                return Promise.all(unregisterPromises).then(() => {
+                    console.log('Registering firebase-messaging-sw.js...');
+                    return navigator.serviceWorker.register('/firebase-messaging-sw.js', { 
+                        scope: '/',
+                        updateViaCache: 'none' 
+                    });
                 });
             }).then((reg) => {
                 console.log('Service worker registered, waiting for ready state...');
-                // Wait for service worker to be ready
                 return navigator.serviceWorker.ready.then(() => {
                     console.log('Service worker ready');
                     return reg;
                 });
             }).then((reg) => {
-                console.log('Getting FCM token...');
+                console.log('Getting FCM token with VAPID key...');
+                console.log('VAPID key length:', this.setting.notification_fcm_public_vapid_key?.length);
+                
                 return getToken(messaging, {
                     vapidKey: this.setting.notification_fcm_public_vapid_key,
                     serviceWorkerRegistration: reg
@@ -513,7 +524,7 @@ export default {
             }).then((currentToken) => {
                     if (!currentToken) {
                         console.error('No FCM token received');
-                        alertService.error('Failed to get notification token. Please refresh and try again.');
+                        alertService.error('Failed to get notification token. Check Firebase configuration.');
                         return;
                     }
                     console.log('FCM token received:', currentToken.substring(0, 20) + '...');
@@ -531,7 +542,14 @@ export default {
                 })
                 .catch((error) => {
                     console.error('Token registration error:', error);
-                    alertService.error('Failed to get notification token. Please refresh and try again.');
+                    
+                    if (error.code === 'messaging/permission-blocked') {
+                        alertService.error('Notification permission is blocked. Please enable it in browser settings.');
+                    } else if (error.message?.includes('push service')) {
+                        alertService.error('Firebase Cloud Messaging error. Please check: 1) Firebase project has Cloud Messaging enabled, 2) VAPID key is correct, 3) Try refreshing the page.');
+                    } else {
+                        alertService.error('Failed to enable notifications: ' + (error.message || 'Unknown error'));
+                    }
                 });
         },
         textShortener: function (text, number = 30) {
