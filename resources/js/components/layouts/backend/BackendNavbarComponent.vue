@@ -523,28 +523,33 @@ export default {
         handleOrderNotification(title, body, url, topicName) {
             this.orderPermissionCheck();
             
-            // Show browser notification
+            // Always use service worker notification for click handling
             if ('Notification' in window && Notification.permission === 'granted') {
-                try {
-                    new Notification(title, {
-                        body: body,
-                        icon: '/images/default/firebase-logo.png',
-                        requireInteraction: true,
+                if (navigator.serviceWorker) {
+                    navigator.serviceWorker.ready.then((reg) => {
+                        if (reg.active) {
+                            reg.showNotification(title, {
+                                body: body,
+                                icon: '/images/default/firebase-logo.png',
+                                requireInteraction: true,
+                                data: { url: url }
+                            }).catch((err) => {
+                                console.error('Service worker notification failed:', err);
+                                // Fallback to basic notification without click handling
+                                try {
+                                    new Notification(title, {
+                                        body: body,
+                                        icon: '/images/default/firebase-logo.png',
+                                        requireInteraction: true,
+                                    });
+                                } catch (e) {
+                                    console.error('Fallback notification also failed:', e);
+                                }
+                            });
+                        }
+                    }).catch((err) => {
+                        console.error('Service worker not ready:', err);
                     });
-                } catch (e) {
-                    // Fallback for PWA where new Notification() is blocked
-                    if (navigator.serviceWorker) {
-                        navigator.serviceWorker.ready.then((reg) => {
-                            if (reg.active) {
-                                reg.showNotification(title, {
-                                    body: body,
-                                    icon: '/images/default/firebase-logo.png',
-                                    requireInteraction: true,
-                                    data: { url: url }
-                                }).catch(() => {});
-                            }
-                        }).catch(() => {});
-                    }
                 }
             }
 
