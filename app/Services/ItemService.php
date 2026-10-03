@@ -401,16 +401,12 @@ class ItemService
                 ->join('items', 'order_items.item_id', '=', 'items.id')
                 ->join('orders', 'order_items.order_id', '=', 'orders.id')
                 ->leftJoin('item_categories', 'items.item_category_id', '=', 'item_categories.id')
-                ->leftJoin('dining_tables', 'orders.dining_table_id', '=', 'dining_tables.id')
-                ->leftJoin('takeaway_types', 'orders.takeaway_type_id', '=', 'takeaway_types.id')
                 ->select(
                     'items.id as item_id',
                     'items.name as item_name',
                     'items.item_type',
                     'item_categories.name as category_name',
                     'orders.order_type',
-                    DB::raw('MIN(dining_tables.name) as table_name'),
-                    DB::raw('MIN(takeaway_types.name) as takeaway_type_name'),
                     // Calculate average unit price for this grouping
                     DB::raw('ROUND(AVG(CASE 
                         WHEN order_items.total_price > 0 AND order_items.quantity > 0 
@@ -466,7 +462,7 @@ class ItemService
                 $query->where('items.item_type', $requests['item_type']);
             }
 
-            // GROUP BY main columns (using MIN() for joined table names)
+            // Simple GROUP BY - back to working version
             $query->groupBy(
                 'items.id',
                 'items.name',
@@ -479,11 +475,7 @@ class ItemService
                     \'|\', 
                     COALESCE(order_items.item_extras, \'\'),
                     \'|\',
-                    COALESCE(orders.order_type, \'\'),
-                    \'|\',
-                    COALESCE(dining_tables.name, \'\'),
-                    \'|\',
-                    COALESCE(takeaway_types.name, \'\')
+                    COALESCE(orders.order_type, \'\')
                 ))')
             )
             ->orderByDesc('total_income');

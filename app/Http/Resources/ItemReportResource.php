@@ -60,20 +60,17 @@ class ItemReportResource extends JsonResource
 
     /**
      * Get the service type (table name or takeaway type name)
+     * Temporarily simplified - will be enhanced later
      */
     private function getServiceType(): string
     {
-        // For Dining Table orders, show table name
-        if ($this->order_type == 20 && !empty($this->table_name)) {
-            return $this->table_name;
-        }
-        
-        // For Takeaway orders, show takeaway type name
-        if ($this->order_type == 10 && !empty($this->takeaway_type_name)) {
-            return $this->takeaway_type_name;
-        }
-        
-        // For other types or no specific type, show dash
-        return '-';
+        // Temporarily show order type until we fix the JOIN issues
+        return match($this->order_type) {
+            20 => 'Dining Table',
+            10 => 'Takeaway', 
+            15 => 'POS',
+            5  => 'Delivery',
+            default => '-'
+        };
     }
 }
