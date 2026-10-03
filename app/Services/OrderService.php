@@ -475,6 +475,14 @@ class OrderService
                 $this->order->delivery_time   = "$start - $end";
                 $this->order->save();
             });
+            
+            // Dispatch notifications for POS orders
+            try {
+                SendOrderGotPush::dispatch(['order_id' => $this->order->id]);
+            } catch (\Throwable $e) {
+                Log::warning("POS order notification failed but order was created successfully: " . $e->getMessage());
+            }
+            
             return $this->order;
         } catch (Exception $exception) {
             DB::rollBack();
