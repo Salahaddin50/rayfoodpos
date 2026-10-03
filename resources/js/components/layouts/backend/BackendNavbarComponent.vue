@@ -597,10 +597,17 @@ export default {
                         ? 'New order #' + (orders[0].order_serial_no || latestId)
                         : newCount + ' new orders received';
                     
+                    // Route to correct page based on order type
+                    // OrderType: POS = 15, DINING_TABLE = 20
+                    const latestOrder = orders[0];
+                    const targetUrl = latestOrder.order_type === 15 
+                        ? '/admin/pos-orders' 
+                        : '/admin/table-orders';
+                    
                     this.handleOrderNotification(
                         'New Order Notification',
                         message,
-                        '/admin/table-orders',
+                        targetUrl,
                         'new-order-found'
                     );
                 }
