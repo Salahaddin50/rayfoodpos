@@ -94,11 +94,17 @@ class OrderGotPushNotificationBuilder
                     $message = ($notificationAlert && $notificationAlert->push_notification == SwitchBox::ON && !blank($notificationAlert->push_notification_message))
                         ? $notificationAlert->push_notification_message
                         : 'New order #' . ($this->order->order_serial_no ?? $this->orderId);
+                    
+                    // Route to correct page based on order type (POS = 15, DINING_TABLE = 20)
+                    $targetUrl = $this->order->order_type == 15 
+                        ? '/admin/pos-orders/show/' . $this->orderId
+                        : '/admin/table-orders/show/' . $this->orderId;
+                    
                     $pushNotification = (object)[
                         'title'       => 'New Order Notification',
                         'description' => $message,
                         'order_id'   => (string) $this->orderId,
-                        'url'        => '/admin/table-orders/show/' . $this->orderId,
+                        'url'        => $targetUrl,
                     ];
                     
                     \Log::info('OrderGotPushNotification: Sending notification', [
