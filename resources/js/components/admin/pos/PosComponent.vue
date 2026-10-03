@@ -317,7 +317,7 @@
                 </ul>
                 
                 <!-- Action buttons - inside scrollable area for mobile visibility -->
-                <div class="flex items-center justify-center gap-6 mt-4" v-if="carts.length > 0">
+                <div class="flex items-center justify-center gap-6 mt-4 mb-20 pb-4" v-if="carts.length > 0">
                     <button @click.prevent="resetCart"
                         class="capitalize text-sm font-medium leading-6 font-rubik w-full text-center rounded-3xl py-2 text-white bg-[#FB4E4E]">
                         {{ $t('button.cancel') }}
