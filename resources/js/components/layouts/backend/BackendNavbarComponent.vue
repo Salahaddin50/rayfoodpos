@@ -558,6 +558,11 @@ export default {
                 this.orderNotificationStatus = true;
                 this.orderNotificationMessage = body;
                 this.orderNotification.url = url?.replace('/admin/', '') || 'table-orders';
+                console.log('In-app notification modal:', {
+                    original_url: url,
+                    final_url: this.orderNotification.url,
+                    topicName: topicName
+                });
                 const audioPath = this.setting?.notification_audio || '/audio/notification.mp3';
                 [0, 2000, 4000].forEach((delay) => {
                     setTimeout(() => {
@@ -605,9 +610,16 @@ export default {
                     
                     // Route based on source: POS (15) or table/web orders (5, 10)
                     const latestOrder = orders[0];
-                    const targetUrl = latestOrder.source === 15 
+                    console.log('Polling detected new order:', {
+                        order_id: latestOrder.id,
+                        source: latestOrder.source,
+                        source_type: typeof latestOrder.source,
+                        order_type: latestOrder.order_type
+                    });
+                    const targetUrl = parseInt(latestOrder.source) === 15 
                         ? '/admin/pos-orders' 
                         : '/admin/table-orders';
+                    console.log('Routing to:', targetUrl);
                     
                     this.handleOrderNotification(
                         'New Order Notification',
