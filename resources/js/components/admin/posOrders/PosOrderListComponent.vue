@@ -111,17 +111,17 @@
                             <td class="db-table-body-td">
                                 <template v-if="order.order_type === enums.orderTypeEnum.TAKEAWAY">
                                     <span v-if="order.token">{{ order.token }}</span>
-                                    <span v-else>{{ $t('label.online') }}</span>
+                                    <span v-else>-</span>
                                     <span v-if="order.takeaway_type_name"> / {{ order.takeaway_type_name }}</span>
                                 </template>
                                 <template v-else-if="order.order_type === enums.orderTypeEnum.DINING_TABLE">
                                     <span v-if="order.token">{{ order.token }}</span>
-                                    <span v-else>{{ $t('label.online') }}</span>
+                                    <span v-else>-</span>
                                     <span v-if="order.table_name"> / {{ order.table_name }}</span>
                                 </template>
                                 <template v-else>
                                     <span v-if="order.token">{{ order.token }}</span>
-                                    <span v-else>{{ $t('label.online') }}</span>
+                                    <span v-else>-</span>
                                 </template>
                             </td>
                             <td class="db-table-body-td">
