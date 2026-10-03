@@ -566,9 +566,9 @@ export default {
         startOrderPolling() {
             if (this.orderPolling.timer) return;
             
-            // Get the latest order ID first as baseline
+            // Get the latest order ID first as baseline (exclude POS orders - source 15)
             axios.get('/admin/table-order', {
-                params: { paginate: 1, per_page: 1, order_column: 'id', order_by: 'desc' }
+                params: { paginate: 1, per_page: 1, order_column: 'id', order_by: 'desc', exceptSource: 15 }
             }).then((res) => {
                 const orders = res.data?.data || [];
                 if (orders.length > 0) {
@@ -584,8 +584,9 @@ export default {
             }, 15000);
         },
         pollForNewOrders() {
+            // Exclude POS orders (source 15) - they use Firebase push only
             axios.get('/admin/table-order', {
-                params: { paginate: 1, per_page: 5, order_column: 'id', order_by: 'desc' }
+                params: { paginate: 1, per_page: 5, order_column: 'id', order_by: 'desc', exceptSource: 15 }
             }).then((res) => {
                 const orders = res.data?.data || [];
                 if (orders.length === 0) return;
@@ -597,17 +598,11 @@ export default {
                         ? 'New order #' + (orders[0].order_serial_no || latestId)
                         : newCount + ' new orders received';
                     
-                    // Route to correct page based on order type
-                    // OrderType: POS = 15, DINING_TABLE = 20
-                    const latestOrder = orders[0];
-                    const targetUrl = latestOrder.order_type === 15 
-                        ? '/admin/pos-orders' 
-                        : '/admin/table-orders';
-                    
+                    // All polling orders go to table-orders (POS excluded via exceptSource)
                     this.handleOrderNotification(
                         'New Order Notification',
                         message,
-                        targetUrl,
+                        '/admin/table-orders',
                         'new-order-found'
                     );
                 }
