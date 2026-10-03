@@ -49,8 +49,10 @@
     </div>
 
     <div id="pos-cart"
-        class="db-pos-cartDiv fixed top-0 ltr:right-0 rtl:left-0 w-full h-screen rounded-none z-50 md:z-10 md:top-[85px] ltr:md:right-5 rtl:md:left-5 md:w-[322px] lg:w-[305px] xl:w-[360px] md:h-[calc(100vh-85px)] md:rounded-lg overflow-y-auto thin-scrolling bg-white">
-        <div class="p-4">
+        class="db-pos-cartDiv fixed top-0 ltr:right-0 rtl:left-0 w-full h-screen rounded-none z-50 md:z-10 md:top-[85px] ltr:md:right-5 rtl:md:left-5 md:w-[322px] lg:w-[305px] xl:w-[360px] md:h-[calc(100vh-85px)] md:rounded-lg bg-white flex flex-col">
+        <!-- Scrollable content area -->
+        <div class="flex-1 overflow-y-auto thin-scrolling">
+            <div class="p-4">
             <div class="md:hidden text-right mb-3">
                 <button class="db-pos-cartCls" @click="closePosCart('pos-cart')">
                     <i class="lab-close-circle-line font-fill-danger lab-font-size-24"></i>
@@ -163,8 +165,8 @@
                 </div>
 
             </div>
-        </div>
-        <table class="w-full">
+            </div>
+            <table class="w-full">
             <thead class="bg-primary-light">
                 <tr class="h-9">
                     <th class="capitalize text-xs font-normal font-rubik text-left pl-3 text-heading"></th>
@@ -242,77 +244,81 @@
                 </tr>
             </tbody>
         </table>
-        <div class="p-4">
-            <div class="flex h-[38px]" v-if="carts.length > 0">
-                <div class="dropdown-group">
-                    <button
-                        class="flex items-center justify-start w-[120px] h-full text-sm font-rubik rounded-tl rounded-bl appearance-none border pl-3 text-heading border-[#EFF0F6] dropdown-btn">
-                        <span class="flex-1 text-start" v-if="discountType === discountTypeEnum.PERCENTAGE">{{
-                            $t("label.percentage") }}</span>
-                        <span class="flex-1 text-start" v-else>{{ $t("label.fixed") }}</span>
-                        <i class="lab lab-arrow-down-2 lab-font-size-17 mx-1"></i>
-                    </button>
-                    <ul
-                        class="p-2 rounded-lg shadow-xl absolute top-10 ltr:right-0 rtl:left-0 z-10 bg-white transition-all duration-300 origin-top scale-y-0 dropdown-list w-full">
-                        <li class="flex items-center gap-2 py-1 px-2.5 rounded-md cursor-pointer hover:bg-gray-100"
-                            v-for="option in [
-                                { name: $t('label.percentage'), value: discountTypeEnum.PERCENTAGE },
-                                { name: $t('label.fixed'), value: discountTypeEnum.FIXED }
-                            ]" :key="option" @click="selectDiscount(option.value)">
-                            <span class="text-heading capitalize text-sm">{{ option.name }}</span>
+            <div class="p-4 pb-2">
+                <div class="flex h-[38px]" v-if="carts.length > 0">
+                    <div class="dropdown-group">
+                        <button
+                            class="flex items-center justify-start w-[120px] h-full text-sm font-rubik rounded-tl rounded-bl appearance-none border pl-3 text-heading border-[#EFF0F6] dropdown-btn">
+                            <span class="flex-1 text-start" v-if="discountType === discountTypeEnum.PERCENTAGE">{{
+                                $t("label.percentage") }}</span>
+                            <span class="flex-1 text-start" v-else>{{ $t("label.fixed") }}</span>
+                            <i class="lab lab-arrow-down-2 lab-font-size-17 mx-1"></i>
+                        </button>
+                        <ul
+                            class="p-2 rounded-lg shadow-xl absolute top-10 ltr:right-0 rtl:left-0 z-10 bg-white transition-all duration-300 origin-top scale-y-0 dropdown-list w-full">
+                            <li class="flex items-center gap-2 py-1 px-2.5 rounded-md cursor-pointer hover:bg-gray-100"
+                                v-for="option in [
+                                    { name: $t('label.percentage'), value: discountTypeEnum.PERCENTAGE },
+                                    { name: $t('label.fixed'), value: discountTypeEnum.FIXED }
+                                ]" :key="option" @click="selectDiscount(option.value)">
+                                <span class="text-heading capitalize text-sm">{{ option.name }}</span>
 
-                        </li>
-                    </ul>
+                            </li>
+                        </ul>
+                    </div>
+                    <input v-on:keypress="floatNumber($event)" v-model="discount" type="text"
+                        :placeholder="$t('label.add_discount')"
+                        class="w-full h-full border-t border-b px-3 border-[#EFF0F6]">
+                    <button @click.prevent="applyDiscount" type="submit"
+                        class="flex-shrink-0 w-16 h-full text-sm font-medium font-rubik capitalize ltr:rounded-tr-lg ltr:rounded-br-lg rtl:rounded-tl-lg rtl:rounded-bl-lg  text-white bg-[#008BBA]">
+                        {{ $t('button.apply') }}
+                    </button>
                 </div>
-                <input v-on:keypress="floatNumber($event)" v-model="discount" type="text"
-                    :placeholder="$t('label.add_discount')"
-                    class="w-full h-full border-t border-b px-3 border-[#EFF0F6]">
-                <button @click.prevent="applyDiscount" type="submit"
-                    class="flex-shrink-0 w-16 h-full text-sm font-medium font-rubik capitalize ltr:rounded-tr-lg ltr:rounded-br-lg rtl:rounded-tl-lg rtl:rounded-bl-lg  text-white bg-[#008BBA]">
-                    {{ $t('button.apply') }}
-                </button>
-            </div>
-            <ul class="flex flex-col gap-1.5 mb-4 mt-4">
-                <li class="flex items-center justify-between">
-                    <span class="text-sm font-rubik capitalize leading-6 text-[#2E2F38]">
-                        {{ $t("label.sub_total") }}
-                    </span>
-                    <span class="text-sm font-rubik capitalize leading-6 text-[#2E2F38]">
-                        {{
-                            currencyFormat(subtotal, setting.site_digit_after_decimal_point,
-                                setting.site_default_currency_symbol, setting.site_currency_position)
-                        }}
-                    </span>
-                </li>
-                <li v-if="checkoutProps.form.order_type === orderTypeEnums.takeAway && parseFloat(checkoutProps.form.delivery_charge || 0) > 0" class="flex items-center justify-between">
-                    <span class="text-sm font-rubik capitalize leading-6">{{ $t("label.pickup_cost") }}</span>
-                    <span class="text-sm font-rubik capitalize leading-6">{{
-                        currencyFormat(parseFloat(checkoutProps.form.delivery_charge || 0),
-                            setting.site_digit_after_decimal_point, setting.site_default_currency_symbol,
-                            setting.site_currency_position)
-                    }}</span>
-                </li>
-                <li class="flex items-center justify-between">
-                    <span class="text-sm font-rubik capitalize leading-6">{{ $t("label.discount") }}</span>
-                    <span class="text-sm font-rubik capitalize leading-6">{{
-                        currencyFormat(posDiscount,
-                            setting.site_digit_after_decimal_point, setting.site_default_currency_symbol,
-                            setting.site_currency_position)
-                    }}</span>
-                </li>
-                <li class="flex items-center justify-between">
-                    <span class="text-sm font-medium font-rubik capitalize leading-6 text-[#2E2F38]">
-                        {{ $t("label.total") }}
-                    </span>
-                    <span class="text-sm font-medium font-rubik capitalize leading-6 text-[#2E2F38]">
-                        {{
-                            currencyFormat(subtotal - posDiscount + parseFloat(checkoutProps.form.delivery_charge || 0),
+                <ul class="flex flex-col gap-1.5 mb-4 mt-4">
+                    <li class="flex items-center justify-between">
+                        <span class="text-sm font-rubik capitalize leading-6 text-[#2E2F38]">
+                            {{ $t("label.sub_total") }}
+                        </span>
+                        <span class="text-sm font-rubik capitalize leading-6 text-[#2E2F38]">
+                            {{
+                                currencyFormat(subtotal, setting.site_digit_after_decimal_point,
+                                    setting.site_default_currency_symbol, setting.site_currency_position)
+                            }}
+                        </span>
+                    </li>
+                    <li v-if="checkoutProps.form.order_type === orderTypeEnums.takeAway && parseFloat(checkoutProps.form.delivery_charge || 0) > 0" class="flex items-center justify-between">
+                        <span class="text-sm font-rubik capitalize leading-6">{{ $t("label.pickup_cost") }}</span>
+                        <span class="text-sm font-rubik capitalize leading-6">{{
+                            currencyFormat(parseFloat(checkoutProps.form.delivery_charge || 0),
                                 setting.site_digit_after_decimal_point, setting.site_default_currency_symbol,
                                 setting.site_currency_position)
-                        }}
-                    </span>
-                </li>
-            </ul>
+                        }}</span>
+                    </li>
+                    <li class="flex items-center justify-between">
+                        <span class="text-sm font-rubik capitalize leading-6">{{ $t("label.discount") }}</span>
+                        <span class="text-sm font-rubik capitalize leading-6">{{
+                            currencyFormat(posDiscount,
+                                setting.site_digit_after_decimal_point, setting.site_default_currency_symbol,
+                                setting.site_currency_position)
+                        }}</span>
+                    </li>
+                    <li class="flex items-center justify-between">
+                        <span class="text-sm font-medium font-rubik capitalize leading-6 text-[#2E2F38]">
+                            {{ $t("label.total") }}
+                        </span>
+                        <span class="text-sm font-medium font-rubik capitalize leading-6 text-[#2E2F38]">
+                            {{
+                                currencyFormat(subtotal - posDiscount + parseFloat(checkoutProps.form.delivery_charge || 0),
+                                    setting.site_digit_after_decimal_point, setting.site_default_currency_symbol,
+                                    setting.site_currency_position)
+                            }}
+                        </span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <!-- Fixed bottom section for buttons -->
+        <div class="flex-shrink-0 bg-white border-t border-[#EFF0F6] p-4">
             <div class="flex items-center justify-center gap-6" v-if="carts.length > 0">
                 <button @click.prevent="resetCart"
                     class="capitalize text-sm font-medium leading-6 font-rubik w-full text-center rounded-3xl py-2 text-white bg-[#FB4E4E]">
