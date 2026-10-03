@@ -409,8 +409,8 @@ class ItemService
                     'items.item_type',
                     'item_categories.name as category_name',
                     'orders.order_type',
-                    DB::raw('COALESCE(dining_tables.name, \'\') as table_name'),
-                    DB::raw('COALESCE(takeaway_types.name, \'\') as takeaway_type_name'),
+                    DB::raw('MAX(COALESCE(dining_tables.name, \'\')) as table_name'),
+                    DB::raw('MAX(COALESCE(takeaway_types.name, \'\')) as takeaway_type_name'),
                     // Calculate average unit price for this grouping
                     DB::raw('ROUND(AVG(CASE 
                         WHEN order_items.total_price > 0 AND order_items.quantity > 0 
@@ -466,7 +466,7 @@ class ItemService
                 $query->where('items.item_type', $requests['item_type']);
             }
 
-            // GROUP BY with service type names
+            // GROUP BY - using MAX() for service type names in SELECT, so no need in GROUP BY
             $query->groupBy(
                 'items.id',
                 'items.name',
@@ -474,8 +474,6 @@ class ItemService
                 'items.price',
                 'item_categories.name',
                 'orders.order_type',
-                DB::raw('COALESCE(dining_tables.name, \'\')'),
-                DB::raw('COALESCE(takeaway_types.name, \'\')'),
                 DB::raw('MD5(CONCAT(
                     COALESCE(order_items.item_variations, \'\'), 
                     \'|\', 
@@ -483,9 +481,9 @@ class ItemService
                     \'|\',
                     COALESCE(orders.order_type, \'\'),
                     \'|\',
-                    COALESCE(dining_tables.name, \'\'),
+                    COALESCE(orders.dining_table_id, \'\'),
                     \'|\',
-                    COALESCE(takeaway_types.name, \'\')
+                    COALESCE(orders.takeaway_type_id, \'\')
                 ))')
             )
             ->orderByDesc('total_income');
