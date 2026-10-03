@@ -7,8 +7,8 @@ return [
         'maximum_distance_for_delivery' => 'Çatdırılma üçün maksimum məsafə (limitsiz üçün boş buraxın)',
         'click_add_location_button' => 'Məkanınızı təyin etmək üçün "Məkan əlavə et" düyməsini basın',
         'unlimited'        => 'Limitsiz',
-        'order_type'       => 'Sifariş Növü',
         'service_type'     => 'Xidmət Növü',
+        'order_type'       => 'Sifariş Növü',
     ],
     'message' => [
         'outside_service_radius' => 'Çatdırılma məkanınız xidmət radiusundan kənardadır',

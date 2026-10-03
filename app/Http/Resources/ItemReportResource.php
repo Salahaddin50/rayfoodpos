@@ -73,7 +73,7 @@ class ItemReportResource extends JsonResource
             return $this->takeaway_type_name;
         }
         
-        // For other types, show the translated order type name
-        return $this->getOrderTypeName();
+        // For other types or no specific type, show dash
+        return '-';
     }
 }
