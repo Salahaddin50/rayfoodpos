@@ -95,8 +95,8 @@ class OrderGotPushNotificationBuilder
                         ? $notificationAlert->push_notification_message
                         : 'New order #' . ($this->order->order_serial_no ?? $this->orderId);
                     
-                    // Route to correct page based on order type (POS = 15, DINING_TABLE = 20)
-                    $targetUrl = $this->order->order_type == 15 
+                    // Route to correct page based on source (POS source = 15, WEB/APP = 5/10)
+                    $targetUrl = $this->order->source == 15 
                         ? '/admin/pos-orders/show/' . $this->orderId
                         : '/admin/table-orders/show/' . $this->orderId;
                     
