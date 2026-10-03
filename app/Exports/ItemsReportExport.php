@@ -41,6 +41,8 @@ class ItemsReportExport implements FromCollection, WithHeadings
                 $item->item_name,
                 $item->category_name ?? '',
                 trans('itemType.' . $item->item_type),
+                $this->getOrderTypeName($item->order_type ?? null),
+                $this->getServiceType($item),
                 $item->first_order_date ? date('Y-m-d', strtotime($item->first_order_date)) : '',
                 AppLibrary::flatAmountFormat($unit),
                 $this->formatOptions($item->item_variations ?? null, $item->item_extras ?? null),
@@ -51,6 +53,8 @@ class ItemsReportExport implements FromCollection, WithHeadings
         
         $itemsReportArray[] = [
             trans('all.label.total'),
+            '',
+            '',
             '',
             '',
             '',
@@ -71,6 +75,8 @@ class ItemsReportExport implements FromCollection, WithHeadings
             trans('all.label.name'),
             trans('all.label.item_category_id'),
             trans('all.label.item_type'),
+            trans('all.label.order_type'),
+            trans('all.label.service_type'),
             trans('all.label.date'),
             trans('all.label.unit_price'),
             trans('all.label.options'),
@@ -129,5 +135,42 @@ class ItemsReportExport implements FromCollection, WithHeadings
         }
 
         return implode(' | ', $parts);
+    }
+
+    /**
+     * Get the order type name based on the order_type value
+     */
+    private function getOrderTypeName($orderType): string
+    {
+        if (empty($orderType)) {
+            return '-';
+        }
+
+        return match((int)$orderType) {
+            5  => trans('orderType.' . \App\Enums\OrderType::DELIVERY),     // 'Delivery'
+            10 => trans('orderType.' . \App\Enums\OrderType::TAKEAWAY),     // 'Takeaway' 
+            15 => trans('orderType.' . \App\Enums\OrderType::POS),          // 'Pos'
+            20 => trans('orderType.' . \App\Enums\OrderType::DINING_TABLE), // 'Dining Table'
+            default => '-'
+        };
+    }
+
+    /**
+     * Get the service type (table name or takeaway type name)
+     */
+    private function getServiceType($item): string
+    {
+        // For Dining Table orders, show table name
+        if (isset($item->order_type) && (int)$item->order_type == 20 && !empty($item->table_name)) {
+            return $item->table_name;
+        }
+        
+        // For Takeaway orders, show takeaway type name
+        if (isset($item->order_type) && (int)$item->order_type == 10 && !empty($item->takeaway_type_name)) {
+            return $item->takeaway_type_name;
+        }
+        
+        // For other types or no specific type, show dash
+        return '-';
     }
 }
