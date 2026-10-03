@@ -425,8 +425,8 @@ class ItemService
                         \'|\',
                         COALESCE(orders.order_type, \'\')
                     )) as options_key'),
-                    DB::raw('MIN(order_items.item_variations) as item_variations'),
-                    DB::raw('MIN(order_items.item_extras) as item_extras'),
+                    'order_items.item_variations',
+                    'order_items.item_extras',
                     DB::raw('SUM(order_items.quantity) as total_quantity'),
                     DB::raw('SUM(CASE 
                         WHEN order_items.total_price > 0 
@@ -466,7 +466,7 @@ class ItemService
                 $query->where('items.item_type', $requests['item_type']);
             }
 
-            // GROUP BY - using MAX() for service type names in SELECT, so no need in GROUP BY
+            // GROUP BY - all non-aggregate columns must be included for MySQL strict mode
             $query->groupBy(
                 'items.id',
                 'items.name',
@@ -474,17 +474,10 @@ class ItemService
                 'items.price',
                 'item_categories.name',
                 'orders.order_type',
-                DB::raw('MD5(CONCAT(
-                    COALESCE(order_items.item_variations, \'\'), 
-                    \'|\', 
-                    COALESCE(order_items.item_extras, \'\'),
-                    \'|\',
-                    COALESCE(orders.order_type, \'\'),
-                    \'|\',
-                    COALESCE(orders.dining_table_id, \'\'),
-                    \'|\',
-                    COALESCE(orders.takeaway_type_id, \'\')
-                ))')
+                'orders.dining_table_id',
+                'orders.takeaway_type_id',
+                'order_items.item_variations',
+                'order_items.item_extras'
             )
             ->orderByDesc('total_income');
 
