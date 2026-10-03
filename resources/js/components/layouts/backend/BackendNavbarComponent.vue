@@ -571,9 +571,9 @@ export default {
         startOrderPolling() {
             if (this.orderPolling.timer) return;
             
-            // Get the latest order ID first as baseline (exclude POS orders - source 15)
+            // Poll ALL orders (including POS) as Firebase push is unreliable
             axios.get('/admin/table-order', {
-                params: { paginate: 1, per_page: 1, order_column: 'id', order_by: 'desc', exceptSource: 15 }
+                params: { paginate: 1, per_page: 1, order_column: 'id', order_by: 'desc' }
             }).then((res) => {
                 const orders = res.data?.data || [];
                 if (orders.length > 0) {
@@ -589,9 +589,9 @@ export default {
             }, 15000);
         },
         pollForNewOrders() {
-            // Exclude POS orders (source 15) - they use Firebase push only
+            // Poll ALL orders (including POS) as fallback for unreliable Firebase push
             axios.get('/admin/table-order', {
-                params: { paginate: 1, per_page: 5, order_column: 'id', order_by: 'desc', exceptSource: 15 }
+                params: { paginate: 1, per_page: 5, order_column: 'id', order_by: 'desc' }
             }).then((res) => {
                 const orders = res.data?.data || [];
                 if (orders.length === 0) return;
@@ -603,12 +603,17 @@ export default {
                         ? 'New order #' + (orders[0].order_serial_no || latestId)
                         : newCount + ' new orders received';
                     
-                    // All polling orders go to table-orders (POS excluded via exceptSource)
+                    // Route based on source: POS (15) or table/web orders (5, 10)
+                    const latestOrder = orders[0];
+                    const targetUrl = latestOrder.source === 15 
+                        ? '/admin/pos-orders' 
+                        : '/admin/table-orders';
+                    
                     this.handleOrderNotification(
                         'New Order Notification',
                         message,
-                        '/admin/table-orders',
-                        'new-order-found'
+                        targetUrl,
+                        'order-polling'
                     );
                 }
                 this.orderPolling.lastOrderId = latestId;
