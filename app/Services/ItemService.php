@@ -401,11 +401,16 @@ class ItemService
                 ->join('items', 'order_items.item_id', '=', 'items.id')
                 ->join('orders', 'order_items.order_id', '=', 'orders.id')
                 ->leftJoin('item_categories', 'items.item_category_id', '=', 'item_categories.id')
+                ->leftJoin('dining_tables', 'orders.dining_table_id', '=', 'dining_tables.id')
+                ->leftJoin('takeaway_types', 'orders.takeaway_type_id', '=', 'takeaway_types.id')
                 ->select(
                     'items.id as item_id',
                     'items.name as item_name',
                     'items.item_type',
                     'item_categories.name as category_name',
+                    'orders.order_type',
+                    'dining_tables.name as table_name',
+                    'takeaway_types.name as takeaway_type_name',
                     // Calculate average unit price for this grouping
                     DB::raw('ROUND(AVG(CASE 
                         WHEN order_items.total_price > 0 AND order_items.quantity > 0 
@@ -416,7 +421,9 @@ class ItemService
                     DB::raw('MD5(CONCAT(
                         COALESCE(order_items.item_variations, \'\'), 
                         \'|\', 
-                        COALESCE(order_items.item_extras, \'\')
+                        COALESCE(order_items.item_extras, \'\'),
+                        \'|\',
+                        COALESCE(orders.order_type, \'\')
                     )) as options_key'),
                     DB::raw('MIN(order_items.item_variations) as item_variations'),
                     DB::raw('MIN(order_items.item_extras) as item_extras'),
@@ -466,10 +473,19 @@ class ItemService
                 'items.item_type',
                 'items.price',
                 'item_categories.name',
+                'orders.order_type',
+                'dining_tables.name',
+                'takeaway_types.name',
                 DB::raw('MD5(CONCAT(
                     COALESCE(order_items.item_variations, \'\'), 
                     \'|\', 
-                    COALESCE(order_items.item_extras, \'\')
+                    COALESCE(order_items.item_extras, \'\'),
+                    \'|\',
+                    COALESCE(orders.order_type, \'\'),
+                    \'|\',
+                    COALESCE(dining_tables.name, \'\'),
+                    \'|\',
+                    COALESCE(takeaway_types.name, \'\')
                 ))')
             )
             ->orderByDesc('total_income');

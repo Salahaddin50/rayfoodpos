@@ -91,6 +91,8 @@
                             <th class="db-table-head-th">{{ $t('label.name') }}</th>
                             <th class="db-table-head-th">{{ $t('label.category') }}</th>
                             <th class="db-table-head-th">{{ $t('label.type') }}</th>
+                            <th class="db-table-head-th">{{ $t('label.order_type') }}</th>
+                            <th class="db-table-head-th">{{ $t('label.service_type') }}</th>
                             <th class="db-table-head-th">{{ $t('label.date') }}</th>
                             <th class="db-table-head-th">{{ $t('label.unit_price') }}</th>
                             <th class="db-table-head-th">{{ $t('label.options') }}</th>
@@ -106,6 +108,8 @@
                             <td class="db-table-body-td">
                                 {{ enums.itemTypeEnumArray[itemsReport.item_type] }}
                             </td>
+                            <td class="db-table-body-td">{{ itemsReport.order_type_name || '-' }}</td>
+                            <td class="db-table-body-td">{{ itemsReport.service_type || '-' }}</td>
                             <td class="db-table-body-td">{{ itemsReport.created_at || '-' }}</td>
                             <td class="db-table-body-td">{{ itemsReport.currency_price || '-' }}</td>
                             <td class="db-table-body-td">
@@ -117,7 +121,7 @@
                     </tbody>
                     <tbody class="db-table-body" v-else>
                         <tr class="db-table-body-tr">
-                            <td class="db-table-body-td text-center" colspan="9">
+                            <td class="db-table-body-td text-center" colspan="11">
                                 <div class="p-4">
                                     <div class="max-w-[300px] mx-auto mt-2">
                                         <img class="w-full h-full" :src="ENV.API_URL + '/images/default/not-found.png'"
@@ -133,6 +137,8 @@
                         <tr>
                             <td class="db-table-body-td hidden"></td>
                             <td class="db-table-body-td">{{ $t('label.total') }}</td>
+                            <td></td>
+                            <td></td>
                             <td></td>
                             <td></td>
                             <td></td>

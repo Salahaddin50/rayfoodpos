@@ -24,6 +24,9 @@ class ItemReportResource extends JsonResource
             "name"             => $this->item_name ?? $this->name,
             "item_type"        => $this->item_type,
             "category_name"    => $this->category_name ?? ($this->category?->name ?? ''),
+            "order_type"       => $this->order_type ?? null,
+            "order_type_name"  => $this->getOrderTypeName(),
+            "service_type"     => $this->getServiceType(),
             "options_key"      => $this->options_key ?? null,
             "item_variations"  => isset($this->item_variations) ? json_decode($this->item_variations) : null,
             "item_extras"      => isset($this->item_extras) ? json_decode($this->item_extras) : null,
@@ -39,5 +42,38 @@ class ItemReportResource extends JsonResource
             "created_at"       => $this->first_order_date ? date('Y-m-d', strtotime($this->first_order_date)) : '',
             "order_numbers"    => $this->order_numbers ?? '',
         ];
+    }
+
+    /**
+     * Get the order type name based on the order_type value
+     */
+    private function getOrderTypeName(): string
+    {
+        return match($this->order_type) {
+            5  => __('orderType.' . \App\Enums\OrderType::DELIVERY),     // 'Delivery'
+            10 => __('orderType.' . \App\Enums\OrderType::TAKEAWAY),     // 'Takeaway' 
+            15 => __('orderType.' . \App\Enums\OrderType::POS),          // 'Pos'
+            20 => __('orderType.' . \App\Enums\OrderType::DINING_TABLE), // 'Dining Table'
+            default => '-'
+        };
+    }
+
+    /**
+     * Get the service type (table name or takeaway type name)
+     */
+    private function getServiceType(): string
+    {
+        // For Dining Table orders, show table name
+        if ($this->order_type == 20 && !empty($this->table_name)) {
+            return $this->table_name;
+        }
+        
+        // For Takeaway orders, show takeaway type name
+        if ($this->order_type == 10 && !empty($this->takeaway_type_name)) {
+            return $this->takeaway_type_name;
+        }
+        
+        // For other types or no specific type, show dash
+        return '-';
     }
 }

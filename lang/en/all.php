@@ -26,6 +26,7 @@ return [
         'payment_status'   => 'Payment Status',
         'quantity'         => 'Quantity',
         'order_type'       => 'Order Type',
+        'service_type'     => 'Service Type',
         'customer'         => 'Customer',
         'confirm'          => 'Confirm',
         'congratulations'  => 'Congratulations!',
