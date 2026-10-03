@@ -409,8 +409,8 @@ class ItemService
                     'items.item_type',
                     'item_categories.name as category_name',
                     'orders.order_type',
-                    'dining_tables.name as table_name',
-                    'takeaway_types.name as takeaway_type_name',
+                    DB::raw('MIN(dining_tables.name) as table_name'),
+                    DB::raw('MIN(takeaway_types.name) as takeaway_type_name'),
                     // Calculate average unit price for this grouping
                     DB::raw('ROUND(AVG(CASE 
                         WHEN order_items.total_price > 0 AND order_items.quantity > 0 
@@ -466,7 +466,7 @@ class ItemService
                 $query->where('items.item_type', $requests['item_type']);
             }
 
-            // Simple GROUP BY - just item and options hash
+            // GROUP BY main columns (using MIN() for joined table names)
             $query->groupBy(
                 'items.id',
                 'items.name',
@@ -474,8 +474,6 @@ class ItemService
                 'items.price',
                 'item_categories.name',
                 'orders.order_type',
-                'dining_tables.name',
-                'takeaway_types.name',
                 DB::raw('MD5(CONCAT(
                     COALESCE(order_items.item_variations, \'\'), 
                     \'|\', 
