@@ -315,19 +315,18 @@
                         </span>
                     </li>
                 </ul>
-            </div>
-        </div>
-        <!-- Fixed bottom section for buttons -->
-        <div class="flex-shrink-0 bg-white border-t border-[#EFF0F6] p-4">
-            <div class="flex items-center justify-center gap-6" v-if="carts.length > 0">
-                <button @click.prevent="resetCart"
-                    class="capitalize text-sm font-medium leading-6 font-rubik w-full text-center rounded-3xl py-2 text-white bg-[#FB4E4E]">
-                    {{ $t('button.cancel') }}
-                </button>
-                <button @click.prevent="orderSubmit"
-                    class="capitalize text-sm font-medium leading-6 font-rubik w-full text-center rounded-3xl py-2 text-white bg-[#1AB759]">
-                    {{ $t('button.order') }}
-                </button>
+                
+                <!-- Action buttons - inside scrollable area for mobile visibility -->
+                <div class="flex items-center justify-center gap-6 mt-4" v-if="carts.length > 0">
+                    <button @click.prevent="resetCart"
+                        class="capitalize text-sm font-medium leading-6 font-rubik w-full text-center rounded-3xl py-2 text-white bg-[#FB4E4E]">
+                        {{ $t('button.cancel') }}
+                    </button>
+                    <button @click.prevent="orderSubmit"
+                        class="capitalize text-sm font-medium leading-6 font-rubik w-full text-center rounded-3xl py-2 text-white bg-[#1AB759]">
+                        {{ $t('button.order') }}
+                    </button>
+                </div>
             </div>
         </div>
     </div>
