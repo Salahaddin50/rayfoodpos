@@ -49,9 +49,9 @@
     </div>
 
     <div id="pos-cart"
-        class="db-pos-cartDiv fixed top-0 ltr:right-0 rtl:left-0 w-full h-screen rounded-none z-50 md:z-10 md:top-[85px] ltr:md:right-5 rtl:md:left-5 md:w-[322px] lg:w-[305px] xl:w-[360px] md:h-[calc(100vh-85px)] md:rounded-lg bg-white flex flex-col">
+        class="db-pos-cartDiv pos-cart-height fixed top-0 ltr:right-0 rtl:left-0 w-full rounded-none z-50 md:z-10 md:top-[85px] ltr:md:right-5 rtl:md:left-5 md:w-[322px] lg:w-[305px] xl:w-[360px] md:rounded-lg bg-white flex flex-col">
         <!-- Scrollable content area -->
-        <div class="flex-1 overflow-y-auto thin-scrolling">
+        <div class="flex-1 min-h-0 overflow-y-auto thin-scrolling">
             <div class="p-4">
             <div class="md:hidden text-right mb-3">
                 <button class="db-pos-cartCls" @click="closePosCart('pos-cart')">
@@ -1107,3 +1107,18 @@ export default {
     },
 }
 </script>
+
+<style scoped>
+/* 100vh ignores the tablet browser toolbar, which pushes the panel bottom off-screen; dvh tracks the visible area. */
+.pos-cart-height {
+    height: 100vh;
+    height: 100dvh;
+}
+
+@media (min-width: 768px) {
+    .pos-cart-height {
+        height: calc(100vh - 85px);
+        height: calc(100dvh - 85px);
+    }
+}
+</style>
