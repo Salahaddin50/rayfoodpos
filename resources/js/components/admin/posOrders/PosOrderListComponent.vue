@@ -164,7 +164,7 @@
                                         </span>
                                     </template>
                                     <template #option="{ id, name }">
-                                        <span :class="orderStatusClass(id)">
+                                        <span :class="getStatusColor(id)">
                                             {{ name }}
                                         </span>
                                     </template>
@@ -431,6 +431,24 @@ export default {
         },
     },
     methods: {
+        getStatusColor: function(status) {
+            if (status === this.enums.orderStatusEnum.PENDING) {
+                return 'text-orange-600 font-medium';
+            } else if (status === this.enums.orderStatusEnum.ACCEPT) {
+                return 'text-blue-600 font-medium';
+            } else if (status === this.enums.orderStatusEnum.PREPARING) {
+                return 'text-purple-600 font-medium';
+            } else if (status === this.enums.orderStatusEnum.PREPARED) {
+                return 'text-indigo-600 font-medium';
+            } else if (status === this.enums.orderStatusEnum.DELIVERED) {
+                return 'text-green-600 font-medium';
+            } else if (status === this.enums.orderStatusEnum.CANCELED) {
+                return 'text-gray-600 font-medium';
+            } else if (status === this.enums.orderStatusEnum.REJECTED) {
+                return 'text-red-600 font-medium';
+            }
+            return 'text-gray-600';
+        },
         startAutoRefresh() {
             this.autoRefreshInterval = setInterval(() => {
                 this.list(this.paginationPage || 1);
