@@ -91,6 +91,10 @@ export default {
             this.$store.dispatch("dashboard/salesSummary", date).then((res) => {
                 this.total_sales = res.data.data.total_sales;
                 this.avg_per_day = res.data.data.avg_per_day;
+                
+                // Generate day labels (1, 2, 3, ... for the number of days)
+                const dayLabels = res.data.data.per_day_sales.map((_, index) => (index + 1).toString());
+                
                 let options = {
                     series: [{
                         name: this.$t('label.sales'),
@@ -107,19 +111,56 @@ export default {
                     plotOptions: {
                         bar: {
                             borderRadius: 4,
-                            columnWidth: '60%',
+                            columnWidth: '50%',
                         }
                     },
                     xaxis: {
-                        tooltip: { enabled: false },
-                        axisBorder: { show: false },
+                        categories: dayLabels,
+                        labels: {
+                            show: true,
+                            style: {
+                                colors: '#6B7280',
+                                fontSize: '12px',
+                            }
+                        },
+                        axisBorder: { 
+                            show: true,
+                            color: '#E5E7EB'
+                        },
+                        axisTicks: {
+                            show: true,
+                            color: '#E5E7EB'
+                        }
+                    },
+                    yaxis: { 
+                        show: true,
+                        labels: {
+                            show: true,
+                            style: {
+                                colors: '#6B7280',
+                                fontSize: '12px',
+                            },
+                            formatter: function(value) {
+                                return '₼' + value.toFixed(0);
+                            }
+                        }
+                    },
+                    tooltip: {
+                        y: {
+                            formatter: function(value) {
+                                return '₼' + value.toFixed(2);
+                            }
+                        }
                     },
                     stroke: {
                         width: 0,
                     },
                     colors: ["#FF4F99"],
-                    grid: { show: false },
-                    yaxis: { show: false },
+                    grid: { 
+                        show: true,
+                        borderColor: '#F3F4F6',
+                        strokeDashArray: 3,
+                    },
                     dataLabels: { enabled: false, },
                 };
 
