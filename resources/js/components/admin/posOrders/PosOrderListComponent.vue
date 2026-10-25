@@ -161,8 +161,6 @@
                                             { id: enums.orderStatusEnum.PREPARING, name: $t('label.preparing') },
                                             { id: enums.orderStatusEnum.PREPARED, name: $t('label.prepared') },
                                             { id: enums.orderStatusEnum.DELIVERED, name: $t('label.delivered') },
-                                            { id: enums.orderStatusEnum.CANCELED, name: $t('label.canceled') },
-                                            { id: enums.orderStatusEnum.REJECTED, name: $t('label.rejected') },
                                         ]"
                                         label-by="name"
                                         value-by="id"
