@@ -130,7 +130,8 @@
                         value="point"
                         class="num bg-[#F7F7FC] rounded-lg p-2.5 flex items-center justify-center text-base font-medium text-[#1F1F39]">.</button>
                 </div>
-                <button @click="confirmOrder" type="button"
+                <button @click="confirmOrder" type="button" :disabled="loading.isActive || isSubmitting"
+                    :class="{'opacity-50 cursor-not-allowed': loading.isActive || isSubmitting}"
                     class="rounded-3xl text-base py-2 px-3 font-medium w-full text-white bg-primary">{{
                         $t("label.confirm_and_print") }}</button>
             </div>
@@ -162,6 +163,7 @@ export default {
                 isActive: false,
             },
             order: {},
+            isSubmitting: false,
             posPaymentMethodEnum: posPaymentMethodEnum,
             inputIdName: "cashInput"
         };
@@ -203,7 +205,15 @@ export default {
             this.$props.props.form.pos_payment_note = "";
         },
         confirmOrder: function () {
+            // Prevent double submission
+            if (this.isSubmitting) {
+                return;
+            }
+            
             try {
+                this.isSubmitting = true;
+                this.loading.isActive = true;
+                
                 // Normalize delivery_charge to avoid 422 (Laravel numeric + nullable fails on "")
                 // Convert empty string, null, undefined, or invalid values to 0
                 const deliveryChargeValue = this.$props.props.form.delivery_charge;
@@ -267,7 +277,10 @@ export default {
                         appService.modalHide('#orderpayment');
                         this.$store.dispatch('posCart/resetCart').then(res => {
                             this.loading.isActive = false;
-                        }).catch();
+                            this.isSubmitting = false;
+                        }).catch(() => {
+                            this.isSubmitting = false;
+                        });
 
                         // Best-effort refresh from server (keeps receipt consistent with latest backend formatting).
                         // Do not block showing the receipt.
@@ -301,6 +314,7 @@ export default {
                         }
                     }).catch((err) => {
                         this.loading.isActive = false;
+                        this.isSubmitting = false;
                         if (typeof err.response.data.errors === 'object') {
                             _.forEach(err.response.data.errors, (error) => {
                                 alertService.error(error[0]);
@@ -309,10 +323,12 @@ export default {
                     });
                 }).catch((err) => {
                     this.loading.isActive = false;
+                    this.isSubmitting = false;
                 });
 
             } catch (err) {
                 this.loading.isActive = false;
+                this.isSubmitting = false;
                 alertService.error(err);
             }
         },
