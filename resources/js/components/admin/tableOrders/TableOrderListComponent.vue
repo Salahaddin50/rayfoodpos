@@ -185,7 +185,7 @@
                                         </span>
                                     </template>
                                     <template #option="{ id, name }">
-                                        <span :class="getStatusColor(id)">
+                                        <span :style="getStatusColor(id)">
                                             {{ name }}
                                         </span>
                                     </template>
@@ -471,21 +471,21 @@ export default {
     methods: {
         getStatusColor: function(status) {
             if (status === this.enums.orderStatusEnum.PENDING) {
-                return 'text-orange-600 font-medium';
+                return { color: '#F6A609', fontWeight: '500' }; // Orange
             } else if (status === this.enums.orderStatusEnum.ACCEPT) {
-                return 'text-blue-600 font-medium';
+                return { color: '#3B82F6', fontWeight: '500' }; // Blue
             } else if (status === this.enums.orderStatusEnum.PREPARING) {
-                return 'text-purple-600 font-medium';
+                return { color: '#9333EA', fontWeight: '500' }; // Purple
             } else if (status === this.enums.orderStatusEnum.PREPARED) {
-                return 'text-indigo-600 font-medium';
+                return { color: '#6366F1', fontWeight: '500' }; // Indigo
             } else if (status === this.enums.orderStatusEnum.DELIVERED) {
-                return 'text-green-600 font-medium';
+                return { color: '#1AB759', fontWeight: '500' }; // Green
             } else if (status === this.enums.orderStatusEnum.CANCELED) {
-                return 'text-gray-600 font-medium';
+                return { color: '#6B7280', fontWeight: '500' }; // Gray
             } else if (status === this.enums.orderStatusEnum.REJECTED) {
-                return 'text-red-600 font-medium';
+                return { color: '#DC2626', fontWeight: '500' }; // Red
             }
-            return 'text-gray-600';
+            return { color: '#6B7280', fontWeight: '500' };
         },
         startAutoRefresh() {
             this.autoRefreshInterval = setInterval(() => {
