@@ -39,7 +39,7 @@ class ItemReportResource extends JsonResource
             "flat_total_income" => AppLibrary::flatAmountFormat($this->total_income ?? 0),
             "convert_total_income" => AppLibrary::convertAmountFormat($this->total_income ?? 0),
             "currency_total_income" => AppLibrary::currencyAmountFormat($this->total_income ?? 0),
-            "created_at"       => $this->first_order_date ? date('Y-m-d', strtotime($this->first_order_date)) : '',
+            "created_at"       => $this->latest_order_date ? date('Y-m-d H:i', strtotime($this->latest_order_date)) : '',
             "order_numbers"    => $this->order_numbers ?? '',
         ];
     }
