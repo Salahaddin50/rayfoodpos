@@ -97,21 +97,25 @@ export default {
                         data: res.data.data.per_day_sales,
                     }],
                     chart: {
-                        type: 'area',
+                        type: 'bar',
                         height: 250,
                         fontFamily: 'inherit',
                         parentHeightOffset: 0,
                         zoom: { enabled: false },
                         toolbar: { show: false, },
                     },
+                    plotOptions: {
+                        bar: {
+                            borderRadius: 4,
+                            columnWidth: '60%',
+                        }
+                    },
                     xaxis: {
                         tooltip: { enabled: false },
                         axisBorder: { show: false },
                     },
                     stroke: {
-                        width: 3,
-                        lineCap: "round",
-                        curve: "smooth",
+                        width: 0,
                     },
                     colors: ["#FF4F99"],
                     grid: { show: false },
