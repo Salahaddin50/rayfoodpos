@@ -137,41 +137,65 @@
                                 <span v-else class="text-[#D9DBE9]">-</span>
                             </td>
                             <td class="db-table-body-td">{{ order.order_datetime }}</td>
-                            <td class="db-table-body-td" style="width: 200px; min-width: 200px;">
-                                <vue-select
-                                    v-if="permissionChecker('pos_orders_edit')"
-                                    class="db-field-control f-b-custom-select"
-                                    :options="[
-                                        { id: enums.orderStatusEnum.PENDING, name: $t('label.pending') },
-                                        { id: enums.orderStatusEnum.ACCEPT, name: $t('label.accept') },
-                                        { id: enums.orderStatusEnum.PREPARING, name: $t('label.preparing') },
-                                        { id: enums.orderStatusEnum.PREPARED, name: $t('label.prepared') },
-                                        { id: enums.orderStatusEnum.DELIVERED, name: $t('label.delivered') },
-                                        { id: enums.orderStatusEnum.CANCELED, name: $t('label.canceled') },
-                                        { id: enums.orderStatusEnum.REJECTED, name: $t('label.rejected') },
-                                    ]"
-                                    label-by="name"
-                                    value-by="id"
-                                    :closeOnSelect="true"
-                                    :searchable="false"
-                                    :clearOnClose="false"
-                                    :modelValue="order.status"
-                                    @update:modelValue="changeOrderStatus(order, $event)"
-                                >
-                                    <template #selected-option="{ name }">
-                                        <span :class="orderStatusClass(order.status)">
-                                            {{ name }}
-                                        </span>
-                                    </template>
-                                    <template #option="{ id, name }">
-                                        <span :style="getStatusColor(id)">
-                                            {{ name }}
-                                        </span>
-                                    </template>
-                                </vue-select>
-                                <span v-else :class="orderStatusClass(order.status)">
-                                    {{ enums.orderStatusEnumArray[order.status] }}
-                                </span>
+                            <td class="db-table-body-td" style="width: 250px; min-width: 250px;">
+                                <div class="flex items-center gap-2">
+                                    <!-- Color indicator circle -->
+                                    <span 
+                                        :style="{ 
+                                            display: 'inline-block',
+                                            width: '12px', 
+                                            height: '12px', 
+                                            borderRadius: '50%',
+                                            backgroundColor: getStatusColorDot(order.status),
+                                            flexShrink: 0
+                                        }"
+                                    ></span>
+                                    <!-- Status dropdown -->
+                                    <vue-select
+                                        v-if="permissionChecker('pos_orders_edit')"
+                                        class="db-field-control f-b-custom-select"
+                                        style="flex: 1;"
+                                        :options="[
+                                            { id: enums.orderStatusEnum.PENDING, name: $t('label.pending') },
+                                            { id: enums.orderStatusEnum.ACCEPT, name: $t('label.accept') },
+                                            { id: enums.orderStatusEnum.PREPARING, name: $t('label.preparing') },
+                                            { id: enums.orderStatusEnum.PREPARED, name: $t('label.prepared') },
+                                            { id: enums.orderStatusEnum.DELIVERED, name: $t('label.delivered') },
+                                            { id: enums.orderStatusEnum.CANCELED, name: $t('label.canceled') },
+                                            { id: enums.orderStatusEnum.REJECTED, name: $t('label.rejected') },
+                                        ]"
+                                        label-by="name"
+                                        value-by="id"
+                                        :closeOnSelect="true"
+                                        :searchable="false"
+                                        :clearOnClose="false"
+                                        :modelValue="order.status"
+                                        @update:modelValue="changeOrderStatus(order, $event)"
+                                    >
+                                        <template #selected-option="{ name }">
+                                            <span :class="orderStatusClass(order.status)">
+                                                {{ name }}
+                                            </span>
+                                        </template>
+                                        <template #option="{ id, name }">
+                                            <div class="flex items-center gap-2">
+                                                <span 
+                                                    :style="{ 
+                                                        display: 'inline-block',
+                                                        width: '10px', 
+                                                        height: '10px', 
+                                                        borderRadius: '50%',
+                                                        backgroundColor: getStatusColorDot(id)
+                                                    }"
+                                                ></span>
+                                                <span>{{ name }}</span>
+                                            </div>
+                                        </template>
+                                    </vue-select>
+                                    <span v-else :class="orderStatusClass(order.status)">
+                                        {{ enums.orderStatusEnumArray[order.status] }}
+                                    </span>
+                                </div>
                             </td>
                             <td class="db-table-body-td" style="width: 200px; min-width: 200px;">
                                 <template v-if="isDriverApplicable(order)">
@@ -431,6 +455,16 @@ export default {
         },
     },
     methods: {
+        getStatusColorDot: function(status) {
+            if (status === this.enums.orderStatusEnum.PENDING) return '#ea580c'; // orange
+            if (status === this.enums.orderStatusEnum.ACCEPT) return '#2563eb'; // blue
+            if (status === this.enums.orderStatusEnum.PREPARING) return '#9333ea'; // purple
+            if (status === this.enums.orderStatusEnum.PREPARED) return '#4f46e5'; // indigo
+            if (status === this.enums.orderStatusEnum.DELIVERED) return '#16a34a'; // green
+            if (status === this.enums.orderStatusEnum.CANCELED) return '#6b7280'; // gray
+            if (status === this.enums.orderStatusEnum.REJECTED) return '#dc2626'; // red
+            return '#6b7280'; // default gray
+        },
         getStatusColor: function(status) {
             if (status === this.enums.orderStatusEnum.PENDING) {
                 return { color: '#ea580c', fontWeight: '500' }; // orange
