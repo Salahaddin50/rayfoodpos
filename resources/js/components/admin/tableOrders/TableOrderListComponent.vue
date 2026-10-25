@@ -158,14 +158,41 @@
                             <td class="db-table-body-td">
                                 {{ order.order_datetime }}
                             </td>
-                            <td class="db-table-body-td">
-                                <span :class="[orderStatusClass(order.status), { 'ff-blink-pending': order.status === enums.orderStatusEnum.PENDING }]">
+                            <td class="db-table-body-td" style="width: 200px; min-width: 200px;">
+                                <vue-select
+                                    v-if="permissionChecker('table_orders_edit')"
+                                    class="db-field-control f-b-custom-select"
+                                    :options="[
+                                        { id: enums.orderStatusEnum.PENDING, name: $t('label.pending'), class: 'text-orange-600' },
+                                        { id: enums.orderStatusEnum.ACCEPT, name: $t('label.accept'), class: 'text-blue-600' },
+                                        { id: enums.orderStatusEnum.PREPARING, name: $t('label.preparing'), class: 'text-purple-600' },
+                                        { id: enums.orderStatusEnum.PREPARED, name: $t('label.prepared'), class: 'text-indigo-600' },
+                                        { id: enums.orderStatusEnum.DELIVERED, name: $t('label.delivered'), class: 'text-green-600' },
+                                        { id: enums.orderStatusEnum.CANCELED, name: $t('label.canceled'), class: 'text-gray-600' },
+                                        { id: enums.orderStatusEnum.REJECTED, name: $t('label.rejected'), class: 'text-red-600' },
+                                    ]"
+                                    label-by="name"
+                                    value-by="id"
+                                    :closeOnSelect="true"
+                                    :searchable="false"
+                                    :clearOnClose="false"
+                                    :modelValue="order.status"
+                                    @update:modelValue="changeOrderStatus(order, $event)"
+                                >
+                                    <template #selected-option="{ name }">
+                                        <span :class="[orderStatusClass(order.status), { 'ff-blink-pending': order.status === enums.orderStatusEnum.PENDING }]">
+                                            {{ name }}
+                                        </span>
+                                    </template>
+                                </vue-select>
+                                <span v-else :class="[orderStatusClass(order.status), { 'ff-blink-pending': order.status === enums.orderStatusEnum.PENDING }]">
                                     {{ enums.orderStatusEnumArray[order.status] }}
                                 </span>
-                                <span :class="orderStatusClass(order.is_advance_order)"
-                                    v-if="order.is_advance_order === enums.isAdvanceOrderEnum.YES">
-                                    {{ $t("label.advance") }}
-                                </span>
+                                <div v-if="order.is_advance_order === enums.isAdvanceOrderEnum.YES" class="mt-1">
+                                    <span :class="orderStatusClass(order.is_advance_order)" class="text-xs">
+                                        {{ $t("label.advance") }}
+                                    </span>
+                                </div>
                             </td>
                             <td class="db-table-body-td" style="width: 200px; min-width: 200px;">
                                 <template v-if="isDriverApplicable(order)">
@@ -684,6 +711,31 @@ export default {
                 this.$store.dispatch("tableOrder/changeStatus", {
                     id: id,
                     status: this.enums.orderStatusEnum.DELIVERED,
+                }).then((res) => {
+                    this.loading.isActive = false;
+                    alertService.successFlip(
+                        1,
+                        this.$t("label.status")
+                    );
+                    this.list();
+                }).catch((err) => {
+                    this.loading.isActive = false;
+                    alertService.error(err.response.data.message);
+                });
+            } catch (err) {
+                this.loading.isActive = false;
+                alertService.error(err.response.data.message);
+            }
+        },
+        changeOrderStatus: function (order, newStatus) {
+            if (!order || order.status === newStatus) {
+                return;
+            }
+            try {
+                this.loading.isActive = true;
+                this.$store.dispatch("tableOrder/changeStatus", {
+                    id: order.id,
+                    status: newStatus,
                 }).then((res) => {
                     this.loading.isActive = false;
                     alertService.successFlip(

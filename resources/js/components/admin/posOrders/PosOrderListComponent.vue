@@ -137,8 +137,34 @@
                                 <span v-else class="text-[#D9DBE9]">-</span>
                             </td>
                             <td class="db-table-body-td">{{ order.order_datetime }}</td>
-                            <td class="db-table-body-td">
-                                <span :class="orderStatusClass(order.status)">
+                            <td class="db-table-body-td" style="width: 200px; min-width: 200px;">
+                                <vue-select
+                                    v-if="permissionChecker('pos_orders_edit')"
+                                    class="db-field-control f-b-custom-select"
+                                    :options="[
+                                        { id: enums.orderStatusEnum.PENDING, name: $t('label.pending'), class: 'text-orange-600' },
+                                        { id: enums.orderStatusEnum.ACCEPT, name: $t('label.accept'), class: 'text-blue-600' },
+                                        { id: enums.orderStatusEnum.PREPARING, name: $t('label.preparing'), class: 'text-purple-600' },
+                                        { id: enums.orderStatusEnum.PREPARED, name: $t('label.prepared'), class: 'text-indigo-600' },
+                                        { id: enums.orderStatusEnum.DELIVERED, name: $t('label.delivered'), class: 'text-green-600' },
+                                        { id: enums.orderStatusEnum.CANCELED, name: $t('label.canceled'), class: 'text-gray-600' },
+                                        { id: enums.orderStatusEnum.REJECTED, name: $t('label.rejected'), class: 'text-red-600' },
+                                    ]"
+                                    label-by="name"
+                                    value-by="id"
+                                    :closeOnSelect="true"
+                                    :searchable="false"
+                                    :clearOnClose="false"
+                                    :modelValue="order.status"
+                                    @update:modelValue="changeOrderStatus(order, $event)"
+                                >
+                                    <template #selected-option="{ name }">
+                                        <span :class="orderStatusClass(order.status)">
+                                            {{ name }}
+                                        </span>
+                                    </template>
+                                </vue-select>
+                                <span v-else :class="orderStatusClass(order.status)">
                                     {{ enums.orderStatusEnumArray[order.status] }}
                                 </span>
                             </td>
@@ -604,6 +630,31 @@ export default {
                 this.$store.dispatch("posOrder/changeStatus", {
                     id: id,
                     status: this.enums.orderStatusEnum.DELIVERED,
+                }).then((res) => {
+                    this.loading.isActive = false;
+                    alertService.successFlip(
+                        1,
+                        this.$t("label.status")
+                    );
+                    this.list();
+                }).catch((err) => {
+                    this.loading.isActive = false;
+                    alertService.error(err.response.data.message);
+                });
+            } catch (err) {
+                this.loading.isActive = false;
+                alertService.error(err.response.data.message);
+            }
+        },
+        changeOrderStatus: function (order, newStatus) {
+            if (!order || order.status === newStatus) {
+                return;
+            }
+            try {
+                this.loading.isActive = true;
+                this.$store.dispatch("posOrder/changeStatus", {
+                    id: order.id,
+                    status: newStatus,
                 }).then((res) => {
                     this.loading.isActive = false;
                     alertService.successFlip(
