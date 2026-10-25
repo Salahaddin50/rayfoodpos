@@ -471,21 +471,21 @@ export default {
     methods: {
         getStatusColor: function(status) {
             if (status === this.enums.orderStatusEnum.PENDING) {
-                return { color: '#F6A609', fontWeight: '500' }; // Orange
+                return { color: '#ea580c', fontWeight: '500' }; // orange
             } else if (status === this.enums.orderStatusEnum.ACCEPT) {
-                return { color: '#3B82F6', fontWeight: '500' }; // Blue
+                return { color: '#2563eb', fontWeight: '500' }; // blue
             } else if (status === this.enums.orderStatusEnum.PREPARING) {
-                return { color: '#9333EA', fontWeight: '500' }; // Purple
+                return { color: '#9333ea', fontWeight: '500' }; // purple
             } else if (status === this.enums.orderStatusEnum.PREPARED) {
-                return { color: '#6366F1', fontWeight: '500' }; // Indigo
+                return { color: '#4f46e5', fontWeight: '500' }; // indigo
             } else if (status === this.enums.orderStatusEnum.DELIVERED) {
-                return { color: '#1AB759', fontWeight: '500' }; // Green
+                return { color: '#16a34a', fontWeight: '500' }; // green
             } else if (status === this.enums.orderStatusEnum.CANCELED) {
-                return { color: '#6B7280', fontWeight: '500' }; // Gray
+                return { color: '#6b7280', fontWeight: '500' }; // gray
             } else if (status === this.enums.orderStatusEnum.REJECTED) {
-                return { color: '#DC2626', fontWeight: '500' }; // Red
+                return { color: '#dc2626', fontWeight: '500' }; // red
             }
-            return { color: '#6B7280', fontWeight: '500' };
+            return { color: '#6b7280', fontWeight: '400' };
         },
         startAutoRefresh() {
             this.autoRefreshInterval = setInterval(() => {
