@@ -142,13 +142,13 @@
                                     v-if="permissionChecker('pos_orders_edit')"
                                     class="db-field-control f-b-custom-select"
                                     :options="[
-                                        { id: enums.orderStatusEnum.PENDING, name: $t('label.pending'), class: 'text-orange-600' },
-                                        { id: enums.orderStatusEnum.ACCEPT, name: $t('label.accept'), class: 'text-blue-600' },
-                                        { id: enums.orderStatusEnum.PREPARING, name: $t('label.preparing'), class: 'text-purple-600' },
-                                        { id: enums.orderStatusEnum.PREPARED, name: $t('label.prepared'), class: 'text-indigo-600' },
-                                        { id: enums.orderStatusEnum.DELIVERED, name: $t('label.delivered'), class: 'text-green-600' },
-                                        { id: enums.orderStatusEnum.CANCELED, name: $t('label.canceled'), class: 'text-gray-600' },
-                                        { id: enums.orderStatusEnum.REJECTED, name: $t('label.rejected'), class: 'text-red-600' },
+                                        { id: enums.orderStatusEnum.PENDING, name: $t('label.pending') },
+                                        { id: enums.orderStatusEnum.ACCEPT, name: $t('label.accept') },
+                                        { id: enums.orderStatusEnum.PREPARING, name: $t('label.preparing') },
+                                        { id: enums.orderStatusEnum.PREPARED, name: $t('label.prepared') },
+                                        { id: enums.orderStatusEnum.DELIVERED, name: $t('label.delivered') },
+                                        { id: enums.orderStatusEnum.CANCELED, name: $t('label.canceled') },
+                                        { id: enums.orderStatusEnum.REJECTED, name: $t('label.rejected') },
                                     ]"
                                     label-by="name"
                                     value-by="id"
@@ -160,6 +160,11 @@
                                 >
                                     <template #selected-option="{ name }">
                                         <span :class="orderStatusClass(order.status)">
+                                            {{ name }}
+                                        </span>
+                                    </template>
+                                    <template #option="{ id, name }">
+                                        <span :class="orderStatusClass(id)">
                                             {{ name }}
                                         </span>
                                     </template>
