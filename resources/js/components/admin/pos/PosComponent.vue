@@ -1009,26 +1009,23 @@ export default {
                             return;
                         }
                         
-                        // Parse price from currency string if needed
-                        let itemPrice = 0;
-                        if (orderItem.price) {
-                            // Remove currency symbols and parse
-                            itemPrice = parseFloat(String(orderItem.price).replace(/[^\d.-]/g, '')) || 0;
-                        } else if (orderItem.item_price) {
-                            itemPrice = parseFloat(orderItem.item_price) || 0;
-                        }
+                        // Parse values - now API returns numeric values directly
+                        const itemPrice = parseFloat(orderItem.price) || 0;
+                        const itemVariationTotal = parseFloat(orderItem.item_variation_total) || 0;
+                        const itemExtraTotal = parseFloat(orderItem.item_extra_total) || 0;
+                        const itemDiscount = parseFloat(orderItem.discount) || 0;
                         
                         // Convert order item to cart format - matching posCart store structure
                         const cartItem = {
                             item_id: orderItem.item_id,
                             name: orderItem.item_name || '',
                             image: orderItem.item_image || '',
-                            currency_price: orderItem.total_currency_price || '',
+                            currency_price: orderItem.price_currency || orderItem.total_currency_price || '',
                             convert_price: itemPrice,
                             quantity: parseInt(orderItem.quantity || 1),
-                            discount: parseFloat(String(orderItem.discount || 0).replace(/[^\d.-]/g, '')) || 0,
-                            item_variation_total: parseFloat(orderItem.item_variation_total || 0),
-                            item_extra_total: parseFloat(orderItem.item_extra_total || 0),
+                            discount: itemDiscount,
+                            item_variation_total: itemVariationTotal,
+                            item_extra_total: itemExtraTotal,
                             instruction: orderItem.instruction || '',
                             item_variations: {
                                 variations: {},
