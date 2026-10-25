@@ -1040,24 +1040,44 @@ export default {
                             }
                         };
                         
-                        // Load variations - handle null/undefined and ensure array
-                        if (orderItem.item_variations && Array.isArray(orderItem.item_variations) && orderItem.item_variations.length > 0) {
-                            orderItem.item_variations.forEach((variation) => {
-                                if (variation && variation.variation_name && variation.id) {
-                                    cartItem.item_variations.variations[variation.variation_name] = variation.id;
-                                    cartItem.item_variations.names[variation.variation_name] = variation.name || '';
-                                }
-                            });
+                        // Load variations - handle both object format {variations: {}, names: {}} and array format
+                        if (orderItem.item_variations) {
+                            if (orderItem.item_variations.variations && typeof orderItem.item_variations.variations === 'object') {
+                                // New format: {variations: {attrId: varId}, names: {attrName: varName}}
+                                cartItem.item_variations.variations = orderItem.item_variations.variations || {};
+                                cartItem.item_variations.names = orderItem.item_variations.names || {};
+                            } else if (Array.isArray(orderItem.item_variations) && orderItem.item_variations.length > 0) {
+                                // Old/array format: [{id: varId, variation_name: attrName, name: varName}, ...]
+                                orderItem.item_variations.forEach((variation) => {
+                                    if (variation && variation.id) {
+                                        // Use variation_name as key if available, otherwise use item_attribute_id
+                                        const key = variation.variation_name || variation.item_attribute_id;
+                                        if (key) {
+                                            cartItem.item_variations.variations[key] = variation.id;
+                                            cartItem.item_variations.names[key] = variation.name || '';
+                                        }
+                                    }
+                                });
+                            }
                         }
-                        
-                        // Load extras - handle null/undefined and ensure array
-                        if (orderItem.item_extras && Array.isArray(orderItem.item_extras) && orderItem.item_extras.length > 0) {
-                            orderItem.item_extras.forEach((extra) => {
-                                if (extra && extra.id) {
-                                    cartItem.item_extras.extras.push(extra.id);
-                                    cartItem.item_extras.names.push(extra.name || '');
-                                }
-                            });
+
+                        // Load extras - handle both object format {extras: [], names: []} and array format
+                        if (orderItem.item_extras) {
+                            if (orderItem.item_extras.extras && Array.isArray(orderItem.item_extras.extras)) {
+                                // New format: {extras: [ids], names: [names]}
+                                cartItem.item_extras.extras = orderItem.item_extras.extras.filter(id => id !== null && id !== undefined);
+                                cartItem.item_extras.names = orderItem.item_extras.names && Array.isArray(orderItem.item_extras.names)
+                                    ? orderItem.item_extras.names.filter(name => name !== null && name !== undefined)
+                                    : [];
+                            } else if (Array.isArray(orderItem.item_extras) && orderItem.item_extras.length > 0) {
+                                // Old format: [{id: 1, name: 'Extra1'}, ...]
+                                orderItem.item_extras.forEach((extra) => {
+                                    if (extra && extra.id) {
+                                        cartItem.item_extras.extras.push(extra.id);
+                                        cartItem.item_extras.names.push(extra.name || '');
+                                    }
+                                });
+                            }
                         }
                         
                         cartItems.push(cartItem);
