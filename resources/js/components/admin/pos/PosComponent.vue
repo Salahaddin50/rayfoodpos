@@ -1047,14 +1047,14 @@ export default {
                                 cartItem.item_variations.variations = orderItem.item_variations.variations || {};
                                 cartItem.item_variations.names = orderItem.item_variations.names || {};
                             } else if (Array.isArray(orderItem.item_variations) && orderItem.item_variations.length > 0) {
-                                // Old/array format: [{id: varId, variation_name: attrName, name: varName}, ...]
+                                // Array format from DB: [{id: varId, item_attribute_id: attrId, variation_name: attrName, name: varName}, ...]
                                 orderItem.item_variations.forEach((variation) => {
-                                    if (variation && variation.id) {
-                                        // Use variation_name as key if available, otherwise use item_attribute_id
-                                        const key = variation.variation_name || variation.item_attribute_id;
-                                        if (key) {
-                                            cartItem.item_variations.variations[key] = variation.id;
-                                            cartItem.item_variations.names[key] = variation.name || '';
+                                    if (variation && variation.id && variation.item_attribute_id) {
+                                        // Use item_attribute_id as key (this is how cart stores it)
+                                        cartItem.item_variations.variations[variation.item_attribute_id] = variation.id;
+                                        // Use variation_name for names mapping
+                                        if (variation.variation_name) {
+                                            cartItem.item_variations.names[variation.variation_name] = variation.name || '';
                                         }
                                     }
                                 });
