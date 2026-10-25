@@ -434,6 +434,7 @@ class ItemService
                         ELSE items.price * order_items.quantity 
                     END) as total_income'),
                     DB::raw('MIN(orders.order_datetime) as first_order_date'),
+                    DB::raw('MAX(orders.order_datetime) as latest_order_date'),
                     DB::raw('GROUP_CONCAT(DISTINCT orders.order_serial_no ORDER BY orders.order_serial_no SEPARATOR \', \') as order_numbers')
                 );
 
@@ -479,7 +480,7 @@ class ItemService
                 'order_items.item_variations',
                 'order_items.item_extras'
             )
-            ->orderByDesc('total_income');
+            ->orderByDesc('latest_order_date'); // Sort by latest order date to show recent orders first
 
             $result = $method === 'paginate' ? $query->paginate($methodValue) : $query->get();
             
