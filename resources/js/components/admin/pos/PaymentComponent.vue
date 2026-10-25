@@ -245,6 +245,10 @@ export default {
                         const isEditMode = !!this.$props.props.form.order_id;
                         const orderId = savedOrder?.id || this.$props.props.form.order_id;
                         
+                        // Clear loading immediately after successful save
+                        this.loading.isActive = false;
+                        this.isSubmitting = false;
+                        
                         if (savedOrder) {
                             // Use the save response immediately for the receipt (avoids extra fetch + avoids 401 issues)
                             this.order = savedOrder;
@@ -275,12 +279,9 @@ export default {
                         this.$props.props.form.order_id = null;
                         this.$props.props.form.order_serial_no = null;
                         appService.modalHide('#orderpayment');
-                        this.$store.dispatch('posCart/resetCart').then(res => {
-                            this.loading.isActive = false;
-                            this.isSubmitting = false;
-                        }).catch(() => {
-                            this.isSubmitting = false;
-                        });
+                        
+                        // Reset cart in background (don't wait for it)
+                        this.$store.dispatch('posCart/resetCart').catch(() => {});
 
                         // Best-effort refresh from server (keeps receipt consistent with latest backend formatting).
                         // Do not block showing the receipt.
