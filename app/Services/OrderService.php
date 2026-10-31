@@ -79,11 +79,10 @@ class OrderService
 
             // Get the selected branch for strict filtering
             $selectedBranchId = $this->branch();
-            Log::info('SalesReport list - Selected Branch ID: ' . $selectedBranchId . ', User ID: ' . Auth::id());
+            Log::info('OrderService list - Selected Branch ID: ' . $selectedBranchId . ', User ID: ' . Auth::id());
 
             return Order::withoutGlobalScope(\App\Models\Scopes\BranchScope::class)
                 ->where('branch_id', '=', $selectedBranchId)
-                ->where('payment_status', PaymentStatus::PAID) // Only include paid orders to match dashboard
                 ->with('transaction', 'orderItems', 'branch', 'user', 'diningTable', 'takeawayType', 'driver')
                 ->where(function ($query) use ($requests) {
                 if (isset($requests['from_date']) && isset($requests['to_date'])) {
@@ -98,6 +97,8 @@ class OrderService
                 foreach ($requests as $key => $request) {
                     if (in_array($key, $this->orderFilter)) {
                         if ($key === "status") {
+                            $query->where($key, (int)$request);
+                        } else if ($key === "payment_status") {
                             $query->where($key, (int)$request);
                         } else if ($key === 'payment_method') {
                             if ((int)$request > 0) {
@@ -1134,6 +1135,8 @@ class OrderService
                 foreach ($requests as $key => $request) {
                     if (in_array($key, $this->orderFilter)) {
                         if ($key === "status") {
+                            $query->where($key, (int)$request);
+                        } else if ($key === "payment_status") {
                             $query->where($key, (int)$request);
                         } else if ($key === 'payment_method') {
                             if ((int)$request > 0) {
