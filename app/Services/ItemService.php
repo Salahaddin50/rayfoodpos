@@ -7,6 +7,7 @@ use Exception;
 use App\Enums\Ask;
 use App\Models\Item;
 use App\Enums\Status;
+use App\Enums\PaymentStatus;
 use Illuminate\Support\Str;
 use App\Models\ItemVariation;
 use App\Http\Requests\ItemRequest;
@@ -444,6 +445,9 @@ class ItemService
                 $query->where('orders.branch_id', '=', $selectedBranchId);
                 Log::info('ItemsReport - Filtering by branch_id: ' . $selectedBranchId . ', User ID: ' . Auth::id());
             }
+
+            // Filter by paid orders only to match dashboard and sales report
+            $query->where('orders.payment_status', PaymentStatus::PAID);
             
             // Apply date filtering
             if (isset($requests['from_date']) && !empty($requests['from_date']) && 
