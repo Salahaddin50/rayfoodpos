@@ -413,11 +413,7 @@ class ItemService
                     DB::raw('MAX(COALESCE(dining_tables.name, \'\')) as table_name'),
                     DB::raw('MAX(COALESCE(takeaway_types.name, \'\')) as takeaway_type_name'),
                     // Calculate average unit price for this grouping
-                    DB::raw('ROUND(AVG(CASE 
-                        WHEN order_items.total_price > 0 AND order_items.quantity > 0 
-                        THEN order_items.total_price / order_items.quantity 
-                        ELSE items.price 
-                    END), 2) as unit_price'),
+                    DB::raw('ROUND(AVG(order_items.total_price / order_items.quantity), 2) as unit_price'),
                     // Hash of variations+extras for grouping
                     DB::raw('MD5(CONCAT(
                         COALESCE(order_items.item_variations, \'\'), 
@@ -429,11 +425,7 @@ class ItemService
                     'order_items.item_variations',
                     'order_items.item_extras',
                     DB::raw('SUM(order_items.quantity) as total_quantity'),
-                    DB::raw('SUM(CASE 
-                        WHEN order_items.total_price > 0 
-                        THEN order_items.total_price 
-                        ELSE items.price * order_items.quantity 
-                    END) as total_income'),
+                    DB::raw('SUM(order_items.total_price) as total_income'),
                     DB::raw('MIN(orders.order_datetime) as first_order_date'),
                     DB::raw('MAX(orders.order_datetime) as latest_order_date'),
                     DB::raw('GROUP_CONCAT(DISTINCT orders.order_serial_no ORDER BY orders.order_serial_no SEPARATOR \', \') as order_numbers')
