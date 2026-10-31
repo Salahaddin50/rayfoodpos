@@ -396,8 +396,7 @@ class ItemService
             $method      = $request->get('paginate', 0) == 1 ? 'paginate' : 'get';
             $methodValue = $request->get('paginate', 0) == 1 ? $request->get('per_page', 10) : '*';
 
-            // Simpler query that groups by item ID and a hash of variations/extras
-            // This avoids complex expressions in GROUP BY
+            // Query without grouping - show each order item as a separate line
             $query = DB::table('order_items')
                 ->join('items', 'order_items.item_id', '=', 'items.id')
                 ->join('orders', 'order_items.order_id', '=', 'orders.id')
@@ -410,25 +409,17 @@ class ItemService
                     'items.item_type',
                     'item_categories.name as category_name',
                     'orders.order_type',
-                    DB::raw('MAX(COALESCE(dining_tables.name, \'\')) as table_name'),
-                    DB::raw('MAX(COALESCE(takeaway_types.name, \'\')) as takeaway_type_name'),
-                    // Calculate average unit price for this grouping
-                    DB::raw('ROUND(AVG(order_items.total_price / order_items.quantity), 2) as unit_price'),
-                    // Hash of variations+extras for grouping
-                    DB::raw('MD5(CONCAT(
-                        COALESCE(order_items.item_variations, \'\'), 
-                        \'|\', 
-                        COALESCE(order_items.item_extras, \'\'),
-                        \'|\',
-                        COALESCE(orders.order_type, \'\')
-                    )) as options_key'),
+                    DB::raw('COALESCE(dining_tables.name, \'\') as table_name'),
+                    DB::raw('COALESCE(takeaway_types.name, \'\') as takeaway_type_name'),
+                    // Unit price = total_price / quantity for this specific order item
+                    DB::raw('ROUND(order_items.total_price / order_items.quantity, 2) as unit_price'),
                     'order_items.item_variations',
                     'order_items.item_extras',
-                    DB::raw('SUM(order_items.quantity) as total_quantity'),
-                    DB::raw('SUM(order_items.total_price) as total_income'),
-                    DB::raw('MIN(orders.order_datetime) as first_order_date'),
-                    DB::raw('MAX(orders.order_datetime) as latest_order_date'),
-                    DB::raw('GROUP_CONCAT(DISTINCT orders.order_serial_no ORDER BY orders.order_serial_no SEPARATOR \', \') as order_numbers')
+                    'order_items.quantity as total_quantity',
+                    'order_items.total_price as total_income',
+                    'orders.order_datetime as first_order_date',
+                    'orders.order_datetime as latest_order_date',
+                    'orders.order_serial_no as order_numbers'
                 );
 
             // Apply branch filtering - only show orders from the selected branch
@@ -463,25 +454,14 @@ class ItemService
                 $query->where('items.item_type', $requests['item_type']);
             }
 
-            // GROUP BY - all non-aggregate columns must be included for MySQL strict mode
-            $query->groupBy(
-                'items.id',
-                'items.name',
-                'items.item_type',
-                'items.price',
-                'item_categories.name',
-                'orders.order_type',
-                'orders.dining_table_id',
-                'orders.takeaway_type_id',
-                'order_items.item_variations',
-                'order_items.item_extras'
-            )
-            ->orderByDesc('latest_order_date'); // Sort by latest order date to show recent orders first
+            // No GROUP BY - each order item is a separate row
+            // Sort by latest order date to show recent orders first
+            $query->orderByDesc('orders.order_datetime');
 
             $result = $method === 'paginate' ? $query->paginate($methodValue) : $query->get();
-            
+
             Log::info('ItemReport Success: Returned ' . (is_countable($result) ? count($result) : $result->count()) . ' rows');
-            
+
             return $result;
         } catch (Exception $exception) {
             Log::error('ItemReport Error: ' . $exception->getMessage());
