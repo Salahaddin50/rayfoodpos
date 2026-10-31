@@ -43,7 +43,7 @@ class ItemsReportExport implements FromCollection, WithHeadings
                 trans('itemType.' . $item->item_type),
                 $this->getOrderTypeName($item->order_type ?? null),
                 $this->getServiceType($item),
-                $item->first_order_date ? date('Y-m-d', strtotime($item->first_order_date)) : '',
+                $item->latest_order_date ? date('Y-m-d H:i', strtotime($item->latest_order_date)) : '',
                 AppLibrary::flatAmountFormat($unit),
                 $this->formatOptions($item->item_variations ?? null, $item->item_extras ?? null),
                 $quantity,
