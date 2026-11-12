@@ -106,7 +106,13 @@
                     <tbody class="db-table-body" v-if="orders.length > 0">
                         <tr class="db-table-body-tr" v-for="order in orders" :key="order">
                             <td class="db-table-body-td">
-                                {{ order.order_serial_no }}
+                                <router-link 
+                                    v-if="permissionChecker('table_orders_show')"
+                                    :to="{ name: 'admin.table.order.show', params: { id: order.id } }"
+                                    class="text-primary hover:underline font-medium cursor-pointer">
+                                    {{ order.order_serial_no }}
+                                </router-link>
+                                <span v-else>{{ order.order_serial_no }}</span>
                             </td>
                             <td class="db-table-body-td">
                                 <span v-if="order.dining_table_id && order.table_name" :class="statusClass(order.order_type)">
