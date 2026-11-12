@@ -102,7 +102,7 @@
                         <tr class="db-table-body-tr" v-for="order in orders" :key="order">
                             <td class="db-table-body-td">
                                 <span 
-                                    @click="$router.push({ name: 'admin.pos.order.show', params: { id: order.id } })"
+                                    @click="$router.push({ name: 'admin.pos.orders.show', params: { id: order.id } })"
                                     class="text-primary hover:underline cursor-pointer"
                                     style="font-weight: 500;">
                                     {{ order.order_serial_no }}
