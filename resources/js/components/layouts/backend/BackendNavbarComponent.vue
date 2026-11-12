@@ -191,7 +191,8 @@ export default {
             branchProps: {
                 paginate: 0,
                 order_column: "id",
-                order_type: "asc"
+                order_type: "asc",
+                status: statusEnum.ACTIVE
             },
             languageProps: {
                 paginate: 0,

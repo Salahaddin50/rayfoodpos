@@ -5,7 +5,7 @@
             <div class="db-card-header border-none">
                 <h3 class="db-card-title">{{ $t("menu.table_orders") }}</h3>
                 <div class="db-card-filter">
-                    <TableLimitComponent :method="list" :search="props.search" :page="paginationPage" />
+                    <TableLimitComponent :method="listForLimit" :search="props.search" :page="paginationPage" />
                     <FilterComponent @click.prevent="handleSlide('table-order-filter')" />
                     <div class="dropdown-group">
                         <ExportComponent />
@@ -107,12 +107,10 @@
                         <tr class="db-table-body-tr" v-for="order in orders" :key="order">
                             <td class="db-table-body-td">
                                 <router-link 
-                                    v-if="permissionChecker('table_orders_show')"
                                     :to="{ name: 'admin.table.order.show', params: { id: order.id } }"
                                     class="text-primary hover:underline font-medium cursor-pointer">
                                     {{ order.order_serial_no }}
                                 </router-link>
-                                <span v-else>{{ order.order_serial_no }}</span>
                             </td>
                             <td class="db-table-body-td">
                                 <span v-if="order.dining_table_id && order.table_name" :class="statusClass(order.order_type)">
@@ -307,10 +305,10 @@
 
             <div class="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-6"
                 v-if="orders.length > 0">
-                <PaginationSMBox :pagination="pagination" :method="list" />
+                <PaginationSMBox :pagination="pagination" :method="listForPagination" />
                 <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
                     <PaginationTextComponent :props="{ page: paginationPage }" />
-                    <PaginationBox :pagination="pagination" :method="list" />
+                    <PaginationBox :pagination="pagination" :method="listForPagination" />
                 </div>
             </div>
         </div>
@@ -616,6 +614,14 @@ export default {
             this.props.search.user_id = null;
             this.props.form.date = null;
             this.list(1, true); // Skip notification sound on manual clear
+        },
+        listForPagination: function (page = 1) {
+            // Wrapper method for pagination components - always skip notification
+            this.list(page, true);
+        },
+        listForLimit: function () {
+            // Wrapper method for table limit component - always skip notification
+            this.list(1, true);
         },
         list: function (page = 1, skipNotificationCheck = false) {
             this.loading.isActive = true;
