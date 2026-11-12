@@ -526,8 +526,7 @@ export default {
         },
         startAutoRefresh() {
             this.autoRefreshInterval = setInterval(() => {
-                const pageNum = typeof this.paginationPage === 'number' ? this.paginationPage : 1;
-                this.list(pageNum, false); // Don't skip notification on auto-refresh
+                this.list(this.props.search.page || 1, false); // Don't skip notification on auto-refresh
             }, 60000); // 60 seconds
         },
         stopAutoRefresh() {
@@ -537,8 +536,7 @@ export default {
             }
         },
         onExternalRefresh() {
-            const pageNum = typeof this.paginationPage === 'number' ? this.paginationPage : 1;
-            this.list(pageNum, true); // Skip notification on manual refresh
+            this.list(this.props.search.page || 1, true); // Skip notification on manual refresh
         },
         permissionChecker(e) {
             return appService.permissionChecker(e);
