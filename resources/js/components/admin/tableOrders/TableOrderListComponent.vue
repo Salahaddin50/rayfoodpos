@@ -109,7 +109,7 @@
                                 <router-link 
                                     :to="{ name: 'admin.table.order.show', params: { id: order.id } }"
                                     class="text-primary hover:underline font-medium cursor-pointer">
-                                    {{ order.order_serial_no }}
+                                    {{ order.order_serial_no || order.id || '#N/A' }}
                                 </router-link>
                             </td>
                             <td class="db-table-body-td">
@@ -816,7 +816,7 @@ export default {
                         1,
                         this.$t("label.status")
                     );
-                    this.list(this.paginationPage || 1, true); // Preserve current page, skip notification
+                    this.list(this.props.search.page || 1, true); // Preserve current page, skip notification
                 }).catch((err) => {
                     this.loading.isActive = false;
                     alertService.error(err.response.data.message);
@@ -839,7 +839,7 @@ export default {
                     payment_status: nextStatus,
                 }).then(() => {
                     this.loading.isActive = false;
-                    this.list(this.paginationPage || 1, true); // Preserve current page, skip notification
+                    this.list(this.props.search.page || 1, true); // Preserve current page, skip notification
                 }).catch((err) => {
                     this.loading.isActive = false;
                     alertService.error(err?.response?.data?.message ?? err);
