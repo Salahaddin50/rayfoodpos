@@ -483,7 +483,7 @@ export default {
         },
         startAutoRefresh() {
             this.autoRefreshInterval = setInterval(() => {
-                this.list(this.paginationPage || 1);
+                this.list(this.paginationPage || 1, false); // Don't skip notification on auto-refresh
             }, 60000); // 60 seconds
         },
         stopAutoRefresh() {
@@ -493,7 +493,7 @@ export default {
             }
         },
         onExternalRefresh() {
-            this.list(this.paginationPage || 1);
+            this.list(this.paginationPage || 1, true); // Skip notification on manual refresh
         },
         permissionChecker(e) {
             return appService.permissionChecker(e);
@@ -511,7 +511,8 @@ export default {
             return appService.handleSlide(id);
         },
         search: function () {
-            this.list();
+            this.props.search.page = 1; // Reset to first page on search
+            this.list(1, true); // Skip notification sound on manual search
         },
         handleDate: function (e) {
             if (e) {
@@ -533,14 +534,20 @@ export default {
             this.props.search.to_date = "";
             this.props.search.user_id = null;
             this.props.form.date = null;
-            this.list();
+            this.list(1, true); // Skip notification sound on manual clear
         },
-        list: function (page = 1) {
+        list: function (page = 1, skipNotificationCheck = false) {
             this.loading.isActive = true;
             this.props.search.page = page;
             this.$store.dispatch('posOrder/lists', this.props.search).then(res => {
                 this.loading.isActive = false;
                 const freshOrders = res?.data?.data || [];
+                
+                // Skip notification check if this is a manual action (pagination, filter, status change)
+                if (skipNotificationCheck) {
+                    return;
+                }
+                
                 // Initialize previousOrderIds if not already set (first load)
                 if (this.previousOrderIds.length === 0 && freshOrders.length > 0) {
                     this.previousOrderIds = freshOrders.map(order => order.id);
@@ -551,7 +558,7 @@ export default {
                     this.previousAcceptOrPreparedOrderIds = acceptOrPreparedOrders.map(order => order.id);
                     console.log('First load - initialized with', this.previousOrderIds.length, 'orders,', this.previousAcceptOrPreparedOrderIds.length, 'with ACCEPT/PREPARED status');
                 } else {
-                    // Check for new orders and play sound (only after first load)
+                    // Check for new orders and play sound (only after first load and auto-refresh)
                     this.checkForNewOrders(freshOrders);
                 }
             }).catch((err) => {
@@ -691,7 +698,7 @@ export default {
                         1,
                         this.$t("label.status")
                     );
-                    this.list();
+                    this.list(this.paginationPage || 1, true); // Preserve current page, skip notification
                 }).catch((err) => {
                     this.loading.isActive = false;
                     alertService.error(err.response.data.message);
@@ -716,7 +723,7 @@ export default {
                         1,
                         this.$t("label.status")
                     );
-                    this.list();
+                    this.list(this.paginationPage || 1, true); // Preserve current page, skip notification
                 }).catch((err) => {
                     this.loading.isActive = false;
                     alertService.error(err.response.data.message);
@@ -764,7 +771,7 @@ export default {
                     payment_status: nextStatus,
                 }).then(() => {
                     this.loading.isActive = false;
-                    this.list(this.paginationPage);
+                    this.list(this.paginationPage || 1, true); // Preserve current page, skip notification
                 }).catch((err) => {
                     this.loading.isActive = false;
                     alertService.error(err?.response?.data?.message ?? err);

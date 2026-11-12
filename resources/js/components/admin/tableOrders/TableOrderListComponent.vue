@@ -522,7 +522,7 @@ export default {
         startAutoRefresh() {
             this.autoRefreshInterval = setInterval(() => {
                 const pageNum = typeof this.paginationPage === 'number' ? this.paginationPage : 1;
-                this.list(pageNum);
+                this.list(pageNum, false); // Don't skip notification on auto-refresh
             }, 60000); // 60 seconds
         },
         stopAutoRefresh() {
@@ -533,7 +533,7 @@ export default {
         },
         onExternalRefresh() {
             const pageNum = typeof this.paginationPage === 'number' ? this.paginationPage : 1;
-            this.list(pageNum);
+            this.list(pageNum, true); // Skip notification on manual refresh
         },
         permissionChecker(e) {
             return appService.permissionChecker(e);
@@ -585,7 +585,8 @@ export default {
             return appService.handleSlide(id);
         },
         search: function () {
-            this.list();
+            this.props.search.page = 1; // Reset to first page on search
+            this.list(1, true); // Skip notification sound on manual search
         },
         handleDate: function (e) {
             if (e) {
@@ -608,9 +609,9 @@ export default {
             this.props.search.to_date = "";
             this.props.search.user_id = null;
             this.props.form.date = null;
-            this.list();
+            this.list(1, true); // Skip notification sound on manual clear
         },
-        list: function (page = 1) {
+        list: function (page = 1, skipNotificationCheck = false) {
             this.loading.isActive = true;
             this.props.search.page = page;
             this.$store
@@ -618,6 +619,12 @@ export default {
                 .then((res) => {
                     this.loading.isActive = false;
                     const freshOrders = res?.data?.data || [];
+                    
+                    // Skip notification check if this is a manual action (pagination, filter, status change)
+                    if (skipNotificationCheck) {
+                        return;
+                    }
+                    
                     // Initialize previousOrderIds if not already set (first load)
                     if (this.previousOrderIds.length === 0 && freshOrders.length > 0) {
                         this.previousOrderIds = freshOrders.map(order => order.id);
@@ -772,7 +779,7 @@ export default {
                         1,
                         this.$t("label.status")
                     );
-                    this.list();
+                    this.list(this.paginationPage || 1, true); // Preserve current page, skip notification
                 }).catch((err) => {
                     this.loading.isActive = false;
                     alertService.error(err.response.data.message);
@@ -797,7 +804,7 @@ export default {
                         1,
                         this.$t("label.status")
                     );
-                    this.list();
+                    this.list(this.paginationPage || 1, true); // Preserve current page, skip notification
                 }).catch((err) => {
                     this.loading.isActive = false;
                     alertService.error(err.response.data.message);
@@ -820,7 +827,7 @@ export default {
                     payment_status: nextStatus,
                 }).then(() => {
                     this.loading.isActive = false;
-                    this.list(this.paginationPage);
+                    this.list(this.paginationPage || 1, true); // Preserve current page, skip notification
                 }).catch((err) => {
                     this.loading.isActive = false;
                     alertService.error(err?.response?.data?.message ?? err);
