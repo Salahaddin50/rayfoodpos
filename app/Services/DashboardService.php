@@ -7,6 +7,8 @@ use Carbon\Carbon;
 use App\Models\Item;
 use App\Models\User;
 use App\Models\Order;
+use App\Enums\Source;
+use App\Enums\OrderType;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use Illuminate\Http\Request;
@@ -194,23 +196,25 @@ class DashboardService
                 $baseQuery->where('branch_id', '=', $selectedBranchId);
             }
             
-            // POS Orders (non-dining table orders)
+            // POS Orders (filtered by source = POS, matching /admin/pos-orders page)
             $posTotal = (clone $baseQuery)
-                ->where('order_type', '!=', \App\Enums\OrderType::DINING_TABLE)
+                ->where('source', Source::POS)
                 ->count();
             
             $posPaid = (clone $baseQuery)
-                ->where('order_type', '!=', \App\Enums\OrderType::DINING_TABLE)
+                ->where('source', Source::POS)
                 ->where('payment_status', PaymentStatus::PAID)
                 ->count();
             
-            // Table Orders (dining table orders)
+            // Table/Online Orders (order_type = DINING_TABLE AND source != POS, matching /admin/table-orders page)
             $tableTotal = (clone $baseQuery)
-                ->where('order_type', \App\Enums\OrderType::DINING_TABLE)
+                ->where('order_type', OrderType::DINING_TABLE)
+                ->where('source', '!=', Source::POS)
                 ->count();
             
             $tablePaid = (clone $baseQuery)
-                ->where('order_type', \App\Enums\OrderType::DINING_TABLE)
+                ->where('order_type', OrderType::DINING_TABLE)
+                ->where('source', '!=', Source::POS)
                 ->where('payment_status', PaymentStatus::PAID)
                 ->count();
             
