@@ -17,6 +17,7 @@ use App\Libraries\QueryExceptionLibrary;
 
 class DashboardService
 {
+    use \App\Traits\DefaultAccessModelTrait;
 
     public function salesSummary(Request $request)
     {
@@ -181,22 +182,34 @@ class DashboardService
         try {
             $today = Carbon::today()->toDateString();
             
+            // Get the selected branch for strict filtering
+            $selectedBranchId = $this->branch();
+            
+            // Build base query with branch filter
+            $baseQuery = Order::withoutGlobalScope(\App\Models\Scopes\BranchScope::class)
+                ->whereDate('order_datetime', $today);
+            
+            // Apply branch filtering
+            if ($selectedBranchId !== null) {
+                $baseQuery->where('branch_id', '=', $selectedBranchId);
+            }
+            
             // POS Orders (non-dining table orders)
-            $posTotal = Order::whereDate('order_datetime', $today)
+            $posTotal = (clone $baseQuery)
                 ->where('order_type', '!=', \App\Enums\OrderType::DINING_TABLE)
                 ->count();
             
-            $posPaid = Order::whereDate('order_datetime', $today)
+            $posPaid = (clone $baseQuery)
                 ->where('order_type', '!=', \App\Enums\OrderType::DINING_TABLE)
                 ->where('payment_status', PaymentStatus::PAID)
                 ->count();
             
             // Table Orders (dining table orders)
-            $tableTotal = Order::whereDate('order_datetime', $today)
+            $tableTotal = (clone $baseQuery)
                 ->where('order_type', \App\Enums\OrderType::DINING_TABLE)
                 ->count();
             
-            $tablePaid = Order::whereDate('order_datetime', $today)
+            $tablePaid = (clone $baseQuery)
                 ->where('order_type', \App\Enums\OrderType::DINING_TABLE)
                 ->where('payment_status', PaymentStatus::PAID)
                 ->count();
