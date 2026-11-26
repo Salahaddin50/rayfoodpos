@@ -488,6 +488,7 @@ Route::prefix('admin')->name('admin.')->middleware(['installed', 'apiKey', 'auth
         Route::get('/customer-states', [DashboardController::class, 'customerStates']);
         Route::get('/featured-items', [DashboardController::class, 'featuredItems']);
         Route::get('/popular-items', [DashboardController::class, 'mostPopularItems']);
+        Route::get('/today-order-counts', [DashboardController::class, 'todayOrderCounts']);
     });
 
     Route::prefix('sales-report')->name('sales-report.')->group(function () {

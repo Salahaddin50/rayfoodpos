@@ -27,7 +27,7 @@ class DashboardController extends AdminController
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:dashboard', only: ['orderStatistics', 'orderSummary', 'featuredItems', 'mostPopularItems', 'topCustomers', 'totalSales', 'salesSummary', 'customerStates', 'totalOrders', 'totalCustomers', 'totalMenuItems']),
+            new Middleware('permission:dashboard', only: ['orderStatistics', 'orderSummary', 'featuredItems', 'mostPopularItems', 'topCustomers', 'totalSales', 'salesSummary', 'customerStates', 'totalOrders', 'totalCustomers', 'totalMenuItems', 'todayOrderCounts']),
         ];
     }
 
@@ -100,6 +100,15 @@ class DashboardController extends AdminController
     {
         try {
             return SimpleItemResource::collection($this->itemService->mostPopularItems());
+        } catch (Exception $exception) {
+            return response(['status' => false, 'message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function todayOrderCounts(): \Illuminate\Http\Response | array | \Illuminate\Contracts\Foundation\Application | \Illuminate\Contracts\Routing\ResponseFactory
+    {
+        try {
+            return ['data' => $this->dashboardService->todayOrderCounts()];
         } catch (Exception $exception) {
             return response(['status' => false, 'message' => $exception->getMessage()], 422);
         }

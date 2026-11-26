@@ -12,6 +12,7 @@ export const dashboard = {
         customerStates: [],
         featuredItems: [],
         mostPopularItems: [],
+        todayOrderCounts: {},
     },
 
     getters: {
@@ -38,6 +39,9 @@ export const dashboard = {
         },
         mostPopularItems: function (state) {
             return state.mostPopularItems;
+        },
+        todayOrderCounts: function (state) {
+            return state.todayOrderCounts;
         },
     },
 
@@ -161,6 +165,19 @@ export const dashboard = {
                     });
             });
         },
+        todayOrderCounts: function (context) {
+            return new Promise((resolve, reject) => {
+                axios
+                    .get("admin/dashboard/today-order-counts")
+                    .then((res) => {
+                        context.commit("todayOrderCounts", res.data.data);
+                        resolve(res);
+                    })
+                    .catch((err) => {
+                        reject(err);
+                    });
+            });
+        },
     },
 
     mutations: {
@@ -187,6 +204,9 @@ export const dashboard = {
         },
         mostPopularItems: function (state, payload) {
             state.mostPopularItems = payload;
+        },
+        todayOrderCounts: function (state, payload) {
+            state.todayOrderCounts = payload;
         },
     },
 };

@@ -175,4 +175,45 @@ class DashboardService
             throw new Exception(QueryExceptionLibrary::message($exception), 422);
         }
     }
+
+    public function todayOrderCounts()
+    {
+        try {
+            $today = Carbon::today()->toDateString();
+            
+            // POS Orders (non-dining table orders)
+            $posTotal = Order::whereDate('order_datetime', $today)
+                ->where('order_type', '!=', \App\Enums\OrderType::DINING_TABLE)
+                ->count();
+            
+            $posPaid = Order::whereDate('order_datetime', $today)
+                ->where('order_type', '!=', \App\Enums\OrderType::DINING_TABLE)
+                ->where('payment_status', PaymentStatus::PAID)
+                ->count();
+            
+            // Table Orders (dining table orders)
+            $tableTotal = Order::whereDate('order_datetime', $today)
+                ->where('order_type', \App\Enums\OrderType::DINING_TABLE)
+                ->count();
+            
+            $tablePaid = Order::whereDate('order_datetime', $today)
+                ->where('order_type', \App\Enums\OrderType::DINING_TABLE)
+                ->where('payment_status', PaymentStatus::PAID)
+                ->count();
+            
+            return [
+                'pos_orders' => [
+                    'total' => $posTotal,
+                    'paid' => $posPaid
+                ],
+                'table_orders' => [
+                    'total' => $tableTotal,
+                    'paid' => $tablePaid
+                ]
+            ];
+        } catch (Exception $exception) {
+            Log::info($exception->getMessage());
+            throw new Exception(QueryExceptionLibrary::message($exception), 422);
+        }
+    }
 }

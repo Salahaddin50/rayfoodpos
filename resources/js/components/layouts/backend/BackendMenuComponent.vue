@@ -18,7 +18,7 @@
                 <li class="db-sidebar-nav-item" v-else @click.prevent="sidebarActive($event)">
                     <router-link :to="'/admin/' + menu.url" class="db-sidebar-nav-menu">
                         <i class="text-sm" :class="menu.icon"></i>
-                        <span class="text-base flex-auto">{{ $t('menu.' + menu.language) }}</span>
+                        <span class="text-base flex-auto">{{ getMenuLabel(menu) }}</span>
                     </router-link>
                 </li>
 
@@ -32,7 +32,14 @@
                         ]"
                     >
                         <i class="text-sm" :class="children.icon"></i>
-                        <span class="text-base flex-auto">{{ $t('menu.' + children.language) }}</span>
+                        <span class="text-base flex-auto">
+                            {{ $t('menu.' + children.language) }}
+                            <span v-if="showOrderCount(children)" 
+                                  class="ml-1 text-xs font-normal"
+                                  style="color: #666;">
+                                ({{ getOrderCount(children) }})
+                            </span>
+                        </span>
                     </router-link>
                 </li>
             </ul>
@@ -48,6 +55,10 @@ export default {
             activeParentId: 1,
             activeChildId: 0,
             sidebarOpen: false,
+            orderCounts: {
+                pos_orders: { total: 0, paid: 0 },
+                table_orders: { total: 0, paid: 0 }
+            }
         }
     },
     computed: {
@@ -212,9 +223,58 @@ export default {
     },
     mounted() {
         this.defaultSidebarActive();
-
+        this.fetchTodayOrderCounts();
+        // Refresh order counts every 60 seconds
+        this.orderCountInterval = setInterval(() => {
+            this.fetchTodayOrderCounts();
+        }, 60000);
+    },
+    beforeUnmount() {
+        if (this.orderCountInterval) {
+            clearInterval(this.orderCountInterval);
+        }
     },
     methods: {
+        fetchTodayOrderCounts: function () {
+            this.$store.dispatch('dashboard/todayOrderCounts').then((res) => {
+                if (res.data && res.data.data) {
+                    this.orderCounts = res.data.data;
+                }
+            }).catch((err) => {
+                console.error('Error fetching order counts:', err);
+            });
+        },
+        getMenuLabel: function (menu) {
+            const baseLabel = this.$t('menu.' + menu.language);
+            
+            // Add counts for POS Orders
+            if (menu.language === 'pos_orders' && this.orderCounts.pos_orders) {
+                const total = this.orderCounts.pos_orders.total;
+                const paid = this.orderCounts.pos_orders.paid;
+                return `${baseLabel} (${total}/${paid})`;
+            }
+            
+            // Add counts for Table Orders
+            if (menu.language === 'table_orders' && this.orderCounts.table_orders) {
+                const total = this.orderCounts.table_orders.total;
+                const paid = this.orderCounts.table_orders.paid;
+                return `${baseLabel} (${total}/${paid})`;
+            }
+            
+            return baseLabel;
+        },
+        showOrderCount: function (menu) {
+            return menu.language === 'pos_orders' || menu.language === 'table_orders';
+        },
+        getOrderCount: function (menu) {
+            if (menu.language === 'pos_orders' && this.orderCounts.pos_orders) {
+                return `${this.orderCounts.pos_orders.total}/${this.orderCounts.pos_orders.paid}`;
+            }
+            if (menu.language === 'table_orders' && this.orderCounts.table_orders) {
+                return `${this.orderCounts.table_orders.total}/${this.orderCounts.table_orders.paid}`;
+            }
+            return '';
+        },
         sidebarActive: function (e) {
             const activeMenu = document.querySelector('.db-sidebar-nav-item.active');
             if (activeMenu) {
@@ -246,6 +306,28 @@ export default {
             if (activeMenu) {
                 activeMenu.closest(".db-sidebar-nav-item")?.classList.add("active");
             }
+        },
+        showOrderCount: function (menu) {
+            // Show counts only for POS Orders and Table Orders
+            const language = menu.language || '';
+            return language === 'pos_orders' || language === 'table_orders';
+        },
+        getOrderCount: function (menu) {
+            const language = menu.language || '';
+            
+            if (language === 'pos_orders' && this.orderCounts.pos_orders) {
+                const total = this.orderCounts.pos_orders.total || 0;
+                const paid = this.orderCounts.pos_orders.paid || 0;
+                return `${total}/${paid}`;
+            }
+            
+            if (language === 'table_orders' && this.orderCounts.table_orders) {
+                const total = this.orderCounts.table_orders.total || 0;
+                const paid = this.orderCounts.table_orders.paid || 0;
+                return `${total}/${paid}`;
+            }
+            
+            return '';
         },
     },
     watch: {
