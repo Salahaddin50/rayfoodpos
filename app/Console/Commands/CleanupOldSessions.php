@@ -24,8 +24,9 @@ class CleanupOldSessions extends Command
         $cutoffTime = Carbon::now()->subHours($hours)->timestamp;
         $deleted = 0;
         $files = File::files($sessionPath);
+        $fileCount = count($files);
 
-        $this->info("Checking {count($files)} session files...");
+        $this->info("Checking {$fileCount} session files...");
         
         foreach ($files as $file) {
             if ($file->getMTime() < $cutoffTime) {
