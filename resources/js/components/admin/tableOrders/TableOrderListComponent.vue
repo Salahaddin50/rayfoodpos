@@ -631,6 +631,9 @@ export default {
                     this.loading.isActive = false;
                     const freshOrders = res?.data?.data || [];
                     
+                    // Trigger sidebar order count refresh
+                    window.dispatchEvent(new CustomEvent('rayfood:refresh-order-counts'));
+                    
                     // Skip notification check if this is a manual action (pagination, filter, status change)
                     if (skipNotificationCheck) {
                         return;

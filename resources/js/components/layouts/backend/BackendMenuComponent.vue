@@ -224,15 +224,21 @@ export default {
     mounted() {
         this.defaultSidebarActive();
         this.fetchTodayOrderCounts();
+        
         // Refresh order counts every 60 seconds
         this.orderCountInterval = setInterval(() => {
             this.fetchTodayOrderCounts();
         }, 60000);
+        
+        // Listen for order refresh events from order list pages
+        window.addEventListener('rayfood:refresh-order-counts', this.fetchTodayOrderCounts);
     },
     beforeUnmount() {
         if (this.orderCountInterval) {
             clearInterval(this.orderCountInterval);
         }
+        // Remove event listener
+        window.removeEventListener('rayfood:refresh-order-counts', this.fetchTodayOrderCounts);
     },
     methods: {
         fetchTodayOrderCounts: function () {
