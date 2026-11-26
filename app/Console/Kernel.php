@@ -20,6 +20,12 @@ class Kernel extends ConsoleKernel
             ->daily()
             ->at('00:01')
             ->timezone(config('app.timezone'));
+        
+        // Clean up old session files daily at 2 AM (older than 48 hours)
+        $schedule->command('sessions:cleanup --hours=48')
+            ->daily()
+            ->at('02:00')
+            ->timezone(config('app.timezone'));
     }
 
     /**
