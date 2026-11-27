@@ -8,6 +8,7 @@ use App\Models\Analytic;
 use App\Models\ThemeSetting;
 use App\Http\Controllers\Controller;
 use Dipokhalder\Settings\Facades\Settings;
+use Illuminate\Support\Facades\Cache;
 
 class RootController extends Controller
 {
@@ -15,18 +16,36 @@ class RootController extends Controller
     public function index(): \Illuminate\Contracts\View\Factory | \Illuminate\Contracts\View\View | \Illuminate\Contracts\Foundation\Application | \Illuminate\Http\Response
     {
         try {
-            try {
-                $analytics = Analytic::with('analyticSections')->where(['status' => Status::ACTIVE])->get();
-            } catch (\Throwable $e) {
-                $analytics = collect();
-            }
-            try {
-                $themeFavicon = ThemeSetting::where(['key' => 'theme_favicon_logo'])->first();
-                $favIcon = $themeFavicon?->faviconLogo ?? null;
-            } catch (\Throwable $e) {
-                $favIcon = null;
-            }
-            return view('master', ['analytics' => $analytics, 'favicon' => $favIcon]);
+            $shell = Cache::remember('frontend:root-shell', 300, function () {
+                try {
+                    $analytics = Analytic::with('analyticSections')->where(['status' => Status::ACTIVE])->get();
+                } catch (\Throwable $e) {
+                    $analytics = collect();
+                }
+                try {
+                    $themeFavicon = ThemeSetting::where(['key' => 'theme_favicon_logo'])->first();
+                    $favIcon = $themeFavicon?->faviconLogo ?? null;
+                } catch (\Throwable $e) {
+                    $favIcon = null;
+                }
+                try {
+                    $companyName = Settings::group('company')->get('company_name') ?? 'Restaurant POS';
+                } catch (\Throwable $e) {
+                    $companyName = 'Restaurant POS';
+                }
+
+                return [
+                    'analytics' => $analytics,
+                    'favicon' => $favIcon,
+                    'companyName' => $companyName,
+                ];
+            });
+
+            return view('master', [
+                'analytics' => $shell['analytics'] ?? collect(),
+                'favicon' => $shell['favicon'] ?? null,
+                'companyName' => $shell['companyName'] ?? 'Restaurant POS',
+            ]);
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('RootController::index failed', [
                 'message' => $e->getMessage(),

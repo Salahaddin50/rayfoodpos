@@ -11,31 +11,32 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     @php
-        try {
-            $companyName = \Dipokhalder\Settings\Facades\Settings::group('company')->get('company_name') ?? 'Restaurant POS';
-        } catch (\Throwable $e) {
-            $companyName = 'Restaurant POS';
-        }
+        $companyName = $companyName ?? 'Restaurant POS';
         $pathSegment = explode('/', request()->path())[0] ?? '';
         $isAdminPwa = $pathSegment === 'admin';
     @endphp
     <meta name="apple-mobile-web-app-title" content="{{ $companyName }}">
 
+    <!-- Faster DNS/TLS for API + assets -->
+    <link rel="dns-prefetch" href="//rayyanscorner.az">
+    <link rel="preconnect" href="{{ config('app.url') }}" crossorigin>
 
     <!-- PWA MANIFEST (admin vs main app by URL path) -->
     <link rel="manifest" href="{{ route('manifest') }}{{ $isAdminPwa ? '?context=admin' : '' }}">
 
-    <!-- FONTS -->
+    <!-- Critical icon fonts first -->
     <link rel="stylesheet" href="{{ asset('themes/default/fonts/fontawesome/fontawesome.css') }}">
     <link rel="stylesheet" href="{{ asset('themes/default/fonts/lab/lab.css') }}">
-    <link rel="stylesheet" href="{{ asset('themes/default/fonts/typography/public/public.css') }}">
-    <link rel="stylesheet" href="{{ asset('themes/default/fonts/typography/rubik/rubik.css') }}">
+    <!-- Non-critical typography: load without blocking first paint -->
+    <link rel="stylesheet" href="{{ asset('themes/default/fonts/typography/public/public.css') }}" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="{{ asset('themes/default/fonts/typography/rubik/rubik.css') }}" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="{{ asset('themes/default/fonts/typography/public/public.css') }}">
+        <link rel="stylesheet" href="{{ asset('themes/default/fonts/typography/rubik/rubik.css') }}">
+    </noscript>
 
-    <!-- CUSTOM STYLE -->
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <!-- Theme overrides only (Vite already injects compiled app CSS) -->
     <link rel="stylesheet" href="{{ asset('themes/default/css/custom.css') }}">
-    
-    <!-- PAGE TITLE -->
 
     <title>{{ $companyName }}</title>
 
@@ -102,7 +103,10 @@
     <script src="{{ asset('themes/default/js/customScript.js') }}" defer></script>
     <script src="{{ asset('themes/default/js/tabs.js') }}" defer></script>
     <script src="{{ asset('themes/default/js/dropdown.js') }}" defer></script>
-    <script src="{{ asset('themes/default/js/apexcharts/apexcharts.min.js') }}" defer></script>
+    {{-- ApexCharts is ~500KB and only needed in admin charts — never load it for online/QR menus --}}
+    @if ($isAdminPwa)
+        <script src="{{ asset('themes/default/js/apexcharts/apexcharts.min.js') }}" defer></script>
+    @endif
 
     <!-- PWA Install Prompt -->
     <div id="pwa-install-prompt" class="pwa-install-prompt" style="display: none;">

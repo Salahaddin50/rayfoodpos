@@ -75,10 +75,24 @@ export default {
         // Ensure correct layout on initial load (watcher only runs on subsequent navigations).
         this.applyThemeFromRoute(this.$route);
 
+        // Use cached settings immediately (from localStorage) so menus can start rendering
+        const cachedSettings = this.$store.getters['frontendSetting/lists'];
+        const cachedLanguage = this.$store.getters['frontendLanguage/show'];
+        if (cachedSettings && cachedSettings.site_default_language) {
+            if (cachedLanguage && cachedLanguage.code) {
+                this.$i18n.locale = cachedLanguage.code;
+            }
+            this.$store.dispatch("globalState/init", {
+                branch_id: cachedSettings.site_default_branch,
+                language_id: cachedSettings.site_default_language,
+                language_code: (cachedLanguage && cachedLanguage.code) ? cachedLanguage.code : 'en'
+            });
+        }
+
+        // Refresh settings/language in background (does not block first paint)
         this.$store.dispatch('frontendSetting/lists').then(res => {
             const defaultLanguageId = res.data.data.site_default_language;
             this.$store.dispatch('frontendLanguage/show', defaultLanguageId).then(langRes => {
-                // Set i18n locale to default language code
                 if (langRes.data && langRes.data.data && langRes.data.data.code) {
                     this.$i18n.locale = langRes.data.data.code;
                     this.$store.dispatch("globalState/init", {
@@ -87,7 +101,6 @@ export default {
                         language_code: langRes.data.data.code
                     });
                 } else {
-                    // Fallback if language not loaded
                     this.$store.dispatch("globalState/init", {
                         branch_id: res.data.data.site_default_branch,
                         language_id: defaultLanguageId,
@@ -95,21 +108,20 @@ export default {
                     });
                 }
             }).catch(() => {
-                // Fallback if language loading fails
-            this.$store.dispatch("globalState/init", {
-                branch_id: res.data.data.site_default_branch,
+                this.$store.dispatch("globalState/init", {
+                    branch_id: res.data.data.site_default_branch,
                     language_id: defaultLanguageId,
                     language_code: 'en'
                 });
             });
-        }).catch();
+        }).catch(() => {});
 
         if (env.DEMO === "true" || env.DEMO === 'TRUE' || env.DEMO === true || env.DEMO === "1" || env.DEMO === 1) {
             this.$store.dispatch("authcheck").then(res => {
                 if (res.data.status === false && (this.theme == "frontend" || this.theme == "backend")) {
                     this.$router.push({ name: "auth.login" });
                 };
-            }).catch();
+            }).catch(() => {});
         }
     },
     watch: {

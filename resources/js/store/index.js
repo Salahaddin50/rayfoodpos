@@ -163,7 +163,18 @@ export default new createStore({
     },
     plugins: [
         createPersistedState({
-            paths: ["auth", "globalState", "frontendCart", "frontendSignup", "GuestSignup", "posCart", "tableCart"],
+            // Persist settings/language so online + QR menus can paint without waiting for API
+            paths: [
+                "auth",
+                "globalState",
+                "frontendCart",
+                "frontendSignup",
+                "GuestSignup",
+                "posCart",
+                "tableCart",
+                "frontendSetting",
+                "frontendLanguage",
+            ],
         }),
     ],
 });
