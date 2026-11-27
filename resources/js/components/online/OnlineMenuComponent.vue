@@ -286,49 +286,49 @@ export default {
         },
     },
     mounted() {
-        // Step 1: Load branches + categories first (essential for UI)
-        // Don't block with full loading - only show for critical initial setup
-        this.loading.isActive = true;
-        
+        // Never block the whole page with a fullscreen loader.
+        // Show UI immediately; use item skeletons while data loads.
+        this.loading.isActive = false;
+
+        const startItems = () => {
+            if (this.$route.params.branchId) {
+                this.selectedBranchId = parseInt(this.$route.params.branchId);
+                this.itemProps.search.branch_id = this.selectedBranchId;
+                this.$store.dispatch('tableCart/initOnlineBranch', this.selectedBranchId).then().catch(() => {});
+                this.itemList(true);
+                return;
+            }
+
+            if (this.branches && this.branches.length > 0 && !this.selectedBranchId) {
+                const firstBranch = this.branches[0];
+                if (firstBranch && firstBranch.id) {
+                    this.selectedBranchId = firstBranch.id;
+                    this.onBranchChange();
+                }
+            }
+        };
+
+        // If cached branches exist, start items immediately
+        if (this.branches && this.branches.length > 0) {
+            startItems();
+        }
+
+        // Refresh branches + categories in parallel (non-blocking)
         Promise.all([
             this.$store.dispatch("frontendBranch/lists", this.branchProps.search),
             this.$store.dispatch("tableItemCategory/lists", this.categoryProps.search),
         ]).then(() => {
-            this.loading.isActive = false;
-
-            // Step 2: After essential data loads, load items (lazy load)
-            if (this.$route.params.branchId) {
-                this.selectedBranchId = parseInt(this.$route.params.branchId);
-                this.itemProps.search.branch_id = this.selectedBranchId;
-                this.$store.dispatch('tableCart/initOnlineBranch', this.selectedBranchId).then().catch();
-                // Use nextTick to ensure UI is rendered before loading items
-                this.$nextTick(() => {
-                    this.itemList(true);
-                });
-            } else {
-                // Auto-select first branch immediately (no artificial delay)
-                if (this.branches && this.branches.length > 0 && !this.selectedBranchId) {
-                    const firstBranch = this.branches[0];
-                    if (firstBranch && firstBranch.id) {
-                        this.selectedBranchId = firstBranch.id;
-                        this.onBranchChange();
-                    }
-                }
+            if (!this.selectedBranchId) {
+                startItems();
             }
-        }).catch(() => {
-            this.loading.isActive = false;
-        });
+        }).catch(() => {});
 
         if (Object.keys(this.$route.query).length > 0) {
-            this.loading.isActive = true;
-            this.$store.dispatch('tableDiningOrder/show', this.$route.query.id).then(res => {
+            this.$store.dispatch('tableDiningOrder/show', this.$route.query.id).then(() => {
                 const modalTarget = this.$refs.confirmOrder;
                 modalTarget?.classList?.add("active");
                 document.body.style.overflowY = "hidden";
-                this.loading.isActive = false;
-            }).catch((err) => {
-                this.loading.isActive = false;
-            });
+            }).catch(() => {});
         }
     },
     methods: {

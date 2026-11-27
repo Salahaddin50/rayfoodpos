@@ -1,1 +1,0 @@
-import{_ as e,r as n,p as r,o as t}from"./app-DQbWXGHy.js";const c={name:"BranchComponent"};function s(a,p,_,m,f,i){const o=n("router-view");return t(),r(o)}const d=e(c,[["render",s]]);export{d as default};

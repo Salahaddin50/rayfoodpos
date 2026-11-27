@@ -307,34 +307,20 @@ export default {
         }
     },
     mounted() {
-        // Step 1: Load categories first (fast, essential for UI)
-        this.loading.isActive = true;
-        this.$store.dispatch("tableItemCategory/lists", this.categoryProps.search).then(res => {
-            this.loading.isActive = false;
-            // Step 2: After categories load, load items (lazy load)
-            this.$nextTick(() => {
-                this.itemList(true);
-            });
-        }).catch((err) => {
-            this.loading.isActive = false;
-            // Even on error, try to load items
-            this.$nextTick(() => {
-                this.itemList(true);
-            });
-        });
+        // Never block the whole page with a fullscreen loader.
+        this.loading.isActive = false;
+
+        // Start items immediately (show skeletons). Categories refresh in parallel.
+        this.itemList(true);
+        this.$store.dispatch("tableItemCategory/lists", this.categoryProps.search).catch(() => {});
 
         if (Object.keys(this.$route.query).length > 0) {
-            this.loading.isActive = true;
-            this.$store.dispatch('tableDiningOrder/show', this.$route.query.id).then(res => {
+            this.$store.dispatch('tableDiningOrder/show', this.$route.query.id).then(() => {
                 const modalTarget = this.$refs.confirmOrder;
                 modalTarget?.classList?.add("active");
                 document.body.style.overflowY = "hidden";
-                this.loading.isActive = false;
-            }).catch((err) => {
-                this.loading.isActive = false;
-            });
+            }).catch(() => {});
         }
-
     },
     methods: {
         closeModal: function () {

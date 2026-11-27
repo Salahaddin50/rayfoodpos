@@ -174,6 +174,8 @@ export default new createStore({
                 "tableCart",
                 "frontendSetting",
                 "frontendLanguage",
+                "frontendBranch",
+                "tableItemCategory",
             ],
         }),
     ],

@@ -188,7 +188,9 @@ export default {
             }
         });
 
-        this.loading.isActive = true;
+        // Never freeze the header/page while settings load.
+        this.loading.isActive = false;
+
         const settingLoaded = this.setting && typeof this.setting === 'object' && Object.keys(this.setting).length > 0;
         const settingPromise = settingLoaded
             ? Promise.resolve({ data: { data: this.setting } })
@@ -198,60 +200,47 @@ export default {
             const globalState = this.$store.getters['globalState/lists'];
             const siteDefaultLanguage = res?.data?.data?.site_default_language;
 
-            // Determine which language to use:
-            // 1. If globalState has a language_id (user previously selected a language), use it
-            // 2. Otherwise, always use the site default language
             if (globalState?.language_id && globalState.language_id > 0) {
-                // User has explicitly selected a language, use it
                 this.defaultLanguage = globalState.language_id;
             } else {
-                // No language selected, always use site default
                 this.defaultLanguage = siteDefaultLanguage;
             }
 
-            // Load language list once (used by the language dropdown).
             if (!this.languages || this.languages.length === 0) {
-            this.$store.dispatch('frontendLanguage/lists', this.languageProps).then().catch();
+                this.$store.dispatch('frontendLanguage/lists', this.languageProps).then().catch(() => {});
             }
 
-            // Load current language once (used by i18n + direction).
             const languageLoaded = this.language && typeof this.language === 'object' && Object.keys(this.language).length > 0;
             if (!languageLoaded && this.defaultLanguage) {
-            this.$store.dispatch('frontendLanguage/show', this.defaultLanguage).then(langRes => {
-                if (langRes.data && langRes.data.data && langRes.data.data.code) {
-                    this.$i18n.locale = langRes.data.data.code;
-                    this.$store.dispatch("globalState/init", {
-                        language_id: this.defaultLanguage,
-                        language_code: langRes.data.data.code
-                    });
-                }
-            }).catch(() => {
-                // Fallback to site default if language loading fails
-                if (siteDefaultLanguage && siteDefaultLanguage !== this.defaultLanguage) {
-                    this.$store.dispatch('frontendLanguage/show', siteDefaultLanguage).then(langRes => {
-                        if (langRes.data && langRes.data.data && langRes.data.data.code) {
-                            this.$i18n.locale = langRes.data.data.code;
-                this.$store.dispatch("globalState/init", {
-                                language_id: siteDefaultLanguage,
-                                language_code: langRes.data.data.code
+                this.$store.dispatch('frontendLanguage/show', this.defaultLanguage).then(langRes => {
+                    if (langRes.data && langRes.data.data && langRes.data.data.code) {
+                        this.$i18n.locale = langRes.data.data.code;
+                        this.$store.dispatch("globalState/init", {
+                            language_id: this.defaultLanguage,
+                            language_code: langRes.data.data.code
+                        });
+                    }
+                }).catch(() => {
+                    if (siteDefaultLanguage && siteDefaultLanguage !== this.defaultLanguage) {
+                        this.$store.dispatch('frontendLanguage/show', siteDefaultLanguage).then(langRes => {
+                            if (langRes.data && langRes.data.data && langRes.data.data.code) {
+                                this.$i18n.locale = langRes.data.data.code;
+                                this.$store.dispatch("globalState/init", {
+                                    language_id: siteDefaultLanguage,
+                                    language_code: langRes.data.data.code
+                                });
+                            }
+                        }).catch(() => {});
+                    }
                 });
-                        }
-            }).catch();
-                }
-            });
             }
 
-            // Only fetch table data for table orders, not online orders
             if (!this.isOnlineOrder && this.$route.params.slug) {
-            this.$store.dispatch('tableDiningTable/show', this.$route.params.slug).then(res => {
-                this.$store.dispatch('tableCart/initTable', res.data.data);
-                }).catch(() => { });
+                this.$store.dispatch('tableDiningTable/show', this.$route.params.slug).then(res => {
+                    this.$store.dispatch('tableCart/initTable', res.data.data);
+                }).catch(() => {});
             }
-
-            this.loading.isActive = false;
-        }).catch(() => {
-            this.loading.isActive = false;
-        });
+        }).catch(() => {});
     },
     methods: {
         changeLanguage: function (id, code) {
