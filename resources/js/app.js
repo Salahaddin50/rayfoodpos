@@ -107,7 +107,17 @@ axios.interceptors.response.use(
             // A Chromium request can occasionally leave before persisted auth is
             // available. Retry it once with the active Vuex token instead of
             // treating that request as a logout.
+            console.log('[AUTH DEBUG]', {
+                isAdminArea,
+                hasConfig: !!requestConfig,
+                token: token ? 'present' : 'missing',
+                sentAuth: sentAuthorization ? 'present' : 'missing',
+                hasRetry: !!requestConfig?._authRetry,
+                url: requestConfig?.url,
+                willRetry: isAdminArea && requestConfig && token && !sentAuthorization && !requestConfig._authRetry
+            });
             if (isAdminArea && requestConfig && token && !sentAuthorization && !requestConfig._authRetry) {
+                console.log('[AUTH RETRY] Retrying request with token');
                 requestConfig._authRetry = true;
                 requestConfig.headers = requestConfig.headers || {};
                 requestConfig.headers['Authorization'] = `Bearer ${token}`;
@@ -116,6 +126,12 @@ axios.interceptors.response.use(
 
             // Only force redirect to admin login for admin area pages.
             // Public pages (e.g., /online/*, /table-order/*) should NOT be redirected to /admin/login.
+            console.log('[AUTH LOGOUT CHECK]', {
+                isAdminArea,
+                isUnauthenticated,
+                responseMessage,
+                willLogout: isAdminArea && isUnauthenticated
+            });
             if (isAdminArea && isUnauthenticated) {
                 // Prevent multiple redirects
                 if (isRedirecting) {
