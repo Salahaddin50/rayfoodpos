@@ -25,7 +25,10 @@ class OrderResource extends JsonResource
             'driver_id'                      => $this->driver_id,
             'driver_name'                    => $this->driver?->name,
             'branch_name'                    => optional($this->branch)->name,
-            'order_items'                    => optional($this->orderItems)->count(),
+            // Prefer withCount() from list queries; fall back to relation count for show/detail
+            'order_items'                    => $this->order_items_count
+                ?? optional($this->orderItems)->count()
+                ?? 0,
             "total_currency_price"           => AppLibrary::currencyAmountFormat($this->total),
             "total_tax_currency_price"       => AppLibrary::currencyAmountFormat($this->total_tax),
             "total_amount_price"             => AppLibrary::flatAmountFormat($this->total),
@@ -48,8 +51,9 @@ class OrderResource extends JsonResource
             'distance'                       => $this->distance,
             'pickup_option'                  => $this->pickup_option,
             'delivery_charge'                => $this->delivery_charge,
-            'customer'                       => new OrderUserResource($this->user->load('roles', 'media')),
-            'transaction'                    => new TransactionResource($this->transaction?->load('order')),
+            // Relations should already be eager-loaded by the service; avoid extra load() N+1
+            'customer'                       => $this->user ? new OrderUserResource($this->user) : null,
+            'transaction'                    => $this->transaction ? new TransactionResource($this->transaction) : null,
         ];
     }
 }

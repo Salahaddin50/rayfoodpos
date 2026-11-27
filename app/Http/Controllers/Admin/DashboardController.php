@@ -27,7 +27,7 @@ class DashboardController extends AdminController
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:dashboard', only: ['orderStatistics', 'orderSummary', 'featuredItems', 'mostPopularItems', 'topCustomers', 'totalSales', 'salesSummary', 'customerStates', 'totalOrders', 'totalCustomers', 'totalMenuItems', 'todayOrderCounts']),
+            new Middleware('permission:dashboard', only: ['orderStatistics', 'orderSummary', 'featuredItems', 'mostPopularItems', 'topCustomers', 'totalSales', 'salesSummary', 'customerStates', 'totalOrders', 'totalCustomers', 'totalMenuItems', 'todayOrderCounts', 'latestOrderCheck']),
         ];
     }
 
@@ -109,6 +109,15 @@ class DashboardController extends AdminController
     {
         try {
             return ['data' => $this->dashboardService->todayOrderCounts()];
+        } catch (Exception $exception) {
+            return response(['status' => false, 'message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function latestOrderCheck(): \Illuminate\Http\Response | array | \Illuminate\Contracts\Foundation\Application | \Illuminate\Contracts\Routing\ResponseFactory
+    {
+        try {
+            return ['data' => $this->dashboardService->latestOrderCheck()];
         } catch (Exception $exception) {
             return response(['status' => false, 'message' => $exception->getMessage()], 422);
         }

@@ -18,11 +18,34 @@ export default defineConfig({
         include: ["quill"],
         exclude: ["swiper/vue", "swiper/types"]
     },
-    // server: {
-    //     host: '0.0.0.0',
-    //     hmr: {
-    //         host: 'localhost'
-    //     }
-    // }
+    build: {
+        cssCodeSplit: true,
+        sourcemap: false,
+        minify: 'esbuild',
+        chunkSizeWarningLimit: 1200,
+        rollupOptions: {
+            output: {
+                manualChunks(id) {
+                    if (!id.includes('node_modules')) return;
+                    if (id.includes('vue') || id.includes('vuex') || id.includes('vue-router')) {
+                        return 'vendor-vue';
+                    }
+                    if (id.includes('axios') || id.includes('lodash') || id.includes('date-fns')) {
+                        return 'vendor-utils';
+                    }
+                    if (
+                        id.includes('vue-toastification') ||
+                        id.includes('vue3-simple-alert') ||
+                        id.includes('sweetalert2') ||
+                        id.includes('vue-next-select') ||
+                        id.includes('@vuepic')
+                    ) {
+                        return 'vendor-ui';
+                    }
+                    return 'vendor';
+                }
+            }
+        }
+    },
 });
 

@@ -182,51 +182,72 @@ class DashboardService
     public function todayOrderCounts()
     {
         try {
-            $today = Carbon::today()->toDateString();
-            
-            // Get the selected branch for strict filtering
+            $start = Carbon::today()->startOfDay()->toDateTimeString();
+            $end   = Carbon::today()->endOfDay()->toDateTimeString();
             $selectedBranchId = $this->branch();
-            
-            // Build base query with branch filter
-            $baseQuery = Order::withoutGlobalScope(\App\Models\Scopes\BranchScope::class)
-                ->whereDate('order_datetime', $today);
-            
-            // Apply branch filtering
-            if ($selectedBranchId !== null) {
-                $baseQuery->where('branch_id', '=', $selectedBranchId);
-            }
-            
-            // POS Orders (filtered by source = POS, matching /admin/pos-orders page)
-            $posTotal = (clone $baseQuery)
-                ->where('source', Source::POS)
-                ->count();
-            
-            $posPaid = (clone $baseQuery)
-                ->where('source', Source::POS)
-                ->where('payment_status', PaymentStatus::PAID)
-                ->count();
-            
-            // Table/Online Orders (order_type = DINING_TABLE AND source != POS, matching /admin/table-orders page)
-            $tableTotal = (clone $baseQuery)
-                ->where('order_type', OrderType::DINING_TABLE)
-                ->where('source', '!=', Source::POS)
-                ->count();
-            
-            $tablePaid = (clone $baseQuery)
-                ->where('order_type', OrderType::DINING_TABLE)
-                ->where('source', '!=', Source::POS)
-                ->where('payment_status', PaymentStatus::PAID)
-                ->count();
-            
+
+            // One aggregate query instead of four COUNT queries (much faster under load)
+            $row = Order::withoutGlobalScope(\App\Models\Scopes\BranchScope::class)
+                ->whereBetween('order_datetime', [$start, $end])
+                ->when($selectedBranchId !== null, function ($q) use ($selectedBranchId) {
+                    $q->where('branch_id', '=', $selectedBranchId);
+                })
+                ->selectRaw(
+                    'SUM(CASE WHEN source = ? THEN 1 ELSE 0 END) as pos_total,
+                     SUM(CASE WHEN source = ? AND payment_status = ? THEN 1 ELSE 0 END) as pos_paid,
+                     SUM(CASE WHEN order_type = ? AND source != ? THEN 1 ELSE 0 END) as table_total,
+                     SUM(CASE WHEN order_type = ? AND source != ? AND payment_status = ? THEN 1 ELSE 0 END) as table_paid',
+                    [
+                        Source::POS,
+                        Source::POS,
+                        PaymentStatus::PAID,
+                        OrderType::DINING_TABLE,
+                        Source::POS,
+                        OrderType::DINING_TABLE,
+                        Source::POS,
+                        PaymentStatus::PAID,
+                    ]
+                )
+                ->first();
+
             return [
                 'pos_orders' => [
-                    'total' => $posTotal,
-                    'paid' => $posPaid
+                    'total' => (int) ($row->pos_total ?? 0),
+                    'paid'  => (int) ($row->pos_paid ?? 0),
                 ],
                 'table_orders' => [
-                    'total' => $tableTotal,
-                    'paid' => $tablePaid
-                ]
+                    'total' => (int) ($row->table_total ?? 0),
+                    'paid'  => (int) ($row->table_paid ?? 0),
+                ],
+            ];
+        } catch (Exception $exception) {
+            Log::info($exception->getMessage());
+            throw new Exception(QueryExceptionLibrary::message($exception), 422);
+        }
+    }
+
+    /**
+     * Lightweight check used by admin navbar polling.
+     * Avoids loading full order relations every few seconds.
+     */
+    public function latestOrderCheck()
+    {
+        try {
+            $selectedBranchId = $this->branch();
+
+            $latest = Order::withoutGlobalScope(\App\Models\Scopes\BranchScope::class)
+                ->when($selectedBranchId !== null, function ($q) use ($selectedBranchId) {
+                    $q->where('branch_id', '=', $selectedBranchId);
+                })
+                ->orderByDesc('id')
+                ->select(['id', 'order_serial_no', 'source', 'order_type'])
+                ->first();
+
+            return [
+                'id'              => $latest?->id,
+                'order_serial_no' => $latest?->order_serial_no,
+                'source'          => $latest?->source,
+                'order_type'      => $latest?->order_type,
             ];
         } catch (Exception $exception) {
             Log::info($exception->getMessage());

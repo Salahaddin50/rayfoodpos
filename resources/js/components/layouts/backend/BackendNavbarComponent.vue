@@ -576,52 +576,35 @@ export default {
         },
         startOrderPolling() {
             if (this.orderPolling.timer) return;
-            
-            // Poll ALL orders (including POS) as Firebase push is unreliable
-            axios.get('/admin/table-order', {
-                params: { paginate: 1, per_page: 1, order_column: 'id', order_by: 'desc' }
-            }).then((res) => {
-                const orders = res.data?.data || [];
-                if (orders.length > 0) {
-                    this.orderPolling.lastOrderId = orders[0].id;
-                }
-                console.log('Order polling started, baseline order ID:', this.orderPolling.lastOrderId);
-            }).catch(() => {
-                console.log('Order polling started without baseline');
-            });
 
+            // Lightweight baseline (no order relations / heavy list query)
+            axios.get('/admin/dashboard/latest-order-check').then((res) => {
+                const latest = res.data?.data;
+                if (latest?.id) {
+                    this.orderPolling.lastOrderId = latest.id;
+                }
+            }).catch(() => {});
+
+            // 30s is enough for notifications and much lighter on the server
             this.orderPolling.timer = setInterval(() => {
-                this.pollForNewOrders();
-            }, 15000);
+                if (document.visibilityState === 'visible') {
+                    this.pollForNewOrders();
+                }
+            }, 30000);
         },
         pollForNewOrders() {
-            // Poll ALL orders (including POS) as fallback for unreliable Firebase push
-            axios.get('/admin/table-order', {
-                params: { paginate: 1, per_page: 5, order_column: 'id', order_by: 'desc' }
-            }).then((res) => {
-                const orders = res.data?.data || [];
-                if (orders.length === 0) return;
-                
-                const latestId = orders[0].id;
+            // Lightweight endpoint: only latest order id/source (avoids full order list + relations)
+            axios.get('/admin/dashboard/latest-order-check').then((res) => {
+                const latest = res.data?.data;
+                if (!latest?.id) return;
+
+                const latestId = latest.id;
                 if (this.orderPolling.lastOrderId !== null && latestId > this.orderPolling.lastOrderId) {
-                    const newCount = orders.filter(o => o.id > this.orderPolling.lastOrderId).length;
-                    const message = newCount === 1 
-                        ? 'New order #' + (orders[0].order_serial_no || latestId)
-                        : newCount + ' new orders received';
-                    
-                    // Route based on source: POS (15) or table/web orders (5, 10)
-                    const latestOrder = orders[0];
-                    console.log('Polling detected new order:', {
-                        order_id: latestOrder.id,
-                        source: latestOrder.source,
-                        source_type: typeof latestOrder.source,
-                        order_type: latestOrder.order_type
-                    });
-                    const targetUrl = parseInt(latestOrder.source) === 15 
-                        ? '/admin/pos-orders' 
+                    const message = 'New order #' + (latest.order_serial_no || latestId);
+                    const targetUrl = parseInt(latest.source) === 15
+                        ? '/admin/pos-orders'
                         : '/admin/table-orders';
-                    console.log('Routing to:', targetUrl);
-                    
+
                     this.handleOrderNotification(
                         'New Order Notification',
                         message,

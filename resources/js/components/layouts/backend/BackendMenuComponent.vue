@@ -225,10 +225,12 @@ export default {
         this.defaultSidebarActive();
         this.fetchTodayOrderCounts();
         
-        // Refresh order counts every 60 seconds
+        // Refresh order counts every 90 seconds (and only when tab is visible)
         this.orderCountInterval = setInterval(() => {
-            this.fetchTodayOrderCounts();
-        }, 60000);
+            if (document.visibilityState === 'visible') {
+                this.fetchTodayOrderCounts();
+            }
+        }, 90000);
         
         // Listen for order refresh events from order list pages
         window.addEventListener('rayfood:refresh-order-counts', this.fetchTodayOrderCounts);

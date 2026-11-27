@@ -79,20 +79,26 @@ class OrderService
 
             // Get the selected branch for strict filtering
             $selectedBranchId = $this->branch();
-            Log::info('OrderService list - Selected Branch ID: ' . $selectedBranchId . ', User ID: ' . Auth::id());
 
             return Order::withoutGlobalScope(\App\Models\Scopes\BranchScope::class)
                 ->where('branch_id', '=', $selectedBranchId)
-                ->with('transaction', 'orderItems', 'branch', 'user', 'diningTable', 'takeawayType', 'driver')
+                // Avoid loading all orderItems just to count them; preload only list-needed relations
+                ->with([
+                    'transaction',
+                    'branch',
+                    'user.roles',
+                    'user.media',
+                    'diningTable',
+                    'takeawayType',
+                    'driver',
+                ])
+                ->withCount('orderItems')
                 ->where(function ($query) use ($requests) {
                 if (isset($requests['from_date']) && isset($requests['to_date'])) {
                     $first_date = Date('Y-m-d', strtotime($requests['from_date']));
                     $last_date  = Date('Y-m-d', strtotime($requests['to_date']));
-                    $query->whereDate('order_datetime', '>=', $first_date)->whereDate(
-                        'order_datetime',
-                        '<=',
-                        $last_date
-                    );
+                    $query->where('order_datetime', '>=', $first_date . ' 00:00:00')
+                          ->where('order_datetime', '<=', $last_date . ' 23:59:59');
                 }
                 foreach ($requests as $key => $request) {
                     if (in_array($key, $this->orderFilter)) {

@@ -1,16 +1,67 @@
 {
+  "_vendor-!~{003}~.js": {
+    "file": "assets/vendor-CvJtHADq.css",
+    "src": "_vendor-!~{003}~.js"
+  },
+  "_vendor-D0QYwpzM.js": {
+    "file": "assets/vendor-D0QYwpzM.js",
+    "name": "vendor",
+    "css": [
+      "assets/vendor-CvJtHADq.css"
+    ]
+  },
+  "_vendor-ui-!~{004}~.js": {
+    "file": "assets/vendor-ui-DILbJEEi.css",
+    "src": "_vendor-ui-!~{004}~.js"
+  },
+  "_vendor-ui-Bjb883zn.js": {
+    "file": "assets/vendor-ui-Bjb883zn.js",
+    "name": "vendor-ui",
+    "css": [
+      "assets/vendor-ui-DILbJEEi.css"
+    ]
+  },
+  "_vendor-utils-BAzejZUo.js": {
+    "file": "assets/vendor-utils-BAzejZUo.js",
+    "name": "vendor-utils",
+    "imports": [
+      "_vendor-D0QYwpzM.js"
+    ]
+  },
+  "_vendor-vue-!~{006}~.js": {
+    "file": "assets/vendor-vue-BFOm1E1j.css",
+    "src": "_vendor-vue-!~{006}~.js"
+  },
+  "_vendor-vue-Bicmu-sg.js": {
+    "file": "assets/vendor-vue-Bicmu-sg.js",
+    "name": "vendor-vue",
+    "imports": [
+      "_vendor-ui-Bjb883zn.js",
+      "_vendor-D0QYwpzM.js",
+      "_vendor-utils-BAzejZUo.js"
+    ],
+    "css": [
+      "assets/vendor-vue-BFOm1E1j.css"
+    ]
+  },
   "resources/css/app.css": {
-    "file": "assets/app-5Ig0P7Bl.css",
+    "file": "assets/app-Cfj5y6La.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-8AC3Kjfg.js",
+    "file": "assets/app-BycglpZq.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
+    "imports": [
+      "_vendor-vue-Bicmu-sg.js",
+      "_vendor-utils-BAzejZUo.js",
+      "_vendor-D0QYwpzM.js",
+      "_vendor-ui-Bjb883zn.js"
+    ],
     "css": [
-      "assets/app-COdgqmK5.css"
+      "assets/app-Bi0YzFpg.css"
     ]
   }
 }
