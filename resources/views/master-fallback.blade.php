@@ -30,7 +30,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <script>
-        const APP_URL = "{{ env('VITE_HOST') }}";
+        const APP_URL = "{{ rtrim(request()->getSchemeAndHttpHost(), '/') }}";
         const APP_KEY = "{{ env('VITE_API_KEY') }}";
         const GOOGLE_TOKEN = "{{ env('VITE_GOOGLE_MAP_KEY') }}";
         const APP_DEMO = "{{ env('VITE_DEMO') }}";

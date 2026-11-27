@@ -27,7 +27,8 @@ class DashboardController extends AdminController
     public static function middleware(): array
     {
         return [
-            new Middleware('permission:dashboard', only: ['orderStatistics', 'orderSummary', 'featuredItems', 'mostPopularItems', 'topCustomers', 'totalSales', 'salesSummary', 'customerStates', 'totalOrders', 'totalCustomers', 'totalMenuItems', 'todayOrderCounts', 'latestOrderCheck']),
+            // todayOrderCounts / latestOrderCheck are used by sidebar + navbar for all roles with order menus
+            new Middleware('permission:dashboard', only: ['orderStatistics', 'orderSummary', 'featuredItems', 'mostPopularItems', 'topCustomers', 'totalSales', 'salesSummary', 'customerStates', 'totalOrders', 'totalCustomers', 'totalMenuItems']),
         ];
     }
 

@@ -1,0 +1,1 @@
+import{_ as e,r as n,p as t,o as r}from"./app-CnLRuUzR.js";const s={name:"RoleComponent"};function c(p,a,_,m,f,i){const o=n("router-view");return r(),t(o)}const u=e(s,[["render",c]]);export{u as default};
