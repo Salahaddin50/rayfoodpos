@@ -1,0 +1,1 @@
+import{_ as t,r as o,p as n,o as r}from"./app-D1oRMaGz.js";const s={name:"ItemAttributeComponent"};function c(p,a,_,m,i,u){const e=o("router-view");return r(),n(e)}const d=t(s,[["render",c]]);export{d as default};

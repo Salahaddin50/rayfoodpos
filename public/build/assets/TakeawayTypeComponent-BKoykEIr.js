@@ -1,0 +1,1 @@
+import{_ as o,r as n,p as t,o as a}from"./app-D1oRMaGz.js";const r={name:"TakeawayTypeComponent"};function p(s,c,_,m,f,i){const e=n("router-view");return a(),t(e)}const d=o(r,[["render",p]]);export{d as default};

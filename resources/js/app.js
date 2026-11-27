@@ -51,16 +51,37 @@ const API_URL = ENV.API_URL;
 const API_KEY = ENV.API_KEY;
 
 axios.defaults.baseURL = API_URL + '/api';
+
+const persistedVuexState = () => {
+    try {
+        const state = localStorage.getItem('vuex');
+        return state ? JSON.parse(state) : {};
+    } catch (error) {
+        return {};
+    }
+};
+
+const currentAuthToken = () => {
+    return store.getters.authToken || persistedVuexState()?.auth?.authToken || null;
+};
+
 axios.interceptors.request.use(
     config => {
         config.headers['x-api-key'] = API_KEY;
-        if (localStorage.getItem('vuex')) {
-            const vuex = JSON.parse(localStorage.getItem('vuex'));
-            const token = vuex.auth.authToken;
-            const language = vuex.globalState.lists.language_code;
-            config.headers['Authorization'] = token ? `Bearer ${token}` : '';
+        const vuex = persistedVuexState();
+        const token = store.getters.authToken || vuex?.auth?.authToken;
+        const language = vuex?.globalState?.lists?.language_code;
+
+        if (token) {
+            config.headers['Authorization'] = `Bearer ${token}`;
+        } else {
+            delete config.headers['Authorization'];
+        }
+
+        if (language) {
             config.headers['x-localization'] = language;
         }
+
         return config;
     },
     error => Promise.reject(error),
@@ -74,10 +95,28 @@ axios.interceptors.response.use(
         if (error.response && error.response.status === 401) {
             const currentPath = window.location.pathname;
             const isAdminArea = currentPath.startsWith('/admin');
+            const token = currentAuthToken();
+            const requestConfig = error.config;
+            const sentAuthorization = requestConfig?.headers?.Authorization
+                || requestConfig?.headers?.authorization;
+            const responseMessage = error.response?.data?.message
+                || error.response?.data?.errors;
+            const isUnauthenticated = responseMessage === 'Unauthenticated.'
+                || responseMessage === 'unauthenticated';
+
+            // A Chromium request can occasionally leave before persisted auth is
+            // available. Retry it once with the active Vuex token instead of
+            // treating that request as a logout.
+            if (isAdminArea && requestConfig && token && !sentAuthorization && !requestConfig._authRetry) {
+                requestConfig._authRetry = true;
+                requestConfig.headers = requestConfig.headers || {};
+                requestConfig.headers['Authorization'] = `Bearer ${token}`;
+                return axios(requestConfig);
+            }
 
             // Only force redirect to admin login for admin area pages.
             // Public pages (e.g., /online/*, /table-order/*) should NOT be redirected to /admin/login.
-            if (isAdminArea) {
+            if (isAdminArea && isUnauthenticated) {
                 // Prevent multiple redirects
                 if (isRedirecting) {
                     return Promise.reject(error);
