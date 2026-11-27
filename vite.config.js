@@ -1,4 +1,3 @@
-
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue'
@@ -22,39 +21,9 @@ export default defineConfig({
         cssCodeSplit: true,
         sourcemap: false,
         minify: 'esbuild',
-        chunkSizeWarningLimit: 1200,
-        rollupOptions: {
-            output: {
-                manualChunks(id) {
-                    if (id.includes('/resources/js/components/admin/')) {
-                        return 'admin-pages';
-                    }
-                    if (
-                        id.includes('/resources/js/components/online/') ||
-                        id.includes('/resources/js/components/table/')
-                    ) {
-                        return 'customer-pages';
-                    }
-                    if (!id.includes('node_modules')) return;
-                    if (id.includes('vue') || id.includes('vuex') || id.includes('vue-router')) {
-                        return 'vendor-vue';
-                    }
-                    if (id.includes('axios') || id.includes('lodash') || id.includes('date-fns')) {
-                        return 'vendor-utils';
-                    }
-                    if (
-                        id.includes('vue-toastification') ||
-                        id.includes('vue3-simple-alert') ||
-                        id.includes('sweetalert2') ||
-                        id.includes('vue-next-select') ||
-                        id.includes('@vuepic')
-                    ) {
-                        return 'vendor-ui';
-                    }
-                    return 'vendor';
-                }
-            }
-        }
+        chunkSizeWarningLimit: 1600,
+        // Let Vite/Rollup create async chunks from dynamic import() only.
+        // Custom manualChunks was splitting Vue ecosystem packages incorrectly
+        // and caused "X is not a constructor" at runtime.
     },
 });
-

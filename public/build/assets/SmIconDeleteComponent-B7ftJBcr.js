@@ -1,0 +1,1 @@
+import{_ as s,c as n,o as a,b as t,t as l}from"./app-DggL-HLI.js";const c={name:"SmIconDeleteComponent"},r={class:"db-table-action delete"},p={class:"db-tooltip"};function d(o,e,i,_,m,b){return a(),n("button",r,[e[0]||(e[0]=t("i",{class:"lab lab-delete"},null,-1)),t("span",p,l(o.$t("button.delete")),1)])}const f=s(c,[["render",d]]);export{f as S};

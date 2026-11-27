@@ -1,0 +1,1 @@
+.ff-blink-confirmed[data-v-d87a1bc0]{animation:ffConfirmedBlink-d87a1bc0 1.1s ease-in-out infinite}@keyframes ffConfirmedBlink-d87a1bc0{0%,to{opacity:1;box-shadow:0 0 #0000}50%{opacity:.6;box-shadow:0 0 0 2px #3b82f640}}@media (prefers-reduced-motion: reduce){.ff-blink-confirmed[data-v-d87a1bc0]{animation:none}}
