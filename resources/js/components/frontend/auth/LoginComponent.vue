@@ -122,13 +122,6 @@ export default {
         }
     },
     mounted() {
-        // Heal broken Edge sessions: authStatus true but token missing/invalid
-        const status = this.$store.getters.authStatus;
-        const token = this.$store.getters.authToken;
-        if (status && !token) {
-            this.$store.dispatch('loginDataReset');
-        }
-
         if (this.turnstile.enabled && this.turnstile.siteKey) {
             this.initTurnstile();
         }

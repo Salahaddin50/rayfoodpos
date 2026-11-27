@@ -83,31 +83,18 @@ axios.interceptors.response.use(
                     return Promise.reject(error);
                 }
 
-                // Clear full auth in memory + localStorage.
-                // Clearing only authToken leaves authStatus=true and causes a login↔dashboard loop.
+                // Clear auth token
+                if (localStorage.getItem('vuex')) {
+                    const vuex = JSON.parse(localStorage.getItem('vuex'));
+                    if (vuex.auth) {
+                        vuex.auth.authToken = null;
+                        localStorage.setItem('vuex', JSON.stringify(vuex));
+                    }
+                }
+
+                // Also clear in-memory Vuex state so router guards react immediately
                 try {
                     store.commit('authLogout');
-                } catch (e) {
-                    // ignore
-                }
-                try {
-                    if (localStorage.getItem('vuex')) {
-                        const vuex = JSON.parse(localStorage.getItem('vuex'));
-                        if (vuex.auth) {
-                            vuex.auth = {
-                                ...vuex.auth,
-                                authStatus: false,
-                                authToken: null,
-                                authBranchId: '',
-                                authInfo: {},
-                                authMenu: [],
-                                authPermission: {},
-                                authDefaultPermission: {},
-                                authDefaultMenu: {},
-                            };
-                            localStorage.setItem('vuex', JSON.stringify(vuex));
-                        }
-                    }
                 } catch (e) {
                     // ignore
                 }
