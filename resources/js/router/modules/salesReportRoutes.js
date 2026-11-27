@@ -1,9 +1,7 @@
-import SalesReportComponent from "../../components/admin/salesReport/SalesReportComponent";
-import SalesReportListComponent from "../../components/admin/salesReport/SalesReportListComponent";
 export default [
     {
         path: "/admin/sales-report",
-        component: SalesReportComponent,
+        component: () => import("../../components/admin/salesReport/SalesReportComponent"),
         name: "admin.sales-report",
         redirect: { name: "admin.sales-report.list" },
         meta: {
@@ -15,7 +13,7 @@ export default [
         children: [
             {
                 path: "",
-                component: SalesReportListComponent,
+                component: () => import("../../components/admin/salesReport/SalesReportListComponent"),
                 name: "admin.sales-report.list",
                 meta: {
                     isFrontend: false,

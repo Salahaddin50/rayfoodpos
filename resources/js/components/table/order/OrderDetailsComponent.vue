@@ -488,9 +488,11 @@ export default {
             if (this.refreshInterval) {
                 clearInterval(this.refreshInterval);
             }
-            // Set interval to refresh every 1 minute (60000ms)
+            // Refresh every minute, only while the tab is visible
             this.refreshInterval = setInterval(() => {
-                this.refreshStatus();
+                if (document.visibilityState === 'visible') {
+                    this.refreshStatus();
+                }
             }, 60000);
         },
         stopAutoRefresh() {

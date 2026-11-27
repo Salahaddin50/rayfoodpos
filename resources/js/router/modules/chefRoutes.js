@@ -1,13 +1,7 @@
-import ChefComponent from "../../components/admin/chefs/ChefComponent.vue";
-import ChefListComponent from "../../components/admin/chefs/ChefListComponent.vue";
-import ChefShowComponent from "../../components/admin/chefs/ChefShowComponent.vue";
-import ChefOrderDetailsComponent from "../../components/admin/chefs/ChefOrderDetailsComponent.vue";
-
-
 export default [
     {
         path: "/admin/chefs",
-        component: ChefComponent,
+        component: () => import("../../components/admin/chefs/ChefComponent.vue"),
         name: "admin.chefs",
         redirect: { name: "admin.chefs.list" },
         meta: {
@@ -19,7 +13,7 @@ export default [
         children: [
             {
                 path: "",
-                component: ChefListComponent,
+                component: () => import("../../components/admin/chefs/ChefListComponent.vue"),
                 name: "admin.chefs.list",
                 meta: {
                     isFrontend: false,
@@ -30,7 +24,7 @@ export default [
             },
             {
                 path: "show/:id",
-                component: ChefShowComponent,
+                component: () => import("../../components/admin/chefs/ChefShowComponent.vue"),
                 name: "admin.chefs.show",
                 meta: {
                     isFrontend: false,
@@ -41,7 +35,7 @@ export default [
             },
             {
                 path: "show/:id/:orderId",
-                component: ChefOrderDetailsComponent,
+                component: () => import("../../components/admin/chefs/ChefOrderDetailsComponent.vue"),
                 name: "admin.chefs.order.details",
                 meta: {
                     isFrontend: false,

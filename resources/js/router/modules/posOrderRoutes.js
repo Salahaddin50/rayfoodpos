@@ -1,11 +1,7 @@
-import PosOrderComponent from "../../components/admin/posOrders/PosOrderComponent";
-import PosOrderListComponent from "../../components/admin/posOrders/PosOrderListComponent";
-import PosOrderShowComponent from "../../components/admin/posOrders/PosOrderShowComponent";
-
 export default [
     {
         path: "/admin/pos-orders",
-        component: PosOrderComponent,
+        component: () => import("../../components/admin/posOrders/PosOrderComponent"),
         name: "admin.pos.orders",
         redirect: { name: "admin.pos.orders.list" },
         meta: {
@@ -17,7 +13,7 @@ export default [
         children: [
             {
                 path: "",
-                component: PosOrderListComponent,
+                component: () => import("../../components/admin/posOrders/PosOrderListComponent"),
                 name: "admin.pos.orders.list",
                 meta: {
                     isFrontend: false,
@@ -28,7 +24,7 @@ export default [
             },
             {
                 path: "show/:id",
-                component: PosOrderShowComponent,
+                component: () => import("../../components/admin/posOrders/PosOrderShowComponent"),
                 name: "admin.pos.orders.show",
                 meta: {
                     isFrontend: false,

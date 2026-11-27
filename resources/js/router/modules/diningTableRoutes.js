@@ -1,12 +1,7 @@
-import DiningTableListComponent from "../../components/admin/diningTable/DiningTableListComponent";
-import DiningTableComponent from "../../components/admin/diningTable/DiningTableComponent";
-import DiningTableShowComponent from "../../components/admin/diningTable/DiningTableShowComponent";
-import DiningTableOverviewComponent from "../../components/admin/diningTable/DiningTableOverviewComponent";
-
 export default [
     {
         path: "/admin/dining-tables",
-        component: DiningTableComponent,
+        component: () => import("../../components/admin/diningTable/DiningTableComponent"),
         name: "admin.diningTable",
         redirect: { name: "admin.diningTable.list" },
         meta: {
@@ -18,7 +13,7 @@ export default [
         children: [
             {
                 path: "list",
-                component: DiningTableListComponent,
+                component: () => import("../../components/admin/diningTable/DiningTableListComponent"),
                 name: "admin.diningTable.list",
                 meta: {
                     isFrontend: false,
@@ -29,7 +24,7 @@ export default [
             },
             {
                 path: "overview",
-                component: DiningTableOverviewComponent,
+                component: () => import("../../components/admin/diningTable/DiningTableOverviewComponent"),
                 name: "admin.diningTable.overview",
                 meta: {
                     isFrontend: false,
@@ -40,7 +35,7 @@ export default [
             },
             {
                 path: "show/:id",
-                component: DiningTableShowComponent,
+                component: () => import("../../components/admin/diningTable/DiningTableShowComponent"),
                 name: "admin.diningTable.show",
                 meta: {
                     isFrontend: false,

@@ -1,10 +1,7 @@
-import DriverComponent from "../../components/admin/drivers/DriverComponent";
-import DriverListComponent from "../../components/admin/drivers/DriverListComponent";
-
 export default [
     {
         path: "/admin/drivers",
-        component: DriverComponent,
+        component: () => import("../../components/admin/drivers/DriverComponent"),
         name: "admin.drivers",
         redirect: { name: "admin.drivers.list" },
         meta: {
@@ -16,7 +13,7 @@ export default [
         children: [
             {
                 path: "",
-                component: DriverListComponent,
+                component: () => import("../../components/admin/drivers/DriverListComponent"),
                 name: "admin.drivers.list",
                 meta: {
                     isFrontend: false,

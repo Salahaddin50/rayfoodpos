@@ -1,9 +1,7 @@
-import OrderStatusScreenComponent from "../../components/admin/orderStatusScreen/OrderStatusScreenComponent";
-
 export default [
     {
         path: "/admin/order-status-screen",
-        component: OrderStatusScreenComponent,
+        component: () => import("../../components/admin/orderStatusScreen/OrderStatusScreenComponent"),
         name: "admin.order-status-screen",
         meta: {
             isFrontend: false,

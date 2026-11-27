@@ -1,11 +1,7 @@
-import TakeawayTypeListComponent from "../../components/admin/takeawayType/TakeawayTypeListComponent";
-import TakeawayTypeComponent from "../../components/admin/takeawayType/TakeawayTypeComponent";
-import TakeawayTypeShowComponent from "../../components/admin/takeawayType/TakeawayTypeShowComponent";
-
 export default [
     {
         path: "/admin/takeaway-types",
-        component: TakeawayTypeComponent,
+        component: () => import("../../components/admin/takeawayType/TakeawayTypeComponent"),
         name: "admin.takeawayType",
         redirect: { name: "admin.takeawayType.list" },
         meta: {
@@ -17,7 +13,7 @@ export default [
         children: [
             {
                 path: "list",
-                component: TakeawayTypeListComponent,
+                component: () => import("../../components/admin/takeawayType/TakeawayTypeListComponent"),
                 name: "admin.takeawayType.list",
                 meta: {
                     isFrontend: false,
@@ -28,7 +24,7 @@ export default [
             },
             {
                 path: "show/:id",
-                component: TakeawayTypeShowComponent,
+                component: () => import("../../components/admin/takeawayType/TakeawayTypeShowComponent"),
                 name: "admin.takeawayType.show",
                 meta: {
                     isFrontend: false,

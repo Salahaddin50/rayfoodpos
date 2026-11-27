@@ -1,9 +1,7 @@
-import PosComponent from "../../components/admin/pos/PosComponent";
-
 export default [
     {
         path: "/admin/pos",
-        component: PosComponent,
+        component: () => import("../../components/admin/pos/PosComponent"),
         name: "admin.pos",
         meta: {
             isFrontend: false,

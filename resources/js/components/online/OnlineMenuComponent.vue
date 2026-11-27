@@ -306,17 +306,13 @@ export default {
                     this.itemList(true);
                 });
             } else {
-                // Auto-select first branch after 2 seconds if no branch is selected
-                if (this.branches && this.branches.length > 0) {
-                    setTimeout(() => {
-                        if (!this.selectedBranchId) {
-                            const firstBranch = this.branches[0];
-                            if (firstBranch && firstBranch.id) {
-                                this.selectedBranchId = firstBranch.id;
-                                this.onBranchChange();
-                            }
-                        }
-                    }, 2000);
+                // Auto-select first branch immediately (no artificial delay)
+                if (this.branches && this.branches.length > 0 && !this.selectedBranchId) {
+                    const firstBranch = this.branches[0];
+                    if (firstBranch && firstBranch.id) {
+                        this.selectedBranchId = firstBranch.id;
+                        this.onBranchChange();
+                    }
                 }
             }
         }).catch(() => {
@@ -401,28 +397,25 @@ export default {
             // Use itemsLoading instead of full page loading
             this.itemsLoading = true;
 
-            // Small delay to allow UI to render (improves perceived performance)
-            setTimeout(() => {
-                const payload = {
-                    ...this.itemProps.search,
-                    branch_id: this.selectedBranchId,
-                    order_column: 'id', // fetch fast, then sort client-side by category sort
-                    order_type: 'asc',
-                    limit: this.itemsLimit,
-                    offset: this.itemsOffset,
-                    vuex: false,
-                };
-                
-                this.$store.dispatch("frontendItem/lists", payload).then((res) => {
-                    const newItems = res?.data?.data || [];
-                    this.itemsLocal = [...this.itemsLocal, ...newItems];
-                    this.itemsOffset += newItems.length;
-                    this.hasMoreItems = newItems.length === this.itemsLimit;
-                    this.itemsLoading = false;
-                }).catch(() => {
-                    this.itemsLoading = false;
-                });
-            }, 50); // Small delay for better UX
+            const payload = {
+                ...this.itemProps.search,
+                branch_id: this.selectedBranchId,
+                order_column: 'id', // fetch fast, then sort client-side by category sort
+                order_type: 'asc',
+                limit: this.itemsLimit,
+                offset: this.itemsOffset,
+                vuex: false,
+            };
+
+            this.$store.dispatch("frontendItem/lists", payload).then((res) => {
+                const newItems = res?.data?.data || [];
+                this.itemsLocal = [...this.itemsLocal, ...newItems];
+                this.itemsOffset += newItems.length;
+                this.hasMoreItems = newItems.length === this.itemsLimit;
+                this.itemsLoading = false;
+            }).catch(() => {
+                this.itemsLoading = false;
+            });
         },
         loadMoreItems: function () {
             if (!this.itemsLoading && this.hasMoreItems) {

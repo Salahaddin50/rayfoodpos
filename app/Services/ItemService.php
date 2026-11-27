@@ -55,8 +55,15 @@ class ItemService
             $orderColumn = $request->get('order_column') ?? 'id';
             $orderType   = $request->get('order_type') ?? 'desc';
 
+            // Lite menu lists (online / QR table) only need media + category + offer.
+            // Keep tax for non-lite consumers.
+            $lite = (int) $request->get('lite', 0) === 1;
+            $with = $lite
+                ? ['media', 'category', 'offer']
+                : ['media', 'category', 'tax', 'offer'];
+
             // Include `offer` to avoid N+1 queries and to keep `item.offer` available for list UIs.
-            $query = Item::with('media', 'category', 'tax', 'offer')
+            $query = Item::with($with)
                 ->when($branchId, function ($q) use ($branchId) {
                     $q->with(['branchItemStatuses' => function ($sub) use ($branchId) {
                         $sub->where('branch_id', $branchId);

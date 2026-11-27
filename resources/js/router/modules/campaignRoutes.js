@@ -1,11 +1,7 @@
-import CampaignComponent from "../../components/admin/campaigns/CampaignComponent";
-import CampaignListComponent from "../../components/admin/campaigns/CampaignListComponent";
-import CampaignShowComponent from "../../components/admin/campaigns/CampaignShowComponent";
-
 export default [
     {
         path: '/admin/campaigns',
-        component: CampaignComponent,
+        component: () => import("../../components/admin/campaigns/CampaignComponent"),
         name: 'admin.campaigns',
         redirect: {name: 'admin.campaigns.list'},
         meta: {
@@ -17,7 +13,7 @@ export default [
         children: [
             {
                 path: '',
-                component: CampaignListComponent,
+                component: () => import("../../components/admin/campaigns/CampaignListComponent"),
                 name: 'admin.campaigns.list',
                 meta: {
                     isFrontend: false,
@@ -28,7 +24,7 @@ export default [
             },
             {
                 path: "show/:id",
-                component: CampaignShowComponent,
+                component: () => import("../../components/admin/campaigns/CampaignShowComponent"),
                 name: "admin.campaign.show",
                 meta: {
                     isFrontend: false,

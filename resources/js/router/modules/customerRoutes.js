@@ -1,13 +1,7 @@
-import CustomerComponent from "../../components/admin/customers/CustomerComponent";
-import CustomerListComponent from "../../components/admin/customers/CustomerListComponent";
-import CustomerShowComponent from "../../components/admin/customers/CustomerShowComponent";
-import CustomerOrderDetailsComponent from "../../components/admin/customers/CustomerOrderDetailsComponent";
-
-
 export default [
     {
         path: "/admin/customers",
-        component: CustomerComponent,
+        component: () => import("../../components/admin/customers/CustomerComponent"),
         name: "admin.customers",
         redirect: {name: "admin.customers.list"},
         meta: {
@@ -19,7 +13,7 @@ export default [
         children: [
             {
                 path: "",
-                component: CustomerListComponent,
+                component: () => import("../../components/admin/customers/CustomerListComponent"),
                 name: "admin.customers.list",
                 meta: {
                     isFrontend: false,
@@ -30,7 +24,7 @@ export default [
             },
             {
                 path: "show/:id",
-                component: CustomerShowComponent,
+                component: () => import("../../components/admin/customers/CustomerShowComponent"),
                 name: "admin.customers.show",
                 meta: {
                     isFrontend: false,
@@ -41,7 +35,7 @@ export default [
             },
             {
                 path: "show/:id/:orderId",
-                component: CustomerOrderDetailsComponent,
+                component: () => import("../../components/admin/customers/CustomerOrderDetailsComponent"),
                 name: "admin.customers.order.details",
                 meta: {
                     isFrontend: false,

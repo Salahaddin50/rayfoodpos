@@ -1,11 +1,7 @@
-import ItemComponent from "../../components/admin/items/ItemComponent";
-import ItemListComponent from "../../components/admin/items/ItemListComponent";
-import ItemShowComponent from "../../components/admin/items/ItemShowComponent";
-
 export default [
     {
         path: '/admin/items',
-        component: ItemComponent,
+        component: () => import("../../components/admin/items/ItemComponent"),
         name: 'admin.items',
         redirect: {name: 'admin.items.list'},
         meta: {
@@ -17,7 +13,7 @@ export default [
         children: [
             {
                 path: '',
-                component: ItemListComponent,
+                component: () => import("../../components/admin/items/ItemListComponent"),
                 name: 'admin.items.list',
                 meta: {
                     isFrontend: false,
@@ -28,7 +24,7 @@ export default [
             },
             {
                 path: "show/:id",
-                component: ItemShowComponent,
+                component: () => import("../../components/admin/items/ItemShowComponent"),
                 name: "admin.item.show",
                 meta: {
                     isFrontend: false,

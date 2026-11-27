@@ -1,11 +1,7 @@
-import ProfileEditProfileComponent from "../../components/admin/profile/ProfileEditProfileComponent";
-import ProfileChangePasswordComponent from "../../components/admin/profile/ProfileChangePasswordComponent";
-
-
 export default [
     {
         path: "/admin/profile/edit-profile",
-        component: ProfileEditProfileComponent,
+        component: () => import("../../components/admin/profile/ProfileEditProfileComponent"),
         name: "admin.profile.editProfile",
         meta: {
             isFrontend: false,
@@ -16,7 +12,7 @@ export default [
     },
     {
         path: "/admin/profile/change-password",
-        component: ProfileChangePasswordComponent,
+        component: () => import("../../components/admin/profile/ProfileChangePasswordComponent"),
         name: "admin.profile.changePassword",
         meta: {
             isFrontend: false,

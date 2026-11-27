@@ -1,11 +1,7 @@
-import TableOrderComponent from "../../components/admin/tableOrders/TableOrderComponent";
-import TableOrderListComponent from "../../components/admin/tableOrders/TableOrderListComponent";
-import TableOrderShowComponent from "../../components/admin/tableOrders/TableOrderShowComponent";
-
 export default [
     {
         path: '/admin/table-orders',
-        component: TableOrderComponent,
+        component: () => import("../../components/admin/tableOrders/TableOrderComponent"),
         name: 'admin.table.order',
         redirect: {name: 'admin.table.order.list'},
         meta: {
@@ -17,7 +13,7 @@ export default [
         children: [
             {
                 path: '',
-                component: TableOrderListComponent,
+                component: () => import("../../components/admin/tableOrders/TableOrderListComponent"),
                 name: 'admin.table.order.list',
                 meta: {
                     isFrontend: false,
@@ -28,7 +24,7 @@ export default [
             },
             {
                 path: "show/:id",
-                component: TableOrderShowComponent,
+                component: () => import("../../components/admin/tableOrders/TableOrderShowComponent"),
                 name: "admin.table.order.show",
                 meta: {
                     isFrontend: false,

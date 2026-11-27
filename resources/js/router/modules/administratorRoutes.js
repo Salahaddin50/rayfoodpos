@@ -1,13 +1,7 @@
-import AdministratorComponent from "../../components/admin/administrators/AdministratorComponent";
-import AdministratorListComponent from "../../components/admin/administrators/AdministratorListComponent";
-import AdministratorShowComponent from "../../components/admin/administrators/AdministratorShowComponent";
-import AdministratorOrderDetailsComponent
-    from "../../components/admin/administrators/AdministratorOrderDetailsComponent";
-
 export default [
     {
         path: "/admin/administrators",
-        component: AdministratorComponent,
+        component: () => import("../../components/admin/administrators/AdministratorComponent"),
         name: "admin.administrators",
         redirect: {name: "admin.administrators.list"},
         meta: {
@@ -19,7 +13,7 @@ export default [
         children: [
             {
                 path: "",
-                component: AdministratorListComponent,
+                component: () => import("../../components/admin/administrators/AdministratorListComponent"),
                 name: "admin.administrators.list",
                 meta: {
                     isFrontend: false,
@@ -30,7 +24,7 @@ export default [
             },
             {
                 path: "show/:id",
-                component: AdministratorShowComponent,
+                component: () => import("../../components/admin/administrators/AdministratorShowComponent"),
                 name: "admin.administrators.show",
                 meta: {
                     isFrontend: false,
@@ -41,7 +35,7 @@ export default [
             },
             {
                 path: "show/:id/:orderId",
-                component: AdministratorOrderDetailsComponent,
+                component: () => import("../../components/admin/administrators/AdministratorOrderDetailsComponent"),
                 name: "admin.administrators.order.details",
                 meta: {
                     isFrontend: false,

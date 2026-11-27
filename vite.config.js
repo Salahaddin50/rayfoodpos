@@ -26,6 +26,15 @@ export default defineConfig({
         rollupOptions: {
             output: {
                 manualChunks(id) {
+                    if (id.includes('/resources/js/components/admin/')) {
+                        return 'admin-pages';
+                    }
+                    if (
+                        id.includes('/resources/js/components/online/') ||
+                        id.includes('/resources/js/components/table/')
+                    ) {
+                        return 'customer-pages';
+                    }
                     if (!id.includes('node_modules')) return;
                     if (id.includes('vue') || id.includes('vuex') || id.includes('vue-router')) {
                         return 'vendor-vue';

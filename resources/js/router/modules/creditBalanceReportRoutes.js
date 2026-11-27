@@ -1,9 +1,7 @@
-import CreditBalanceReportComponent from "../../components/admin/creditBalanceReport/CreditBalanceReportComponent";
-
 export default [
     {
         path: "/admin/credit-balance-report",
-        component: CreditBalanceReportComponent,
+        component: () => import("../../components/admin/creditBalanceReport/CreditBalanceReportComponent"),
         name: "admin.credit-balance-report",
         meta: {
             isFrontend: false,

@@ -1,13 +1,7 @@
-import WaiterComponent from "../../components/admin/waiters/WaiterComponent.vue";
-import WaiterListComponent from "../../components/admin/waiters/WaiterListComponent.vue";
-import WaiterShowComponent from "../../components/admin/waiters/WaiterShowComponent.vue";
-import WaiterOrderDetailsComponent from "../../components/admin/waiters/WaiterOrderDetailsComponent.vue";
-
-
 export default [
     {
         path: "/admin/waiters",
-        component: WaiterComponent,
+        component: () => import("../../components/admin/waiters/WaiterComponent.vue"),
         name: "admin.waiters",
         redirect: {name: "admin.waiters.list"},
         meta: {
@@ -19,7 +13,7 @@ export default [
         children: [
             {
                 path: "",
-                component: WaiterListComponent,
+                component: () => import("../../components/admin/waiters/WaiterListComponent.vue"),
                 name: "admin.waiters.list",
                 meta: {
                     isFrontend: false,
@@ -30,7 +24,7 @@ export default [
             },
             {
                 path: "show/:id",
-                component: WaiterShowComponent,
+                component: () => import("../../components/admin/waiters/WaiterShowComponent.vue"),
                 name: "admin.waiters.show",
                 meta: {
                     isFrontend: false,
@@ -41,7 +35,7 @@ export default [
             },
             {
                 path: "show/:id/:orderId",
-                component: WaiterOrderDetailsComponent,
+                component: () => import("../../components/admin/waiters/WaiterOrderDetailsComponent.vue"),
                 name: "admin.waiters.order.details",
                 meta: {
                     isFrontend: false,

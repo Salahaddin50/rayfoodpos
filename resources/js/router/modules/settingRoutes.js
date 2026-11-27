@@ -1,42 +1,7 @@
-import SettingsComponent from "../../components/admin/settings/SettingsComponent";
-import CompanyComponent from "../../components/admin/settings/Company/CompanyComponent";
-import SiteComponent from "../../components/admin/settings/Site/SiteComponent";
-import ItemCategoryListComponent from "../../components/admin/settings/ItemCategory/ItemCateogryListComponent";
-import ItemCategoryComponent from "../../components/admin/settings/ItemCategory/ItemCategoryComponent";
-import ItemCategoryShowComponent from "../../components/admin/settings/ItemCategory/ItemCategoryShowComponent";
-import ItemAttributeComponent from "../../components/admin/settings/ItemAttribute/ItemAttributeComponent";
-import ItemAttributeListComponent from "../../components/admin/settings/ItemAttribute/ItemAttributeListComponent";
-import BranchComponent from "../../components/admin/settings/Branch/BranchComponent";
-import BranchListComponent from "../../components/admin/settings/Branch/BranchListComponent";
-import BranchShowComponent from "../../components/admin/settings/Branch/BranchShowComponent";
-import TaxComponent from "../../components/admin/settings/Tax/TaxComponent";
-import TaxListComponent from "../../components/admin/settings/Tax/TaxListComponent";
-import CurrencyComponent from "../../components/admin/settings/Currency/CurrencyComponent";
-import CurrencyListComponent from "../../components/admin/settings/Currency/CurrencyListComponent";
-import MailComponent from "../../components/admin/settings/Mail/MailComponent";
-import PageComponent from "../../components/admin/settings/Page/PageComponent";
-import PageListComponent from "../../components/admin/settings/Page/PageListComponent";
-import PageShowComponent from "../../components/admin/settings/Page/PageShowComponent";
-import OtpComponent from "../../components/admin/settings/Otp/OtpComponent";
-import AnalyticComponent from "../../components/admin/settings/analytics/AnalyticComponent";
-import AnalyticListComponent from "../../components/admin/settings/analytics/AnalyticListComponent";
-import AnalyticShowComponent from "../../components/admin/settings/analytics/AnalyticShowComponent";
-import RoleComponent from "../../components/admin/settings/Role/RoleComponent";
-import RoleListComponent from "../../components/admin/settings/Role/RoleListComponent";
-import RoleShowComponent from "../../components/admin/settings/Role/RoleShowComponent";
-import ThemeComponent from "../../components/admin/settings/Theme/ThemeComponent";
-import LanguageComponent from "../../components/admin/settings/Language/LanguageComponent";
-import LanguageListComponent from "../../components/admin/settings/Language/LanguageListComponent";
-import LanguageShowComponent from "../../components/admin/settings/Language/LanguageShowComponent";
-import PaymentGatewayComponent from "../../components/admin/settings/PaymentGateway/PaymentGatewayComponent";
-import SmsGatewayComponent from "../../components/admin/settings/SmsGateway/SmsGatewayComponent";
-import NotificationAlertComponent from "../../components/admin/settings/NotificationAlert/NotificationAlertComponent";
-import NotificationComponent from "../../components/admin/settings/Notification/NotificationComponent";
-
 export default [
     {
         path: "/admin/settings",
-        component: SettingsComponent,
+        component: () => import("../../components/admin/settings/SettingsComponent"),
         name: "admin.settings",
         redirect: { name: "admin.settings.company" },
         meta: {
@@ -48,7 +13,7 @@ export default [
         children: [
             {
                 path: "company",
-                component: CompanyComponent,
+                component: () => import("../../components/admin/settings/Company/CompanyComponent"),
                 name: "admin.settings.company",
                 meta: {
                     isFrontend: false,
@@ -59,7 +24,7 @@ export default [
             },
             {
                 path: "site",
-                component: SiteComponent,
+                component: () => import("../../components/admin/settings/Site/SiteComponent"),
                 name: "admin.settings.site",
                 meta: {
                     isFrontend: false,
@@ -70,7 +35,7 @@ export default [
             },
             {
                 path: "branches",
-                component: BranchComponent,
+                component: () => import("../../components/admin/settings/Branch/BranchComponent"),
                 name: "admin.settings.branch",
                 redirect: { name: "admin.settings.branch.list" },
                 meta: {
@@ -82,7 +47,7 @@ export default [
                 children: [
                     {
                         path: "list",
-                        component: BranchListComponent,
+                        component: () => import("../../components/admin/settings/Branch/BranchListComponent"),
                         name: "admin.settings.branch.list",
                         meta: {
                             isFrontend: false,
@@ -93,7 +58,7 @@ export default [
                     },
                     {
                         path: "show/:id",
-                        component: BranchShowComponent,
+                        component: () => import("../../components/admin/settings/Branch/BranchShowComponent"),
                         name: "admin.settings.branch.show",
                         meta: {
                             isFrontend: false,
@@ -106,7 +71,7 @@ export default [
             },
             {
                 path: "mail",
-                component: MailComponent,
+                component: () => import("../../components/admin/settings/Mail/MailComponent"),
                 name: "admin.settings.mail",
                 meta: {
                     isFrontend: false,
@@ -117,7 +82,7 @@ export default [
             },
             {
                 path: "otp",
-                component: OtpComponent,
+                component: () => import("../../components/admin/settings/Otp/OtpComponent"),
                 name: "admin.settings.otp",
                 meta: {
                     isFrontend: false,
@@ -128,7 +93,7 @@ export default [
             },
             {
                 path: "analytics",
-                component: AnalyticComponent,
+                component: () => import("../../components/admin/settings/analytics/AnalyticComponent"),
                 name: "admin.settings.analytic",
                 redirect: { name: "admin.settings.analytic.list" },
                 meta: {
@@ -141,7 +106,7 @@ export default [
                     {
 
                         path: "list",
-                        component: AnalyticListComponent,
+                        component: () => import("../../components/admin/settings/analytics/AnalyticListComponent"),
                         name: "admin.settings.analytic.list",
                         meta: {
                             isFrontend: false,
@@ -152,7 +117,7 @@ export default [
                     },
                     {
                         path: "show/:id",
-                        component: AnalyticShowComponent,
+                        component: () => import("../../components/admin/settings/analytics/AnalyticShowComponent"),
                         name: "admin.settings.analytic.show",
                         meta: {
                             isFrontend: false,
@@ -165,7 +130,7 @@ export default [
             },
             {
                 path: "theme",
-                component: ThemeComponent,
+                component: () => import("../../components/admin/settings/Theme/ThemeComponent"),
                 name: "admin.settings.theme",
                 meta: {
                     isFrontend: false,
@@ -176,7 +141,7 @@ export default [
             },
             {
                 path: "currencies",
-                component: CurrencyComponent,
+                component: () => import("../../components/admin/settings/Currency/CurrencyComponent"),
                 name: "admin.settings.currency",
                 redirect: { name: "admin.settings.currency.list" },
                 meta: {
@@ -188,7 +153,7 @@ export default [
                 children: [
                     {
                         path: "list",
-                        component: CurrencyListComponent,
+                        component: () => import("../../components/admin/settings/Currency/CurrencyListComponent"),
                         name: "admin.settings.currency.list",
                         meta: {
                             isFrontend: false,
@@ -201,7 +166,7 @@ export default [
             },
             {
                 path: "item-categories",
-                component: ItemCategoryComponent,
+                component: () => import("../../components/admin/settings/ItemCategory/ItemCategoryComponent"),
                 name: "admin.settings.itemCategory",
                 redirect: { name: "admin.settings.itemCategory.list" },
                 meta: {
@@ -213,7 +178,7 @@ export default [
                 children: [
                     {
                         path: "list",
-                        component: ItemCategoryListComponent,
+                        component: () => import("../../components/admin/settings/ItemCategory/ItemCateogryListComponent"),
                         name: "admin.settings.itemCategory.list",
                         meta: {
                             isFrontend: false,
@@ -224,7 +189,7 @@ export default [
                     },
                     {
                         path: "show/:id",
-                        component: ItemCategoryShowComponent,
+                        component: () => import("../../components/admin/settings/ItemCategory/ItemCategoryShowComponent"),
                         name: "admin.settings.itemCategory.show",
                         meta: {
                             isFrontend: false,
@@ -237,7 +202,7 @@ export default [
             },
             {
                 path: "item-attributes",
-                component: ItemAttributeComponent,
+                component: () => import("../../components/admin/settings/ItemAttribute/ItemAttributeComponent"),
                 name: "admin.settings.itemAttribute",
                 redirect: { name: "admin.settings.itemAttribute.list" },
                 meta: {
@@ -249,7 +214,7 @@ export default [
                 children: [
                     {
                         path: "list",
-                        component: ItemAttributeListComponent,
+                        component: () => import("../../components/admin/settings/ItemAttribute/ItemAttributeListComponent"),
                         name: "admin.settings.itemAttribute.list",
                         meta: {
                             isFrontend: false,
@@ -262,7 +227,7 @@ export default [
             },
             {
                 path: "taxes",
-                component: TaxComponent,
+                component: () => import("../../components/admin/settings/Tax/TaxComponent"),
                 name: "admin.settings.tax",
                 redirect: { name: "admin.settings.tax.list" },
                 meta: {
@@ -274,7 +239,7 @@ export default [
                 children: [
                     {
                         path: "list",
-                        component: TaxListComponent,
+                        component: () => import("../../components/admin/settings/Tax/TaxListComponent"),
                         name: "admin.settings.tax.list",
                         meta: {
                             isFrontend: false,
@@ -287,7 +252,7 @@ export default [
             },
             {
                 path: "pages",
-                component: PageComponent,
+                component: () => import("../../components/admin/settings/Page/PageComponent"),
                 name: "admin.settings.page",
                 redirect: { name: "admin.settings.page.list" },
                 meta: {
@@ -299,7 +264,7 @@ export default [
                 children: [
                     {
                         path: "list",
-                        component: PageListComponent,
+                        component: () => import("../../components/admin/settings/Page/PageListComponent"),
                         name: "admin.settings.page.list",
                         meta: {
                             isFrontend: false,
@@ -310,7 +275,7 @@ export default [
                     },
                     {
                         path: "show/:id",
-                        component: PageShowComponent,
+                        component: () => import("../../components/admin/settings/Page/PageShowComponent"),
                         name: "admin.settings.page.show",
                         meta: {
                             isFrontend: false,
@@ -323,7 +288,7 @@ export default [
             },
             {
                 path: "role",
-                component: RoleComponent,
+                component: () => import("../../components/admin/settings/Role/RoleComponent"),
                 name: "admin.settings.role",
                 redirect: { name: "admin.settings.role.list" },
                 meta: {
@@ -335,7 +300,7 @@ export default [
                 children: [
                     {
                         path: "list",
-                        component: RoleListComponent,
+                        component: () => import("../../components/admin/settings/Role/RoleListComponent"),
                         name: "admin.settings.role.list",
                         meta: {
                             isFrontend: false,
@@ -346,7 +311,7 @@ export default [
                     },
                     {
                         path: "show/:id",
-                        component: RoleShowComponent,
+                        component: () => import("../../components/admin/settings/Role/RoleShowComponent"),
                         name: "admin.settings.role.show",
                         meta: {
                             isFrontend: false,
@@ -359,7 +324,7 @@ export default [
             },
             {
                 path: "languages",
-                component: LanguageComponent,
+                component: () => import("../../components/admin/settings/Language/LanguageComponent"),
                 name: "admin.settings.language",
                 redirect: { name: "admin.settings.language.list" },
                 meta: {
@@ -371,7 +336,7 @@ export default [
                 children: [
                     {
                         path: "list",
-                        component: LanguageListComponent,
+                        component: () => import("../../components/admin/settings/Language/LanguageListComponent"),
                         name: "admin.settings.language.list",
                         meta: {
                             isFrontend: false,
@@ -382,7 +347,7 @@ export default [
                     },
                     {
                         path: "show/:id",
-                        component: LanguageShowComponent,
+                        component: () => import("../../components/admin/settings/Language/LanguageShowComponent"),
                         name: "admin.settings.language.show",
                         meta: {
                             isFrontend: false,
@@ -395,7 +360,7 @@ export default [
             },
             {
                 path: "sms-gateway",
-                component: SmsGatewayComponent,
+                component: () => import("../../components/admin/settings/SmsGateway/SmsGatewayComponent"),
                 name: "admin.settings.smsGateway",
                 meta: {
                     isFrontend: false,
@@ -406,7 +371,7 @@ export default [
             },
             {
                 path: "payment-gateway",
-                component: PaymentGatewayComponent,
+                component: () => import("../../components/admin/settings/PaymentGateway/PaymentGatewayComponent"),
                 name: "admin.settings.paymentGateway",
                 meta: {
                     isFrontend: false,
@@ -417,7 +382,7 @@ export default [
             },
             {
                 path: "notification-alert",
-                component: NotificationAlertComponent,
+                component: () => import("../../components/admin/settings/NotificationAlert/NotificationAlertComponent"),
                 name: "admin.settings.notificationAlert",
                 meta: {
                     isFrontend: false,
@@ -428,7 +393,7 @@ export default [
             },
             {
                 path: "notification",
-                component: NotificationComponent,
+                component: () => import("../../components/admin/settings/Notification/NotificationComponent"),
                 name: "admin.settings.notification",
                 meta: {
                     isFrontend: false,

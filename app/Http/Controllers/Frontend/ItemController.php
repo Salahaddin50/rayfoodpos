@@ -33,11 +33,12 @@ class ItemController extends Controller
                 // Lite list is used by menu grids (online/table) to keep payload small.
                 // Full item data is fetched via `frontend/item/details/:id` when needed.
                 // Biggest perf win without changing UI: cache the heavy "lite + non-paginated" menu list briefly.
+                // Cache all lite menu responses (including limit/offset chunks used by online + QR table menus)
                 if ((int) $request->get('paginate', 0) === 0) {
                     $cacheKey = 'frontend:item:lite:' . md5($request->fullUrl());
                     try {
                         $cacheHit = Cache::has($cacheKey);
-                        $payload = Cache::remember($cacheKey, 60, function () use ($request) {
+                        $payload = Cache::remember($cacheKey, 300, function () use ($request) {
                             return SimpleItemResource::collection($this->itemService->list($request))
                                 ->response()
                                 ->getData(true);
@@ -46,7 +47,7 @@ class ItemController extends Controller
                         $durMs = (microtime(true) - $start) * 1000;
                         return response()
                             ->json($payload)
-                            ->header('Cache-Control', 'public, max-age=60')
+                            ->header('Cache-Control', 'public, max-age=300')
                             ->header('Server-Timing', 'app;dur=' . round($durMs, 2) . ', cache;desc=' . ($cacheHit ? 'hit' : 'miss'));
                     } catch (Throwable $e) {
                         // Fail-safe: don't break menu loading if cache is unavailable.

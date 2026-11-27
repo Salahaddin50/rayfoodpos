@@ -1,9 +1,7 @@
-import TransactionListComponent from "../../components/admin/transactions/TransactionListComponent";
-
 export default [
     {
         path: '/admin/transactions',
-        component: TransactionListComponent,
+        component: () => import("../../components/admin/transactions/TransactionListComponent"),
         name: 'admin.transactions.list',
         meta: {
             isFrontend: false,

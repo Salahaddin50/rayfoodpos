@@ -1,12 +1,7 @@
-import EmployeeComponent from "../../components/admin/employees/EmployeeComponent";
-import EmployeeListComponent from "../../components/admin/employees/EmployeeListComponent";
-import EmployeeShowComponent from "../../components/admin/employees/EmployeeShowComponent";
-import EmployeeOrderDetailsComponent from "../../components/admin/employees/EmployeeOrderDetailsComponent";
-
 export default [
     {
         path: "/admin/employees",
-        component: EmployeeComponent,
+        component: () => import("../../components/admin/employees/EmployeeComponent"),
         name: "admin.employees",
         redirect: {name: "admin.employees.list"},
         meta: {
@@ -18,7 +13,7 @@ export default [
         children: [
             {
                 path: "",
-                component: EmployeeListComponent,
+                component: () => import("../../components/admin/employees/EmployeeListComponent"),
                 name: "admin.employees.list",
                 meta: {
                     isFrontend: false,
@@ -29,7 +24,7 @@ export default [
             },
             {
                 path: "show/:id",
-                component: EmployeeShowComponent,
+                component: () => import("../../components/admin/employees/EmployeeShowComponent"),
                 name: "admin.employees.show",
                 meta: {
                     isFrontend: false,
@@ -40,7 +35,7 @@ export default [
             },
             {
                 path: "show/:id/:orderId",
-                component: EmployeeOrderDetailsComponent,
+                component: () => import("../../components/admin/employees/EmployeeOrderDetailsComponent"),
                 name: "admin.employees.order.details",
                 meta: {
                     isFrontend: false,

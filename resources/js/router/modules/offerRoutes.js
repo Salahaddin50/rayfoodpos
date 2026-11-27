@@ -1,11 +1,7 @@
-import OfferComponent from "../../components/admin/offers/OfferComponent";
-import OfferListComponent from "../../components/admin/offers/OfferListComponent";
-import OfferShowComponent from "../../components/admin/offers/OfferShowComponent";
-
 export default [
     {
         path: '/admin/offers',
-        component: OfferComponent,
+        component: () => import("../../components/admin/offers/OfferComponent"),
         name: 'admin.offers',
         redirect: {name: 'admin.offers.list'},
         meta: {
@@ -17,7 +13,7 @@ export default [
         children: [
             {
                 path: '',
-                component: OfferListComponent,
+                component: () => import("../../components/admin/offers/OfferListComponent"),
                 name: 'admin.offers.list',
                 meta: {
                     isFrontend: false,
@@ -28,7 +24,7 @@ export default [
             },
             {
                 path: "show/:id",
-                component: OfferShowComponent,
+                component: () => import("../../components/admin/offers/OfferShowComponent"),
                 name: "admin.offer.show",
                 meta: {
                     isFrontend: false,
